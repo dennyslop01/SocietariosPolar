@@ -89,19 +89,28 @@ h1:focus {
     pointer-events: none; /* No interfiere con clics */
 }
 
+/* Esto quita específicamente el padding superior de la lista desplegable de MudBlazor */
+.mud-menu-list {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+}
+
+/* Opcional: si quieres que el primer ítem respire un poquito (ej. 4px) */
+.mud-menu-list > *:first-child {
+    margin-top: 2px !important;
+}
+
 .animate__fadeInDown {
     animation: fadeInDown 0.5s both;
 }
 
-@@keyframes fadeInDown {
+@keyframes fadeInDown {
     from {
         opacity: 0;
         transform: translate3d(-50%, -100%, 0);
     }
-
     to {
         opacity: 1;
         transform: translate3d(-50%, 0, 0);
     }
 }
-

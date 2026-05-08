@@ -12,69 +12,93 @@
     @if (userrol == 1 || userrol == 2)
     {
         <MudMenu Label="Administración"
-        Variant="Variant.Text"
+                 Variant="Variant.Text"
+                 Dense="true"
+                 Padding="false"
              Style="color: white; text-transform: none;"
              StartIcon="@Icons.Material.Filled.Settings"
              EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
              AnchorOrigin="Origin.BottomLeft"
              TransformOrigin="Origin.TopLeft">
             <ChildContent>
-                <MudMenuItem href="/administrar/cargos">
-                    <div class="d-flex align-center">
-                        Cargos
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/claselibros">
-                    <div class="d-flex align-center">
-                        Clase Libros
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/empresas">
-                    <div class="d-flex align-center">
-                        Empresas
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/estatussociedad">
-                    <div class="d-flex align-center">
-                        Estatus Sociedad
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/nombrediarios">
-                    <div class="d-flex align-center">
-                        Nombre Diarios
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/regiones">
-                    <div class="d-flex align-center">
-                        Regiones
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/registros">
-                    <div class="d-flex align-center">
-                        Registros
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/tipoasambleas">
-                    <div class="d-flex align-center">
-                        Tipos de Asambleas
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/administrar/tiporeformas">
-                    <div class="d-flex align-center">
-                        Tipos de Reformas
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/admintiposociedad">
-                    <div class="d-flex align-center">
-                        Tipo de Sociedad
-                    </div>
-                </MudMenuItem>
-
+                <!-- Nuevo Nivel: Tablas -->
+                <MudMenu Label="Tablas"
+                         Variant="Variant.Text"
+                         Dense="true"
+                         Padding="false"
+                         Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
+                         EndIcon="@Icons.Material.Filled.ChevronRight"
+                         AnchorOrigin="Origin.TopRight"
+                         TransformOrigin="Origin.TopLeft">
+                    <ChildContent>
+                        <MudMenuItem href="/administrar/cargos">
+                            <div style="font-size: 0.85rem;">
+                                Cargos
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/claselibros">
+                            <div style="font-size: 0.85rem;">
+                                Clase Libros
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/empresas">
+                            <div style="font-size: 0.85rem;">
+                                Empresas
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/estatussociedad">
+                            <div style="font-size: 0.85rem;">
+                                Estatus Sociedad
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/nombrediarios">
+                            <div style="font-size: 0.85rem;">
+                                Nombre Diarios
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/regiones">
+                            <div style="font-size: 0.85rem;">
+                                Regiones
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/registros">
+                            <div style="font-size: 0.85rem;">
+                                Registros
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/tipoasambleas">
+                            <div style="font-size: 0.85rem;">
+                                Tipos de Asambleas
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/tiporeformas">
+                            <div style="font-size: 0.85rem;">
+                                Tipos de Reformas
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/administrar/tiposociedad">
+                            <div style="font-size: 0.85rem;">
+                                Tipo de Sociedad
+                            </div>
+                        </MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
                 <MudDivider />
 
+                <MudMenuItem href="/usuarios">
+                    <div style="font-size: 0.85rem;">
+                        Usuarios
+                    </div>
+                </MudMenuItem>
             </ChildContent>
         </MudMenu>
     }
+
+    <MudButton href="/"
+               Variant="Variant.Text"
+               Style="color: white; text-transform: none;">
+        <i class="bi bi-bezier m-2"></i> Societarios
+    </MudButton>
 
     <MudSpacer />
     @* Botón alineado a la derecha con el valor de la variable *@

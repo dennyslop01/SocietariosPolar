@@ -1,0 +1,22 @@
+﻿using Microsoft.EntityFrameworkCore;
+using SociePolar.Domain.Entities;
+
+namespace SociePolar.Infrastructure.DataContext
+{
+    public class SociedadDbContext(DbContextOptions<SociedadDbContext> options) : DbContext(options)
+    {
+        public DbSet<Cargo> Cargos { get; set; }
+        public DbSet<ClaseLibro> ClaseLibros { get; set; }
+        public DbSet<Empresa> Empresas { get; set; }
+        public DbSet<EstatusSociedad> EstatusSociedades { get; set; }
+        public DbSet<NombreDiario> NombreDiarios { get; set; }
+        public DbSet<Region> Regiones { get; set; }
+        public DbSet<Registro> Registros { get; set; }
+        public DbSet<TipoAsamblea> TiposAsambleas { get; set; }
+        public DbSet<TipoReforma> TiposReformas { get; set; }
+        public DbSet<TipoSociedad> TiposSociedades { get; set; }
+        public DbSet<TipoSociedadActiva> TiposSociedadActivas { get; set; }
+        public DbSet<UnidadNegocio> UnidadesNegocios { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
+    }
+}

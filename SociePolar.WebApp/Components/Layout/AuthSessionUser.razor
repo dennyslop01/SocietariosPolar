@@ -1,0 +1,95 @@
+﻿@page "/authsessionuser"
+@rendermode InteractiveServer
+
+@if (cargando)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px);">
+        <div class="modal-dialog modal-dialog-centered justify-content-center">
+            <div class="modal-content border-0 bg-transparent">
+                <div class="modal-body text-center">
+                    @* Spinner más fino y con el color principal de tu app *@
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
+                        Procesando
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    private string? userEmail = "nadia.brito@empresaspolar.com";
+    string nombre = string.Empty;
+    string apellido = string.Empty;
+    bool cargando =  false;
+
+    [Inject] private IUsuario repousuario { get; set; } = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        cargando = true;
+        if (firstRender)
+        {
+            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+            if (string.IsNullOrEmpty(useremailaux.Value))
+            {
+                await LoadUserDataAsync();
+            }            
+        }
+        cargando = false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            //userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            nombre = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
+            apellido = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+
+            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+            if (string.IsNullOrEmpty(useremailaux.Value))
+            {
+                await LoadUserDataAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores (opcional)
+            Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
+        }
+        cargando = false;
+    }
+
+    private async Task LoadUserDataAsync()
+    {
+        try
+        {
+            var usuario = await repousuario.GetByEmailAsync(userEmail);
+            if (usuario == null)
+            {
+                Console.WriteLine($"Usuario con email {userEmail} no encontrado.");
+                return;
+            }
+            await SessionStorage.SetAsync("UserEmail", usuario.Email.ToString());
+            await SessionStorage.SetAsync("UserId", usuario.Id.ToString());
+            await SessionStorage.SetAsync("UserRol", usuario.IdRol.ToString());
+            await SessionStorage.SetAsync("UserCedula", usuario.Cedula);
+            await SessionStorage.SetAsync("UserNombreCorto", $"{nombre}, {apellido}".ToLower());
+            NavManager.NavigateTo($"/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores (opcional)
+            Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
+        }
+    }
+}

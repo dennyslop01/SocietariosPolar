@@ -1,0 +1,18 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+@* <PageTitle>Home</PageTitle> *@
+
+Welcome to your new app.
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+            if (string.IsNullOrEmpty(useremailaux.Value))
+                NavManager.NavigateTo($"/authsessionuser");
+        }
+    }
+}

@@ -1,0 +1,181 @@
+﻿@typeparam TItem
+
+<div>
+    <table class="table">
+        <thead class="table">
+            @ChildContentHeader
+        </thead>
+        <tbody>
+            @foreach (var item in PaginatedData)
+            {
+                @ChildContentRow(item)
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex align-items-center justify-content-between mt-3 px-3 pb-3">
+        <div class="d-flex align-items-center">
+            <!-- Selector de Tamaño -->
+            <label class="me-2 fw-bold text-secondary small">Tamaño:</label>
+            <select @bind="PageSize" class="form-select form-select-sm border-light-subtle shadow-sm" style="width: 65px; height: 28px; font-size: 0.75rem;">
+                @foreach (var size in PageSizes)
+                {
+                    <option value="@size">@size</option>
+                }
+            </select>
+
+            <!-- Botones de Navegación -->
+            <div class="ms-3">
+                <button class="btn btn-outline-light btn-sm border text-secondary me-1"
+                        @onclick="PreviousPage" disabled="@IsPreviousDisabled">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+
+                @foreach (var pageNumber in Enumerable.Range(1, TotalPages))
+                {
+                    <!-- Ejemplo para un botón numérico -->
+                    <button @onclick="() => GoToPage(pageNumber)"
+                            class="btn btn-pagination @(CurrentPage == pageNumber ? "active" : "")">
+                        @pageNumber
+                    </button>
+                }
+
+                <button class="btn-pagination" @onclick="NextPage" disabled="@IsNextDisabled">
+                    <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Info de Registros -->
+        <div class="text-secondary small">
+            Mostrando <span class="fw-bold text-dark">@RecordStart</span> al
+            <span class="fw-bold text-dark">@RecordEnd</span> de
+            <span class="fw-bold text-dark">@TotalItems</span> registros
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = Enumerable.Empty<TItem>();
+    [Parameter] public int DefaultPageSize { get; set; } = 10;
+    [Parameter] public RenderFragment ChildContentHeader { get; set; }
+    [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
+
+    private int CurrentPage { get; set; } = 1;
+    private readonly int[] PageSizes = new[] { 5, 10, 20, 50 };
+    private int _pageSize;
+    private int PageSize
+    {
+        get => _pageSize;
+        set
+        {
+            if (_pageSize != value)
+            {
+                _pageSize = value;
+                CurrentPage = 1; // Reiniciar a página 1 si cambian el tamaño
+            }
+        }
+    }
+    // Lógica de datos paginados
+    private List<TItem> PaginatedData => Items?
+        .Skip((CurrentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToList() ?? new List<TItem>();
+
+    // Propiedades de conteo
+    private int TotalItems => Items?.Count() ?? 0;
+    private int TotalPages => TotalItems > 0 ? (int)Math.Ceiling(TotalItems / (double)PageSize) : 1;
+    private int RecordStart => TotalItems == 0 ? 0 : (CurrentPage - 1) * PageSize + 1;
+    private int RecordEnd => Math.Min(CurrentPage * PageSize, TotalItems);
+
+    protected override void OnInitialized()
+    {
+        PageSize = DefaultPageSize;
+    }
+
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages) CurrentPage++;
+    }
+
+    private void PreviousPage()
+    {
+        if (CurrentPage > 1) CurrentPage--;
+    }
+
+    private void GoToPage(int pageNumber)
+    {
+        CurrentPage = pageNumber;
+    }
+
+    private bool IsPreviousDisabled => CurrentPage == 1;
+    private bool IsNextDisabled => CurrentPage >= TotalPages;
+}
+
+<style>
+    /* Estilizamos la tabla para que sea minimalista */
+    .table thead th {
+        background-color: #f8f9fa;
+        border-top: none;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Ajuste para que los botones desactivados no resalten tanto */
+    .btn:disabled {
+        opacity: 0.4;
+        background-color: #f8f9fa !important;
+        border-color: #dee2e6 !important;
+    }
+
+    /* Quitar el borde azul feo al hacer clic */
+    .btn:focus, .form-select:focus {
+        box-shadow: none;
+        border-color: #dee2e6;
+    }
+
+    .btn-pagination {
+        /* Tamaño mínimo para que sean cuadraditos */
+        min-width: 28px;
+        height: 28px;
+        padding: 0 4px;
+        font-size: 0.75rem; /* Letra más pequeña */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        color: #6c757d;
+        margin: 0 2px;
+        transition: all 0.2s;
+    }
+
+    .btn-pagination:hover:not(:disabled) {
+        background-color: #f8f9fa;
+        color: #007bff;
+        border-color: #007bff;
+    }
+
+    .btn-pagination.active {
+        background-color: #0d6efd; /* Azul Bootstrap 5 */
+        color: white;
+        border-color: #0d6efd;
+        font-weight: 600;
+    }
+
+    .btn-pagination:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #f8f9fa;
+    }
+
+    /* Reducir también el tamaño del selector (Select) */
+    .form-select-sm {
+        font-size: 0.75rem;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        height: 28px;
+    }
+</style>
+

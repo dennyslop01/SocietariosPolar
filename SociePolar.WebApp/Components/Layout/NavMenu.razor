@@ -1,0 +1,144 @@
+﻿@rendermode InteractiveServer
+
+<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="width: 100%;">
+
+    @* Botón Simple (Sin hijos) *@
+    <MudButton href="/"
+               Variant="Variant.Text"
+               Style="color: white; text-transform: none;">
+        <i class="bi bi-house-fill m-2"></i> Inicio
+    </MudButton>
+
+    @if (userrol == 1 || userrol == 2)
+    {
+        <MudMenu Label="Administración"
+        Variant="Variant.Text"
+             Style="color: white; text-transform: none;"
+             StartIcon="@Icons.Material.Filled.Settings"
+             EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+             AnchorOrigin="Origin.BottomLeft"
+             TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                <MudMenuItem href="/administrar/cargos">
+                    <div class="d-flex align-center">
+                        Cargos
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/claselibros">
+                    <div class="d-flex align-center">
+                        Clase Libros
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/empresas">
+                    <div class="d-flex align-center">
+                        Empresas
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/estatussociedad">
+                    <div class="d-flex align-center">
+                        Estatus Sociedad
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/nombrediarios">
+                    <div class="d-flex align-center">
+                        Nombre Diarios
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/regiones">
+                    <div class="d-flex align-center">
+                        Regiones
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/registros">
+                    <div class="d-flex align-center">
+                        Registros
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/tipoasambleas">
+                    <div class="d-flex align-center">
+                        Tipos de Asambleas
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/administrar/tiporeformas">
+                    <div class="d-flex align-center">
+                        Tipos de Reformas
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/admintiposociedad">
+                    <div class="d-flex align-center">
+                        Tipo de Sociedad
+                    </div>
+                </MudMenuItem>
+
+                <MudDivider />
+
+            </ChildContent>
+        </MudMenu>
+    }
+
+    <MudSpacer />
+    @* Botón alineado a la derecha con el valor de la variable *@
+    <MudButton Variant="Variant.Text"
+               Style="color: white; text-transform: none;"
+               StartIcon="@Icons.Material.Filled.Person">
+        @userEmail
+    </MudButton>
+</MudStack>
+
+@code {
+    int userrol = 5;
+    string userEmail = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+            if (!string.IsNullOrEmpty(userrolaux.Value))
+            {
+                userrol = int.Parse(userrolaux.Value);
+            }
+
+            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+            if (!string.IsNullOrEmpty(useremailaux.Value))
+            {
+                userEmail = useremailaux.Value;
+            }
+            StateHasChanged();
+        }
+    }
+}
+
+<style>
+
+    /* Esto asegura que los iconos de Bootstrap dentro del botón también sean blancos */
+    .mud-button-root {
+        color: white !important;
+    }
+    /* Si el icono EndIcon de MudBlazor no se pone blanco, esto lo fuerza */
+    .mud-icon-root.mud-svg-icon {
+        fill: white !important;
+    }
+
+    /* Forzamos que el texto del botón de administración sea igual al de los items */
+    .mud-button-root {
+        font-size: 0.875rem !important; /* Esto es Typo.body2 (14px) */
+        letter-spacing: normal !important;
+    }
+
+    .mud-menu .mud-button-root {
+        text-transform: none !important;
+    }
+    
+    /* Ajustamos los items del menú desplegable */
+    .item-menu-igual .mud-typography {
+        font-size: 0.875rem !important;
+        font-weight: 500;
+    }
+
+    /* Opcional: Si quieres que el logo también se vea más integrado */
+    .navbar-top img {
+        height: 30px;
+        vertical-align: middle;
+    }
+</style>

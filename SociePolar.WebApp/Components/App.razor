@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<PageTitle>Societarios Polar</PageTitle>
+<head>
+    <meta charset="utf-8" />
+    <title>Societarios Polar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["SociePolar.WebApp.styles.css"]" />
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" /> @* Corregido: Sin @Assets *@
+
+    <ImportMap />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet @rendermode="InteractiveServer" /> @* Agregado: Rendermode *@
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServer" /> @* Agregado: Rendermode para toda la app *@
+    <script src="_framework/blazor.web.js"></script>
+    @* FUNDAMENTAL: Script de MudBlazor *@
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+</body>
+
+</html>

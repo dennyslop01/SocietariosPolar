@@ -1,0 +1,71 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+@* El PopoverProvider debe estar en un lugar que alcance el NavMenu interactivo *@
+<MudPopoverProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Style="background: #00338D;">
+        <MudImage Src="LogoPolar.png" Alt="Logo" Class="mr-4" />
+
+        @* Aquí insertamos el menú horizontal *@
+        <NavMenu />
+
+        <MudSpacer />
+
+        @* <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" /> *@
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = false;
+    int userrol = 1;
+    private string? userEmail = "nadia.brito@empresaspolar.com";
+    //private Usuario usuario = new();
+    //[Inject] private IUsuario repousuario { get; set; } = null!;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            //var authState = await authStateProvider.GetAuthenticationStateAsync();
+            //var user = authState.User;
+            //userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            if(!string.IsNullOrEmpty(userEmail))
+            {
+                await LoadAdminDataAsync();
+            }            
+        }
+        catch (Exception ex)
+        {
+            // Manejo de errores (opcional)
+            Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
+        }
+    }
+
+    private async Task LoadAdminDataAsync()
+    {
+        // if (!string.IsNullOrEmpty(userEmail))
+        // {
+        //     usuario = await repousuario.GetByEmailAsync(userEmail);
+        //     if (usuario != null)
+        //     {
+        //         userrol = (int)usuario.IdRol;
+        //     }
+        // }
+        await Task.CompletedTask;
+    }
+ }

@@ -1,6 +1,8 @@
-﻿namespace SociePolar.Domain.Entities
+﻿using SociePolar.Domain.Interfaces;
+
+namespace SociePolar.Domain.Entities
 {
-    public class Cargo
+    public class Cargo : IBaseEntity
     {
         public int Id { get; set; }
         public string? Nombre { get; set; }

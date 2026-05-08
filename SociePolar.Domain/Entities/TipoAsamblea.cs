@@ -1,6 +1,8 @@
-﻿namespace SociePolar.Domain.Entities
+﻿using SociePolar.Domain.Interfaces;
+
+namespace SociePolar.Domain.Entities
 {
-    public class TipoAsamblea
+    public class TipoAsamblea : IBaseEntity
     {
         public int Id { get; set; }
         public string? Nombre { get; set; }

@@ -57,5 +57,15 @@ namespace SociePolar.Infrastructure.Repositories
                 context.SaveChanges();
             }
         }
+
+        public async Task<List<UnidadNegocio>> GetByIdRegionAllAsync(int idregion)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<UnidadNegocio>()
+                .Include(b => b.Region)
+                .Where(x => x.Region.Id == idregion)
+                .ToListAsync();
+
+        }
     }
 }

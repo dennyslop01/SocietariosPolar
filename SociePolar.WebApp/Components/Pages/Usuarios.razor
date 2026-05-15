@@ -1,4 +1,4 @@
-﻿@page "/unidadesnegocio/{id}"
+﻿@page "/usuarios"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -11,54 +11,29 @@
                         <i class="bi bi-gear-fill text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Unidades de Negocio - Region: @nombreRegion
+                        Usuarios
                     </h5>
                 </div>
 
-                <!-- Contenedor flex para alinear los botones en línea -->
-                <div class="d-flex gap-2 align-items-center">
-
-                    <!-- Botón Agregar -->
-                    <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                            @onclick="AbrirModalNuevo"
-                            style="height: 32px; font-weight: 500;">
-                        <i class="bi bi-plus-lg me-2"></i> Agregar
-                    </button>
-
-                    <!-- Botón Regresar -->
-                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                            @onclick="Regresar"
-                            style="height: 32px; font-weight: 500;">
-                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
-                    </button>
-
-                </div>
+                <!-- Parte Derecha: Botón Agregar -->
+                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                        @onclick="AbrirModalNuevo"
+                        style="height: 32px; font-weight: 500;">
+                    <i class="bi bi-plus-lg me-2"></i> Agregar
+                </button>
             </div>
         </div>
 
 
         <div class="card-body">
-            <!-- Buscador Global por Nombre -->
-            <div class="row mb-3">
-                <div class="col-md-4 ms-auto">
-                    <div class="input-group input-group-sm shadow-sm">
-                        <span class="input-group-text bg-white border-end-0 text-secondary">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
-                               @oninput="FiltrarBusqueda" />
-                    </div>
-                </div>
-            </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="UnidadNegocio" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="Usuario" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Región</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 30%; font-size: 0.85rem;">Descripción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 25%; font-size: 0.85rem;">Email</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Rol</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Estatus</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha de creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
@@ -67,8 +42,15 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="fw-medium" style="width: 15%;">@p.Region.Nombre</td>
-                            <td class="fw-medium" style="width: 30%;">@p.Nombre</td>
+                            <td class="fw-medium" style="width: 25%;">@p.Email</td>
+                            <td class="fw-medium" style="width: 10%;">
+                                @(ListaRoles.FirstOrDefault(r => r.Id == p.IdRol)?.Nombre ?? p.IdRol.ToString())
+                            </td>
+
+                            <!-- Columna Estatus: Busca el nombre basado en el Estatus -->
+                            <td class="fw-medium" style="width: 10%;">
+                                @(ListaEstatus.FirstOrDefault(e => e.Id == p.Estatus)?.Nombre ?? p.Estatus.ToString())
+                            </td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
@@ -127,15 +109,46 @@
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Unidad de Negocio" : "Modificar Unidad de Negocio")
+                        @(entidadEditando.Id == 0 ? "Agregar Usuario" : "Modificar Usuario")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
                 <div class="modal-body py-4">
+                    <!-- Campo Correo Electrónico -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Nombre</label>
-                        <input type="text" class="form-control" @bind="entidadEditando.Nombre"
-                               placeholder="Ingrese el nombre aquí..." />
+                        <label class="form-label fw-bold text-secondary">Correo Electrónico</label>
+                        <input type="email" class="form-control" @bind="entidadEditando.Email"
+                               placeholder="Ingrese el correo electrónico aquí..." />
+                    </div>
+
+                    <!-- Campo Rol (Lista desplegable) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Rol asignado</label>
+                        <select class="form-select" @bind="entidadEditando.IdRol">
+                            <option value="" disabled selected>Seleccione un rol...</option>
+                            @if (ListaRoles != null)
+                            {
+                                @foreach (var rol in ListaRoles)
+                                {
+                                    <option value="@rol.Id">@rol.Nombre</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Campo Estatus (Lista desplegable) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Estatus</label>
+                        <select class="form-select" @bind="entidadEditando.Estatus">
+                            <option value="" disabled selected>Seleccione un estatus...</option>
+                            @if (ListaEstatus != null)
+                            {
+                                @foreach (var estatus in ListaEstatus)
+                                {
+                                    <option value="@estatus.Id">@estatus.Nombre</option>
+                                }
+                            }
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -159,7 +172,7 @@
                     <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
                     <h5 class="fw-bold">¿Estás seguro?</h5>
                     <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.Nombre</strong>. Esta acción no se puede deshacer.
+                        Vas a eliminar <strong>@entidadParaEliminar?.Email</strong>. Esta acción no se puede deshacer.
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
@@ -173,10 +186,8 @@
 
 
 @code {
-    [Parameter] public string id { get; set; } = "";
-
-    private List<UnidadNegocio> Listgral = new();
-    private List<UnidadNegocio> ListgralBuscar = new();
+    private List<Usuario> Listgral = new();
+    private List<Usuario> ListgralBuscar = new();
     private string searchTerm = "";
     private bool cargando = false;
     private bool mostrarModal = false;
@@ -185,16 +196,44 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private bool mostrarModalEliminar = false;
-    private UnidadNegocio entidadEditando = default!;
-    private UnidadNegocio? entidadParaEliminar;
-    private string nombreRegion = "";
-    private Region regionEntity = new();
+    private Usuario entidadEditando = default!;
+    private Usuario? entidadParaEliminar;
 
-    [Inject] private IUnidadNegocio repository { get; set; } = null!;
+    private List<ElementoLista> ListaRoles { get; set; } = new();
+    private List<ElementoLista> ListaEstatus { get; set; } = new();
+
+    // Clase auxiliar para manejar los elementos de las listas
+    public class ElementoLista
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    [Inject] private IUsuario repository { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
+        CargarListasLocales();
         await LoadGenericDataAsync();
+    }
+
+    private void CargarListasLocales()
+    {
+        // Valores fijos para Roles
+        ListaRoles = new List<ElementoLista>
+        {
+            new ElementoLista { Id = 1, Nombre = "Administrador" },
+            new ElementoLista { Id = 2, Nombre = "Supervisor" },
+            new ElementoLista { Id = 3, Nombre = "Operador" },
+            new ElementoLista { Id = 4, Nombre = "Solo Lectura / Consultor" }
+        };
+
+        // Valores fijos para Estatus
+        ListaEstatus = new List<ElementoLista>
+        {
+            new ElementoLista { Id = 1, Nombre = "Activo" },
+            new ElementoLista { Id = 2, Nombre = "Inactivo" },
+        };
     }
 
     private async Task LoadGenericDataAsync()
@@ -202,21 +241,7 @@
         cargando = true;
         try
         {
-            var repo = RepoFactory.GetRepository("regiones");
-            var method = repo.GetType().GetMethod("GetByIdAsync");
-            var task = (Task)method!.Invoke(repo, new object[] { int.Parse(id) })!;
-            await task;
-
-            dynamic resultRegiones = task.GetType().GetProperty("Result")?.GetValue(task)!;
-            regionEntity = resultRegiones != null ? new Region
-            {
-                Id = resultRegiones.Id,
-                Nombre = resultRegiones.Nombre
-            } : new Region();
-
-            nombreRegion = regionEntity?.Nombre ?? "Región desconocida";
-
-            Listgral = await repository.GetByIdRegionAllAsync(int.Parse(id));
+            Listgral = await repository.GetAllAsync();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -231,15 +256,14 @@
 
     private void AbrirModalNuevo()
     {
-        entidadEditando = new ();
-        entidadEditando.Region = regionEntity;
+        entidadEditando = new();
         entidadEditando.CreateDate = DateTime.Now;
         entidadEditando.UpdateDate = DateTime.Now;
 
         mostrarModal = true;
     }
 
-    private void Editar(UnidadNegocio item)
+    private void Editar(Usuario item)
     {
         entidadEditando = item;
         mostrarModal = true;
@@ -249,9 +273,32 @@
 
     private async Task GuardarCambios()
     {
-        if (string.IsNullOrWhiteSpace(entidadEditando.Nombre))
+        // 1. Validación de Correo Electrónico (Presencia)
+        if (string.IsNullOrWhiteSpace(entidadEditando.Email))
         {
-            await MostrarNotificacion("El nombre es obligatorio", true);
+            await MostrarNotificacion("El correo electrónico es obligatorio.", true);
+            return;
+        }
+
+        // 2. Validación de Correo Electrónico (Formato)
+        var emailRegex = new System.Text.RegularExpressions.Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        if (!emailRegex.IsMatch(entidadEditando.Email))
+        {
+            await MostrarNotificacion("El formato del correo electrónico no es válido.", true);
+            return;
+        }
+
+        // 3. Validación de Rol
+        if (string.IsNullOrWhiteSpace(entidadEditando.IdRol.ToString()))
+        {
+            await MostrarNotificacion("Debe seleccionar un rol para el usuario.", true);
+            return;
+        }
+
+        // 4. Validación de Estatus
+        if (string.IsNullOrWhiteSpace(entidadEditando.Estatus.ToString()))
+        {
+            await MostrarNotificacion("Debe seleccionar un estatus para el usuario.", true);
             return;
         }
 
@@ -275,7 +322,7 @@
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Unidad de negocio guardada correctamente");
+                    await MostrarNotificacion($"Usuario guardada correctamente");
                 }
                 else
                 {
@@ -283,7 +330,7 @@
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Unidad de negocio actualizado correctamente");
+                    await MostrarNotificacion($"Usuario actualizado correctamente");
                 }
             }
         }
@@ -299,22 +346,7 @@
         }
     }
 
-    private void FiltrarBusqueda(ChangeEventArgs e)
-    {
-        searchTerm = e.Value?.ToString() ?? "";
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            Listgral = ListgralBuscar;
-        }
-        else
-        {
-            Listgral = ListgralBuscar
-                .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-    }
-
-    private void VerificarEliminar(UnidadNegocio item)
+    private void VerificarEliminar(Usuario item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -332,7 +364,7 @@
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Unidad de negocio eliminado correctamente");
+            await MostrarNotificacion($"Usuario eliminado correctamente");
         }
         catch (Exception ex)
         {

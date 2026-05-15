@@ -84,7 +84,7 @@
             await SessionStorage.SetAsync("UserRol", usuario.IdRol.ToString());
             await SessionStorage.SetAsync("UserCedula", usuario.Cedula);
             await SessionStorage.SetAsync("UserNombreCorto", $"{nombre}, {apellido}".ToLower());
-            NavManager.NavigateTo($"/", forceLoad: true);
+            navManager.NavigateTo($"/", forceLoad: true);
         }
         catch (Exception ex)
         {

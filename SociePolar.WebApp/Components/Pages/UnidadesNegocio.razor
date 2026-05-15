@@ -1,4 +1,4 @@
-﻿@page "/administrar/{tipo}"
+﻿@page "/unidadesnegocio/{id}"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -11,16 +11,28 @@
                         <i class="bi bi-gear-fill text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Administrar @CultureInfo.CurrentCulture.TextInfo.ToTitleCase(tituloPlural.ToLower())
+                        Unidades de Negocio - Region: @nombreRegion
                     </h5>
                 </div>
 
-                <!-- Parte Derecha: Botón Agregar -->
-                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="AbrirModalNuevo"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-plus-lg me-2"></i> Agregar
-                </button>
+                <!-- Contenedor flex para alinear los botones en línea -->
+                <div class="d-flex gap-2 align-items-center">
+
+                    <!-- Botón Agregar -->
+                    <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="AbrirModalNuevo"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-plus-lg me-2"></i> Agregar
+                    </button>
+
+                    <!-- Botón Regresar -->
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="Regresar"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
+                    </button>
+
+                </div>
             </div>
         </div>
 
@@ -28,11 +40,6 @@
         <div class="card-body">
             <!-- Buscador Global por Nombre -->
             <div class="row mb-3">
-                @* <div class="col-md-4">
-                    <button class="btn btn-primary btn-sm shadow-sm px-3" @onclick="AbrirModalNuevo">
-                        <i class="bi bi-plus-lg me-1"></i> Agregar
-                    </button>
-                </div> *@
                 <div class="col-md-4 ms-auto">
                     <div class="input-group input-group-sm shadow-sm">
                         <span class="input-group-text bg-white border-end-0 text-secondary">
@@ -46,11 +53,12 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="IBaseEntity" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="UnidadNegocio" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 45%; font-size: 0.85rem;">Descripción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Región</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 30%; font-size: 0.85rem;">Descripción</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha de creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
@@ -59,8 +67,8 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="fw-medium" style="width: 45%;">@p.Nombre</td>
-                            @* Añadimos text-center para que coincida con el título de arriba *@
+                            <td class="fw-medium" style="width: 15%;">@p.Region.Nombre</td>
+                            <td class="fw-medium" style="width: 30%;">@p.Nombre</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
@@ -71,13 +79,6 @@
                                         @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                     <i class="bi bi-trash3 fs-6"></i>
                                 </button>
-                                @if(tipo.Equals("regiones", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <button class="btn btn-link btn-sm text-secondary p-0 ms-2" 
-                                            @onclick="() => VerUnidadNegocio(p)" title="Unidades de Negocio">
-                                        <i class="bi bi-eye fs-6"></i>
-                                    </button>
-                                }
                             </td>
                         </tr>
                     </ChildContentRow>
@@ -109,7 +110,7 @@
                         <span class="visually-hidden">Cargando...</span>
                     </div>
                     <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
-                        Procesando @tituloSingular...
+                        Procesando...
                     </h6>
                 </div>
             </div>
@@ -126,13 +127,13 @@
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar" : "Modificar") @tituloSingular
+                        @(entidadEditando.Id == 0 ? "Agregar Unidad de Negocio" : "Modificar Unidad de Negocio")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
                 <div class="modal-body py-4">
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Nombre @tituloSingular</label>
+                        <label class="form-label fw-bold text-secondary">Nombre</label>
                         <input type="text" class="form-control" @bind="entidadEditando.Nombre"
                                placeholder="Ingrese el nombre aquí..." />
                     </div>
@@ -172,10 +173,10 @@
 
 
 @code {
-    [Parameter] public string tipo { get; set; } = "";
+    [Parameter] public string id { get; set; } = "";
 
-    private List<IBaseEntity> Listgral = new();
-    private List<IBaseEntity> ListgralBuscar = new();
+    private List<UnidadNegocio> Listgral = new();
+    private List<UnidadNegocio> ListgralBuscar = new();
     private string searchTerm = "";
     private bool cargando = false;
     private bool mostrarModal = false;
@@ -184,51 +185,15 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private bool mostrarModalEliminar = false;
-    private IBaseEntity entidadEditando = default!;
-    private IBaseEntity? entidadParaEliminar;
+    private UnidadNegocio entidadEditando = default!;
+    private UnidadNegocio? entidadParaEliminar;
+    private string nombreRegion = "";
+    private Region regionEntity = new();
 
-    private string tituloPlural = "";
-    private string tituloSingular = "";
+    [Inject] private IUnidadNegocio repository { get; set; } = null!;
 
-    private readonly Dictionary<string, (string Singular, string Plural)> mapeoTitulos =
-    new(StringComparer.OrdinalIgnoreCase)
-        {
-        { "cargos", ("Cargo", "Cargos") },
-        { "claselibros", ("Clase Libro", "Clase Libros") },
-        { "empresas", ("Empresa", "Empresas") },
-        { "estatussociedad", ("Estatus Sociedad", "Estatus Sociedades") },
-        { "nombrediarios", ("Nombre Diario", "Nombre Diarios") },
-        { "regiones", ("Región", "Regiones") },
-        { "registros", ("Registro", "Registros") },
-        { "tipoasambleas", ("Tipo de Asamblea", "Tipos de Asambleas") },
-        { "tiporeformas", ("Tipo de Reforma", "Tipos de Reformas") },
-        { "tiposociedad", ("Tipo de Sociedad", "Tipos de Sociedades") }
-    };
-
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            // 1. Validar si el tipo existe en nuestro diccionario
-            if (!mapeoTitulos.ContainsKey(tipo))
-            {
-                await MostrarNotificacion("Tipo de entidad no válido: " + tipo, true);
-                // Opcional: Redirigir al home si el tipo no es válido
-                navManager.NavigateTo("/");
-                return;
-            }
-
-            // 2. Asignar los títulos correspondientes
-            var titulos = mapeoTitulos[tipo];
-            tituloSingular = titulos.Singular;
-            tituloPlural = titulos.Plural;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al validar el tipo: {ex.Message}");
-            await MostrarNotificacion("Error al validar el tipo: " + ex.Message, true);
-            return;
-        }
         await LoadGenericDataAsync();
     }
 
@@ -237,15 +202,21 @@
         cargando = true;
         try
         {
-            var repo = RepoFactory.GetRepository(tipo);
-            var method = repo.GetType().GetMethod("GetAllAsync");
-            var task = (Task)method!.Invoke(repo, null)!;
+            var repo = RepoFactory.GetRepository("regiones");
+            var method = repo.GetType().GetMethod("GetByIdAsync");
+            var task = (Task)method!.Invoke(repo, new object[] { int.Parse(id) })!;
             await task;
 
-            var resultProperty = task.GetType().GetProperty("Result");
-            var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+            dynamic resultRegiones = task.GetType().GetProperty("Result")?.GetValue(task)!;
+            regionEntity = resultRegiones != null ? new Region
+            {
+                Id = resultRegiones.Id,
+                Nombre = resultRegiones.Nombre
+            } : new Region();
 
-            Listgral = result.ToList();
+            nombreRegion = regionEntity?.Nombre ?? "Región desconocida";
+
+            Listgral = await repository.GetAllAsync();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -260,19 +231,15 @@
 
     private void AbrirModalNuevo()
     {
-        // Obtenemos el tipo real a través del Factory para instanciarlo
-        var repo = RepoFactory.GetRepository(tipo);
-        // IGenericRepository<TipoReal> -> sacamos el TipoReal
-        var entityType = repo.GetType().GetGenericArguments()[0];
-
-        entidadEditando = (IBaseEntity)Activator.CreateInstance(entityType)!;
+        entidadEditando = new ();
+        entidadEditando.Region = regionEntity;
         entidadEditando.CreateDate = DateTime.Now;
         entidadEditando.UpdateDate = DateTime.Now;
 
         mostrarModal = true;
     }
 
-    private void Editar(IBaseEntity item)
+    private void Editar(UnidadNegocio item)
     {
         entidadEditando = item;
         mostrarModal = true;
@@ -296,7 +263,6 @@
             {
                 int userid = int.Parse(useridaux.Value);
 
-                var repo = RepoFactory.GetRepository(tipo);
                 entidadEditando.UpdateDate = DateTime.Now;
                 entidadEditando.UpdateUserId = userid;
 
@@ -305,21 +271,19 @@
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
 
-                    var method = repo.GetType().GetMethod("AddAsync");
-                    await (Task)method!.Invoke(repo, new object[] { entidadEditando })!;
+                    await repository.AddAsync(entidadEditando);
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"{tituloSingular} guardado correctamente");
+                    await MostrarNotificacion($"Unidad de negocio guardada correctamente");
                 }
                 else
                 {
-                    var method = repo.GetType().GetMethod("Update");
-                    method!.Invoke(repo, new object[] { entidadEditando });
+                    repository.Update(entidadEditando);
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"{tituloSingular} actualizado correctamente");
+                    await MostrarNotificacion($"Unidad de negocio actualizado correctamente");
                 }
             }
         }
@@ -350,7 +314,7 @@
         }
     }
 
-    private void VerificarEliminar(IBaseEntity item)
+    private void VerificarEliminar(UnidadNegocio item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -365,17 +329,10 @@
         cargando = true;
         try
         {
-            // 1. Obtener repositorio
-            var repo = RepoFactory.GetRepository(tipo);
-
-            // 2. Invocar el método Delete(int id)
-            var method = repo.GetType().GetMethod("Delete");
-            method!.Invoke(repo, new object[] { entidadParaEliminar.Id });
-
-            // 3. Feedback y actualización
+            repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"{tituloSingular} eliminado correctamente");
+            await MostrarNotificacion($"Unidad de negocio eliminado correctamente");
         }
         catch (Exception ex)
         {
@@ -403,8 +360,8 @@
         StateHasChanged();
     }
 
-    private void VerUnidadNegocio(IBaseEntity region)
+    private void Regresar()
     {
-        navManager.NavigateTo($"/unidadesnegocio/{region.Id}");
+        navManager.NavigateTo("/administrar/regiones");
     }
 }

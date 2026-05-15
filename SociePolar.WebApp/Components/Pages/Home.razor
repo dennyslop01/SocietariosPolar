@@ -12,7 +12,7 @@ Welcome to your new app.
         {
             var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
             if (string.IsNullOrEmpty(useremailaux.Value))
-                NavManager.NavigateTo($"/authsessionuser");
+                navManager.NavigateTo($"/authsessionuser");
         }
     }
 }

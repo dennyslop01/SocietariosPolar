@@ -29,6 +29,8 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<IRepositoryFactory, RepositoryFactory>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUsuario, UsuarioRepository>();
+builder.Services.AddScoped<IUnidadNegocio, UnidadNegocioRepository>();
+
 
 
 builder.Services.AddCascadingAuthenticationState();

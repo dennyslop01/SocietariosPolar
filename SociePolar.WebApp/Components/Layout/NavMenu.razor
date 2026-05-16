@@ -99,11 +99,27 @@
         </MudMenu>
     }
 
-    <MudButton href="/"
-               Variant="Variant.Text"
-               Style="color: white; text-transform: none;">
-        <i class="bi bi-bezier m-2"></i> Societarios
-    </MudButton>
+    <MudMenu StartIcon="@Icons.Material.Filled.DeviceHub"
+        EndIcon="@Icons.Material.Filled.KeyboardArrowDown" 
+         Label="Sociedades"
+         Variant="Variant.Text"
+         Style="color: white; text-transform: none;">    
+    <!-- Opciones del menú desplegable -->
+    <ChildContent>
+        <MudMenuItem href="/sociedades">
+            <div style="font-size: 0.85rem;">
+                Sociedades Activas
+            </div>
+        </MudMenuItem>
+        
+        <MudMenuItem href="/sociedadesinactivas">
+            <div style="font-size: 0.85rem;">
+                Sociedades Inactivas
+            </div>
+        </MudMenuItem>
+    </ChildContent>
+</MudMenu>
+
 
     <MudSpacer />
     @* Botón alineado a la derecha con el valor de la variable *@

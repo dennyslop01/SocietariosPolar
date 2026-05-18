@@ -58,7 +58,6 @@ namespace SociePolar.Infrastructure.Repositories
             if(estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {entity.EstatusSociedadId} no existe.");
 
             var tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(entity.TipoSociedadActivaId);
-            if(tipoSociedadActiva == null) throw new Exception($"TipoSociedadActiva con ID {entity.TipoSociedadActivaId} no existe.");
 
             var moneda = await context.Set<Moneda>().FindAsync(entity.MonedaId);
             if(moneda == null) throw new Exception($"Moneda con ID {entity.MonedaId} no existe.");
@@ -103,7 +102,8 @@ namespace SociePolar.Infrastructure.Repositories
             context.Entry(newsociedad.Empresa).State = EntityState.Unchanged;
             context.Entry(newsociedad.TipoSociedad).State = EntityState.Unchanged;
             context.Entry(newsociedad.EstatusSociedad).State = EntityState.Unchanged;
-            context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Unchanged;
+            if (newsociedad.TipoSociedadActiva != null)
+                context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Unchanged;
             context.Entry(newsociedad.Moneda).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
@@ -112,7 +112,8 @@ namespace SociePolar.Infrastructure.Repositories
             context.Entry(newsociedad.Empresa).State = EntityState.Detached;
             context.Entry(newsociedad.TipoSociedad).State = EntityState.Detached;
             context.Entry(newsociedad.EstatusSociedad).State = EntityState.Detached;
-            context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Detached;
+            if (newsociedad.TipoSociedadActiva != null)
+                context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Detached;
             context.Entry(newsociedad.Moneda).State = EntityState.Detached;
         }
 

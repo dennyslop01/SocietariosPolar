@@ -136,8 +136,12 @@ namespace SociePolar.Infrastructure.Repositories
             var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(entity.EstatusSociedadId);
             if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {entity.EstatusSociedadId} no existe.");
 
-            var tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(entity.TipoSociedadActivaId);
-            if (tipoSociedadActiva == null) throw new Exception($"TipoSociedadActiva con ID {entity.TipoSociedadActivaId} no existe.");
+            TipoSociedadActiva tipoSociedadActiva = null;
+            if (entity.TipoSociedadActivaId != null)
+            {
+                tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(entity.TipoSociedadActivaId);
+                if (tipoSociedadActiva == null) throw new Exception($"TipoSociedadActiva con ID {entity.TipoSociedadActivaId} no existe.");
+            }
 
             var moneda = await context.Set<Moneda>().FindAsync(entity.MonedaId);
             if (moneda == null) throw new Exception($"Moneda con ID {entity.MonedaId} no existe.");
@@ -151,7 +155,9 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.NumeroSap = entity.NumeroSap;
             editsociedad.TipoSociedad = tipoSociedad;
             editsociedad.EstatusSociedad = estatusSociedad;
-            editsociedad.TipoSociedadActiva = tipoSociedadActiva;
+            if (entity.TipoSociedadActivaId != null)
+                editsociedad.TipoSociedadActiva = tipoSociedadActiva;
+
             editsociedad.Objeto = entity.Objeto;
             editsociedad.Domicilio = entity.Domicilio;
             editsociedad.DireccionFiscal = entity.DireccionFiscal;

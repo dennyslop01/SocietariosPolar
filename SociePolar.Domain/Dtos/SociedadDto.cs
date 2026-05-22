@@ -55,9 +55,9 @@ namespace SociePolar.Domain.Dtos
         public string? Observaciones { get; set; }
         public string? Rif { get; set; }
         public string? Nit { get; set; }
-        public DateTime CreateDate { get; set; }
-        public DateTime UpdateDate { get; set; }
-        public int CreateUserId { get; set; }
-        public int UpdateUserId { get; set; }
+        public DateTime? CreateDate { get; set; }
+        public DateTime? UpdateDate { get; set; }
+        public int? CreateUserId { get; set; }
+        public int? UpdateUserId { get; set; }
     }
 }

@@ -25,7 +25,178 @@
         </div>
 
         <div class="card-body">
-            
+            <!-- Contenedor principal centrado que limita el ancho máximo en pantallas grandes -->
+            <div class="row justify-content-center">
+                <div class="col-xl-9 col-lg-10 col-md-12">
+                    <div class="row">
+                        <!-- Región -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Región</label>
+                            <label class="form-label text-secondary small">@entidadActual.Region?.Nombre</label>
+                        </div>
+
+                        <!-- Unidad de Negocio -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Unidad de Negocio</label>
+                            <label class="form-label text-secondary small">@entidadActual.UnidadNegocio?.Nombre</label>
+                        </div>
+
+                        <!-- Nombre de Sociedad -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Nombre de Sociedad</label>
+                            <label class="form-label text-secondary small">@entidadActual.Empresa?.Nombre</label>
+                        </div>
+
+                        <!-- Moneda de la Sociedad -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Moneda de la Sociedad</label>
+                            <label class="form-label text-secondary small">@entidadActual.Moneda?.Nombre</label>
+                        </div>
+
+                        <!-- Número SAP -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Número SAP</label>
+                            <label class="form-label text-secondary small">@entidadActual.NumeroSap</label>
+                        </div>
+
+                        <!-- Sociedad -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Sociedad</label>
+                            <label class="form-label text-secondary small">@entidadActual.TipoSociedad?.Nombre</label>
+                        </div>
+
+                        <!-- Estatus de la Sociedad -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Estatus de la Sociedad</label>
+                            <label class="form-label text-secondary small">@entidadActual.EstatusSociedad?.Nombre</label>
+                        </div>
+
+                        @if (entidadActual.EstatusSociedad?.Id == 1)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small d-block">Tipo de Sociedad Activa</label>
+                                <label class="form-label text-secondary small">@entidadActual.TipoSociedadActiva?.Nombre</label>
+                            </div>
+                        }
+
+                        <div class="col-12"><hr /></div>
+
+                        <!-- Objeto de la Sociedad (varchar max) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Objeto de la Sociedad</label>
+                            <label class="form-label text-secondary small text-break">@entidadActual.Objeto</label>
+                        </div>
+
+                        <div class="col-12"><hr /></div>
+
+                        <!-- Domicilio (varchar max) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Domicilio</label>
+                            <label class="form-label text-secondary small text-break">@entidadActual.Domicilio</label>
+                        </div>
+
+                        <!-- Dirección Fiscal (varchar max) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Dirección Fiscal</label>
+                            <label class="form-label text-secondary small text-break">@entidadActual.DireccionFiscal</label>
+                        </div>
+
+                        <!-- Datos de constitución (varchar max) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Datos de constitución</label>
+                            <label class="form-label text-secondary small text-break">@entidadActual.DatosConstitucion</label>
+                        </div>
+
+                        <!-- Fecha de Constitución -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Constitución</label>
+                            <label class="form-label text-secondary small">@entidadActual.FechaConstitucion?.ToString("yyyy-MM-dd")</label>
+                        </div>
+
+                        <!-- Fecha de Vencimiento -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento</label>
+                            <label class="form-label text-secondary small">@entidadActual.FechaVencimiento?.ToString("yyyy-MM-dd")</label>
+                        </div>
+
+                        <!-- Duración -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Duración</label>
+                            <label class="form-label text-secondary small">@entidadActual.Duracion</label>
+                        </div>
+
+                        <!-- Número Acciones -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Número Acciones</label>
+                            <label class="form-label text-secondary small">@entidadActual.NumeroAcciones</label>
+                        </div>
+
+                        <!-- ¿Aplica Capital? -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">¿Aplica Capital?</label>
+                            <label class="form-label text-secondary small">@((entidadActual.AplicaCapital == 1) ? "Sí aplica" : "No aplica")</label>
+                        </div>
+
+                        @if (entidadActual.AplicaCapital == 1)
+                        {
+                            <!-- Capital Suscrito -->
+                            <div class="col-md-6 mb-3 animate__animated animate__fadeIn">
+                                <label class="form-label fw-bold text-secondary small d-block">Capital Suscrito</label>
+                                <label class="form-label text-secondary small">@entidadActual.CapitalSuscrito</label>
+                            </div>
+
+                            <!-- Capital Pagado -->
+                            <div class="col-md-6 mb-3 animate__animated animate__fadeIn">
+                                <label class="form-label fw-bold text-secondary small d-block">Capital Pagado</label>
+                                <label class="form-label text-secondary small">@entidadActual.CapitalPagado</label>
+                            </div>
+                        }
+
+                        <!-- Clase de Acciones -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Clase de Acciones</label>
+                            <label class="form-label text-secondary small">@entidadActual.ClaseAcciones</label>
+                        </div>
+
+                        <!-- Forma de Administración -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Forma de Administración</label>
+                            <label class="form-label text-secondary small">@entidadActual.FormaAdministracion</label>
+                        </div>
+
+                        <!-- Ejercicio Económico -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Ejercicio Económico</label>
+                            <label class="form-label text-secondary small">@entidadActual.EjercicioEconomico</label>
+                        </div>
+
+                        <!-- Número de Expediente -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Número de Expediente</label>
+                            <label class="form-label text-secondary small">@entidadActual.NumeroExpediente</label>
+                        </div>
+
+                        <!-- Observaciones (varchar max) -->
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Observaciones</label>
+                            <label class="form-label text-secondary small text-break">@entidadActual.Observaciones</label>
+                        </div>
+
+                        <!-- Rif -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Rif</label>
+                            <label class="form-label text-secondary small">@entidadActual.Rif</label>
+                        </div>
+
+                        <!-- Nit -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Nit</label>
+                            <label class="form-label text-secondary small">@entidadActual.Nit</label>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -73,10 +244,52 @@
     private bool mostrarAlerta = false;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
+    private Sociedad entidadActual = new();
+
+    [Inject] private ISociedad repository { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+
+        if (id != "0")
+        {
+            await LoadGenericDataAsync();
+        }
+        else
+        {
+            await MostrarNotificacion("No se proporcionó un ID válido", true);
+        }
+        cargando = false;
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            entidadActual = await repository.GetByIdAsync(int.Parse(id));
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("No se pudieron cargar los datos", true);
+        }
+    }
 
 
 
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
 
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
 
     private void Regresar()
     {

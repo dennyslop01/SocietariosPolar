@@ -750,6 +750,13 @@
             entidadEditando.RegionId = idSeleccionado;
         }
 
+        // Identificamos el campo modificado
+        var fieldId = new FieldIdentifier(entidadEditando, nameof(entidadEditando.RegionId));
+
+        // IMPORTANTE: Le avisamos al EditContext que valide este campo justo ahora
+        editContext?.NotifyFieldChanged(fieldId);
+
+        // Tu lógica de filtrado existente
         if (entidadEditando.RegionId > 0)
         {
             listUnidadFiltrado = listUnidad.Where(u => u.Region.Id == entidadEditando.RegionId).ToList();
@@ -758,7 +765,9 @@
         {
             listUnidadFiltrado = new List<UnidadNegocio>();
         }
-        StateHasChanged();
+
+        // Forzamos el refresco visual de la UI
+        editContext?.NotifyValidationStateChanged();
     }
 
     private void OnEstatusChanged(ChangeEventArgs e)

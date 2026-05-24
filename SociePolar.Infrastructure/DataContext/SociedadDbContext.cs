@@ -20,6 +20,7 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Sociedad> Sociedades { get; set; }
         public DbSet<Moneda> Monedas { get; set; }
+        public DbSet<Autoridad> Autoridades { get; set; }
 
     }
 }

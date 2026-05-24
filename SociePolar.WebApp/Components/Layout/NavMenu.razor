@@ -99,27 +99,62 @@
         </MudMenu>
     }
 
-    <MudMenu StartIcon="@Icons.Material.Filled.DeviceHub"
-        EndIcon="@Icons.Material.Filled.KeyboardArrowDown" 
-         Label="Sociedades"
-         Variant="Variant.Text"
-         Style="color: white; text-transform: none;">    
-    <!-- Opciones del menú desplegable -->
-    <ChildContent>
-        <MudMenuItem href="/sociedades">
-            <div style="font-size: 0.85rem;">
-                Sociedades Activas
-            </div>
-        </MudMenuItem>
-        
-        <MudMenuItem href="/sociedadesinactivas">
-            <div style="font-size: 0.85rem;">
-                Sociedades Inactivas
-            </div>
-        </MudMenuItem>
-    </ChildContent>
-</MudMenu>
+    <MudMenu Label="Sociedades"
+             Variant="Variant.Text"
+             Dense="true"
+             Padding="false"
+             Style="color: white; text-transform: none;"
+             StartIcon="@Icons.Material.Filled.DeviceHub"
+             EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+             AnchorOrigin="Origin.BottomLeft"
+             TransformOrigin="Origin.TopLeft">
+        <ChildContent>
+            <MudMenu Label="Activas"
+                     Variant="Variant.Text"
+                     Dense="true"
+                     Padding="false"
+                     Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
+                     EndIcon="@Icons.Material.Filled.ChevronRight"
+                     AnchorOrigin="Origin.TopRight"
+                     TransformOrigin="Origin.TopLeft">
+                <ChildContent>
+                    <MudMenuItem href="/sociedades">
+                        <div style="font-size: 0.85rem;">
+                            Ficha Sociedad
+                        </div>
+                    </MudMenuItem>
+                    <MudMenuItem href="/autoridades">
+                        <div style="font-size: 0.85rem;">
+                            Autoridades
+                        </div>
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+            <MudDivider />
 
+            <MudMenu Label="Inctivas"
+                     Variant="Variant.Text"
+                     Dense="true"
+                     Padding="false"
+                     Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
+                     EndIcon="@Icons.Material.Filled.ChevronRight"
+                     AnchorOrigin="Origin.TopRight"
+                     TransformOrigin="Origin.TopLeft">
+                <ChildContent>
+                    <MudMenuItem href="/sociedadesinactivas">
+                        <div style="font-size: 0.85rem;">
+                            Ficha Sociedad
+                        </div>
+                    </MudMenuItem>
+                    <MudMenuItem href="/asambleas">
+                        <div style="font-size: 0.85rem;">
+                            Asambleas
+                        </div>
+                    </MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </ChildContent>
+    </MudMenu>
 
     <MudSpacer />
     @* Botón alineado a la derecha con el valor de la variable *@

@@ -90,10 +90,10 @@ namespace SociePolar.Infrastructure.Repositories
                 Observaciones = entity.Observaciones,
                 Rif = entity.Rif,
                 Nit = entity.Nit,
-                CreateDate = DateTime.UtcNow, // Asignar la fecha actual
-                UpdateDate = DateTime.UtcNow, // Asignar la fecha actual
-                CreateUserId = 1, // Asignar un ID de usuario predeterminado o dinámico
-                UpdateUserId = 1  // Asignar un ID de usuario predeterminado o dinámico
+                CreateDate = DateTime.UtcNow,
+                UpdateDate = DateTime.UtcNow,
+                CreateUserId = entity.CreateUserId ?? 0,
+                UpdateUserId = entity.UpdateUserId ?? 0
             };
 
             await context.Set<Sociedad>().AddAsync(newsociedad);
@@ -177,6 +177,8 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.Observaciones = entity.Observaciones;
             editsociedad.Rif = entity.Rif;
             editsociedad.Nit = entity.Nit;
+            editsociedad.UpdateDate = DateTime.UtcNow;
+            editsociedad.UpdateUserId = entity.UpdateUserId ?? 0;
 
             context.Set<Sociedad>().Update(editsociedad);
             context.SaveChanges();

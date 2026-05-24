@@ -20,7 +20,6 @@
                         style="height: 32px; font-weight: 500;">
                     <i class="bi bi-arrow-return-left me-2"></i> Regresar
                 </button>
-
             </div>
         </div>
 
@@ -199,7 +198,36 @@
             </div>
         </div>
     </div>
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-bezier text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Autoridades
+                    </h5>
+                </div>
+            </div>
+        </div>
 
+        <div class="card-body">
+            <!-- Contenedor principal centrado que limita el ancho máximo en pantallas grandes -->
+            <div class="row justify-content-center">
+                <div class="col-xl-9 col-lg-10 col-md-12">
+                    <div class="row">
+                        <!-- Región -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Región</label>
+                            <label class="form-label text-secondary small">@entidadActual.Region?.Nombre</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     @if (mostrarAlerta)
     {
         <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">

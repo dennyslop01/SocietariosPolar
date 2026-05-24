@@ -32,6 +32,7 @@ builder.Services.AddScoped<IUsuario, UsuarioRepository>();
 builder.Services.AddScoped<IUnidadNegocio, UnidadNegocioRepository>();
 builder.Services.AddScoped<IMoneda, MonedaRepository>();
 builder.Services.AddScoped<ISociedad, SociedadRepository>();
+builder.Services.AddScoped<IAutoridad, AutoridadRepository>();
 
 
 

@@ -42,13 +42,13 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="fw-medium" style="width: 25%;">@p.Email</td>
-                            <td class="fw-medium" style="width: 10%;">
+                            <td class="text-start text-secondary small" style="width: 25%; text-align: left !important;">@p.Email</td>
+                            <td class="text-start text-secondary small" style="width: 10%; text-align: left !important;">
                                 @(ListaRoles.FirstOrDefault(r => r.Id == p.IdRol)?.Nombre ?? p.IdRol.ToString())
                             </td>
 
                             <!-- Columna Estatus: Busca el nombre basado en el Estatus -->
-                            <td class="fw-medium" style="width: 10%;">
+                            <td class="text-start text-secondary small" style="width: 10%;">
                                 @(ListaEstatus.FirstOrDefault(e => e.Id == p.Estatus)?.Nombre ?? p.Estatus.ToString())
                             </td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>

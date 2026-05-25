@@ -15,6 +15,7 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Autoridad>()
                 .Include(b => b.Sociedad)
+                .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Cargo)
                 .ToListAsync();
         }
@@ -24,10 +25,23 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Autoridad>()
                 .Include(b => b.Sociedad)
+                .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Cargo)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<List<Autoridad>> GetBySociedadIdAsync(int sociedadId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<Autoridad>()
+                .Include(b => b.Sociedad)
+                .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Cargo)
+                .Where(x => x.Sociedad.Id == sociedadId)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(AutoridadDto entity)
         {
             using var context = await _contextFactory.CreateDbContextAsync();

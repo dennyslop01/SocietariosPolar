@@ -59,8 +59,8 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="fw-medium" style="width: 45%;">@p.Nombre</td>
-                            @* Añadimos text-center para que coincida con el título de arriba *@
+                            <td class="text-start text-secondary small" style="width: 45%;">@p.Nombre</td>
+                            @* Añadimos text-start para que coincida con el título de arriba *@
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">

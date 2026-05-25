@@ -47,12 +47,10 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Duración</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.Duracion"
-                                   placeholder="Ingrese la duración..."
-                                   maxlength="2"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                            <InputNumber class="form-control form-control-sm small"
+                                         @bind-Value="entidadEditando.Duracion"
+                                         placeholder="Ingrese la duración..."
+                                         maxlength="2" />
                             <ValidationMessage For="@(() => entidadEditando.Duracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -81,6 +79,7 @@
                                        @onchange="@(() => entidadEditando.TipoDocumento = "E")">
                                 <label class="form-check-label small text-secondary" for="inlineRadio2">E</label>
                             </div>
+                            <ValidationMessage For="@(() => entidadEditando.TipoDocumento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -88,9 +87,13 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Documento"
                                    placeholder="Ingrese número de documento..."
-                                   maxlength="15"
+                                   maxlength="9"
                                    inputmode="numeric"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                            <ValidationMessage For="@(() => entidadEditando.Documento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
                         </div>
                     </div>
                 </div>
@@ -142,6 +145,7 @@
     private AutoridadDto entidadEditando = new();
 
     private List<Sociedad> listSociedad = new();
+    private List<Autoridad> listAutoridad = new();
 
     private List<IBaseEntity> listCargos = new();
     private List<IBaseEntity> listCargosFiltrado = new();
@@ -234,6 +238,8 @@
 
             var listSociedades = await reposociedad.GetAllAsync();
             listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+
+            listAutoridad = await repository.GetAllAsync();
         }
         catch (Exception ex)
         {
@@ -248,12 +254,14 @@
 
     private async Task GuardarCambios()
     {
-        cargando = true;
+        mensajeAlerta = string.Empty;
+
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
         {
             StateHasChanged();
+            cargando = false;
             return;
         }
 
@@ -269,6 +277,14 @@
 
                 if (entidadEditando.Id == 0)
                 {
+                    var existeAutoSociedad = listAutoridad.Any(x => x.Cargo.Id == entidadEditando.CargoId && x.Sociedad.Id == entidadEditando.SociedadId);
+                    if (existeAutoSociedad)
+                    {
+                        mensajeAlerta = "Ya existe esta autoridad para esta sociedad";
+                        await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
+                        return;
+                    }
+                    cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
 
@@ -280,6 +296,7 @@
                 }
                 else
                 {
+                    cargando = true;
                     repository.Update(entidadEditando);
 
                     await LoadGenericDataAsync();

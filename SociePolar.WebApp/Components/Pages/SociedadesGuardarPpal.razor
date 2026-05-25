@@ -301,7 +301,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Rif"
                                    placeholder="Ingrese el rif..."
-                                   maxlength="10"
+                                   maxlength="9"
                                    inputmode="text" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -309,7 +309,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Nit"
                                    placeholder="Ingrese el nit..."
-                                   maxlength="10"
+                                   maxlength="9"
                                    inputmode="text" />
                         </div>
                     </div>
@@ -519,6 +519,7 @@
         if (!formularioValido)
         {
             StateHasChanged();
+            cargando = false;
             return;
         }
 

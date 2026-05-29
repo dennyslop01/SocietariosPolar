@@ -41,19 +41,20 @@
     {
         try
         {
-            //var authState = await authStateProvider.GetAuthenticationStateAsync();
-            //var user = authState.User;
-            //userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-            if(!string.IsNullOrEmpty(userEmail))
-            {
-                await LoadAdminDataAsync();
-            }            
+            // var authState = await authStateProvider.GetAuthenticationStateAsync();
+            // var user = authState.User;
+            // userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            // if(!string.IsNullOrEmpty(userEmail))
+            // {
+            //     await LoadAdminDataAsync();
+            // }            
         }
         catch (Exception ex)
         {
             // Manejo de errores (opcional)
             Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
         }
+        await Task.CompletedTask;
     }
 
     private async Task LoadAdminDataAsync()

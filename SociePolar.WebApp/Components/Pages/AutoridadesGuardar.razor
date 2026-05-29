@@ -19,7 +19,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Sociedad</label>
-                            <select class="form-select form-select-sm" @bind="entidadEditando.SociedadId">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.SociedadId">
                                 <option value="0">Seleccione ...</option>
                                 @if (listSociedad != null)
                                 {
@@ -28,12 +28,12 @@
                                         <option value="@sociedad.Id">@sociedad.Empresa.Nombre</option>
                                     }
                                 }
-                            </select>
+                            </InputSelect>
                             <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Cargo</label>
-                            <select class="form-select form-select-sm" @bind="entidadEditando.CargoId">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.CargoId">
                                 <option value="0" selected>Seleccione ...</option>
                                 @if (listCargos != null)
                                 {
@@ -42,7 +42,7 @@
                                         <option value="@cargo.Id">@cargo.Nombre</option>
                                     }
                                 }
-                            </select>
+                            </InputSelect>
                             <ValidationMessage For="@(() => entidadEditando.CargoId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -55,8 +55,8 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Nombre</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.Nombre"
+                            <InputText type="text" class="form-control form-control-sm small"
+                                   @bind-Value="entidadEditando.Nombre"
                                    placeholder="Ingrese nombre..."
                                    maxlength="150" />
                             <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
@@ -84,8 +84,8 @@
 
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Número Documento</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.Documento"
+                            <InputText type="text" class="form-control form-control-sm small"
+                                   @bind-Value="entidadEditando.Documento"
                                    placeholder="Ingrese número de documento..."
                                    maxlength="9"
                                    inputmode="numeric"
@@ -277,13 +277,13 @@
 
                 if (entidadEditando.Id == 0)
                 {
-                    var existeAutoSociedad = listAutoridad.Any(x => x.Cargo.Id == entidadEditando.CargoId && x.Sociedad.Id == entidadEditando.SociedadId);
-                    if (existeAutoSociedad)
-                    {
-                        mensajeAlerta = "Ya existe esta autoridad para esta sociedad";
-                        await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
-                        return;
-                    }
+                    // var existeAutoSociedad = listAutoridad.Any(x => x.Cargo.Id == entidadEditando.CargoId && x.Sociedad.Id == entidadEditando.SociedadId);
+                    // if (existeAutoSociedad)
+                    // {
+                    //     mensajeAlerta = "Ya existe esta autoridad para esta sociedad";
+                    //     await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
+                    //     return;
+                    // }
                     cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;

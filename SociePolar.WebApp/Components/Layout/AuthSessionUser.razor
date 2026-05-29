@@ -1,6 +1,46 @@
 ﻿@page "/authsessionuser"
 @rendermode InteractiveServer
 
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-gear-fill text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Cargar Datos del Usuario
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-body">
+            <!-- Buscador Global por Nombre -->
+            <div class="row mb-3">
+            </div>
+            <div class="table-responsive">
+                @usuario
+                @mensajeAlerta
+            </div>
+        </div>
+    </div>
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
 @if (cargando)
 {
     <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
@@ -23,14 +63,16 @@
     </div>
 }
 
-
-
-
 @code {
     private string? userEmail = "nadia.brito@empresaspolar.com";
     string nombre = string.Empty;
     string apellido = string.Empty;
     bool cargando =  false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private string usuario = string.Empty;
 
     [Inject] private IUsuario repousuario { get; set; } = null!;
 
@@ -55,7 +97,8 @@
         {
             var authState = await authStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            //userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            usuario = user.Identity?.Name ?? "Usuario Desconocido";
+            userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             nombre = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
             apellido = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
 
@@ -64,9 +107,14 @@
             {
                 await LoadUserDataAsync();
             }
+            else
+            {
+                MostrarNotificacion($"Bienvenido {nombre} {apellido}!", esError: false);
+            }
         }
         catch (Exception ex)
         {
+            await MostrarNotificacion($"Error al cargar datos del usuario {usuario}. Por favor, inténtalo de nuevo. {ex.Message.ToString()}", esError: true);
             // Manejo de errores (opcional)
             Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
         }
@@ -80,8 +128,8 @@
             var usuario = await repousuario.GetByEmailAsync(userEmail);
             if (usuario == null)
             {
+                await MostrarNotificacion(mensajeAlerta = $"Usuario con email {userEmail} no encontrado.", esError: true);
                 Console.WriteLine($"Usuario con email {userEmail} no encontrado.");
-                return;
             }
             await SessionStorage.SetAsync("UserEmail", usuario.Email.ToString());
             await SessionStorage.SetAsync("UserId", usuario.Id.ToString());
@@ -92,8 +140,24 @@
         }
         catch (Exception ex)
         {
+            await MostrarNotificacion($"Error al cargar datos del usuario {usuario}. Por favor, inténtalo de nuevo. {ex.Message.ToString()}", esError: true);
             // Manejo de errores (opcional)
             Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
         }
     }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
 }

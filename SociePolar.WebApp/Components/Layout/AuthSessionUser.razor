@@ -2,32 +2,6 @@
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
-    <div class="card shadow-sm border-0 h-auto">
-        <div class="card-header bg-white py-3">
-            <div class="d-flex align-items-center justify-content-between">
-                <!-- Parte Izquierda: Icono y Título -->
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
-                        <i class="bi bi-gear-fill text-white fs-5"></i>
-                    </div>
-                    <h5 class="mb-0 fw-bold text-dark">
-                        Cargar Datos del Usuario
-                    </h5>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="card-body">
-            <!-- Buscador Global por Nombre -->
-            <div class="row mb-3">
-            </div>
-            <div class="table-responsive">
-                @usuario
-                @mensajeAlerta
-            </div>
-        </div>
-    </div>
     @if (mostrarAlerta)
     {
         <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
@@ -98,9 +72,10 @@
             var authState = await authStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             usuario = user.Identity?.Name ?? "Usuario Desconocido";
-            userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-            nombre = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
-            apellido = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+            userEmail = user.Identity?.Name ?? "Usuario Desconocido";
+            // userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            // nombre = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
+            // apellido = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
 
             var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
             if (string.IsNullOrEmpty(useremailaux.Value))

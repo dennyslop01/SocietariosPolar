@@ -73,9 +73,6 @@
             var user = authState.User;
             usuario = user.Identity?.Name ?? "Usuario Desconocido";
             userEmail = user.Identity?.Name ?? "Usuario Desconocido";
-            // userEmail = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-            // nombre = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
-            // apellido = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
 
             var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
             if (string.IsNullOrEmpty(useremailaux.Value))

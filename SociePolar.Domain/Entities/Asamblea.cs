@@ -10,11 +10,12 @@
         public DateTime FechaRegistro { get; set; }
         public Registro? Registro { get; set; }
         public int NumeroRegistro { get; set; }
-        public int Tomo { get; set; }
+        public string Tomo { get; set; }
         public int AnoPublicacion { get; set; }
         public DateTime FechaPublicacion { get; set; }
         public int NumeroPublicacion { get; set; }
         public NombreDiario NombreDiario { get; set; }
+        public int IndicadorAsamblea { get; set; }
         public int AplicaReforma { get; set; }
         public TipoReforma TipoReforma { get; set; }
         public DateTime CreateDate { get; set; }

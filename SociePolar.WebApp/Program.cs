@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using SociePolar.Application.Interfaces;
 using SociePolar.Infrastructure.DataContext;
 using SociePolar.Infrastructure.Repositories;
 using SociePolar.WebApp.Components;
-using Microsoft.AspNetCore.Authentication.Negotiate;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,9 @@ builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => { options.DetailedErrors = true; });
 
 builder.Services.AddDbContextFactory<SociedadDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConn")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConn"))
+           .EnableSensitiveDataLogging()
+           .EnableDetailedErrors());
 
 builder.Services.AddDistributedMemoryCache(); // Requerido para almacenar la sesión en memoria
 builder.Services.AddSession(options =>

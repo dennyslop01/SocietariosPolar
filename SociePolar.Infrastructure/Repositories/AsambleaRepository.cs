@@ -16,6 +16,7 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<Asamblea>()
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Sociedad.EstatusSociedad)
                 .Include(b => b.TipoAsamblea)
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
@@ -29,6 +30,7 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<Asamblea>()
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Sociedad.EstatusSociedad)
                 .Include(b => b.TipoAsamblea)
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
@@ -43,6 +45,7 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<Asamblea>()
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Sociedad.EstatusSociedad)
                 .Include(b => b.TipoAsamblea)
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
@@ -67,8 +70,7 @@ namespace SociePolar.Infrastructure.Repositories
             var nombreDiario = await context.Set<NombreDiario>().FindAsync(entity.NombreDiarioId);
             if (nombreDiario == null) throw new Exception($"NombreDiario con ID {entity.NombreDiarioId} no existe.");
 
-
-            TipoReforma tipoReforma = new();
+            TipoReforma? tipoReforma = null;
             if (entity.AplicaReforma == 1)
             {
                 tipoReforma = await context.Set<TipoReforma>().FindAsync(entity.TipoReformaId);
@@ -79,18 +81,18 @@ namespace SociePolar.Infrastructure.Repositories
             {
                 Sociedad = sociedad,
                 TipoAsamblea = tipoAsamblea,
-                FechaCelebracion = entity.FechaCelebracion.Value,
-                NumeroActa = entity.NumeroActa.Value,
-                FechaRegistro = entity.FechaRegistro.Value,
+                FechaCelebracion = entity.FechaCelebracion,
+                NumeroActa = entity.NumeroActa,
+                FechaRegistro = entity.FechaRegistro,
                 Registro = registro,
-                NumeroRegistro = entity.NumeroRegistro.Value,
+                NumeroRegistro = entity.NumeroRegistro,
                 Tomo = entity.Tomo,
-                AnoPublicacion = entity.AnoPublicacion.Value,
-                NumeroPublicacion = entity.NumeroPublicacion.Value,
-                FechaPublicacion = entity.FechaPublicacion.Value,
+                AnoPublicacion = entity.AnoPublicacion,
+                NumeroPublicacion = entity.NumeroPublicacion,
+                FechaPublicacion = entity.FechaPublicacion,
                 NombreDiario = nombreDiario,
-                IndicadorAsamblea = 1,
-                AplicaReforma = entity.AplicaReforma.Value,
+                IndicadorAsamblea = entity.IndicadorAsamblea,
+                AplicaReforma = entity.AplicaReforma,
                 TipoReforma = tipoReforma,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
@@ -99,17 +101,26 @@ namespace SociePolar.Infrastructure.Repositories
             };
 
             await context.Set<Asamblea>().AddAsync(newAsamblea);
+
+            // Cambiar estados a Unchanged para evitar duplicados en tablas maestras
+            context.Entry(newAsamblea.Sociedad).State = EntityState.Unchanged;
             context.Entry(newAsamblea.TipoAsamblea).State = EntityState.Unchanged;
             context.Entry(newAsamblea.Registro).State = EntityState.Unchanged;
             context.Entry(newAsamblea.NombreDiario).State = EntityState.Unchanged;
-            context.Entry(newAsamblea.TipoReforma).State = EntityState.Unchanged;
+
+            if (tipoReforma != null)
+                context.Entry(tipoReforma).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
+            context.Entry(newAsamblea.Sociedad).State = EntityState.Detached;
             context.Entry(newAsamblea.TipoAsamblea).State = EntityState.Detached;
             context.Entry(newAsamblea.Registro).State = EntityState.Detached;
             context.Entry(newAsamblea.NombreDiario).State = EntityState.Detached;
-            context.Entry(newAsamblea.TipoReforma).State = EntityState.Detached;
+
+            if (tipoReforma != null)
+                context.Entry(tipoReforma).State = EntityState.Detached;
         }
+
 
         public async void Update(AsambleaDto entity)
         {
@@ -127,7 +138,7 @@ namespace SociePolar.Infrastructure.Repositories
             var nombreDiario = await context.Set<NombreDiario>().FindAsync(entity.NombreDiarioId);
             if (nombreDiario == null) throw new Exception($"NombreDiario con ID {entity.NombreDiarioId} no existe.");
 
-            TipoReforma tipoReforma = new();
+            TipoReforma tipoReforma = null;
             if (entity.AplicaReforma == 1)
             {
                 tipoReforma = await context.Set<TipoReforma>().FindAsync(entity.TipoReformaId);
@@ -139,17 +150,17 @@ namespace SociePolar.Infrastructure.Repositories
 
             editAsamblea.Sociedad = sociedad;
             editAsamblea.TipoAsamblea = tipoAsamblea;
-            editAsamblea.FechaCelebracion = entity.FechaCelebracion.Value;
-            editAsamblea.NumeroActa = entity.NumeroActa.Value;
-            editAsamblea.FechaRegistro = entity.FechaRegistro.Value;
+            editAsamblea.FechaCelebracion = entity.FechaCelebracion;
+            editAsamblea.NumeroActa = entity.NumeroActa;
+            editAsamblea.FechaRegistro = entity.FechaRegistro;
             editAsamblea.Registro = registro;
-            editAsamblea.NumeroRegistro = entity.NumeroRegistro.Value;
+            editAsamblea.NumeroRegistro = entity.NumeroRegistro;
             editAsamblea.Tomo = entity.Tomo;
-            editAsamblea.AnoPublicacion = entity.AnoPublicacion.Value;
-            editAsamblea.NumeroPublicacion = entity.NumeroPublicacion.Value;
-            editAsamblea.FechaPublicacion = entity.FechaPublicacion.Value;
+            editAsamblea.AnoPublicacion = entity.AnoPublicacion;
+            editAsamblea.NumeroPublicacion = entity.NumeroPublicacion;
+            editAsamblea.FechaPublicacion = entity.FechaPublicacion;
             editAsamblea.NombreDiario = nombreDiario;
-            editAsamblea.AplicaReforma =  entity.AplicaReforma.Value;
+            editAsamblea.AplicaReforma =  entity.AplicaReforma;
             editAsamblea.TipoReforma = tipoReforma;
             editAsamblea.UpdateDate = DateTime.UtcNow;
             editAsamblea.UpdateUserId = entity.UpdateUserId;

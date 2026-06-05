@@ -44,7 +44,7 @@
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Reforma</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Asamblea</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha Celebración</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha Registro</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Registro</th>
@@ -64,7 +64,7 @@
                             // 2. Ruptura para Cargo (Se dispara si es una nueva sociedad O si dentro de la misma sociedad cambia el cargo)
                             bool esNuevoCargo = index == 0 ||
                             esNuevaSociedad ||
-                            Listgral[index - 1].TipoReforma?.Nombre != p.TipoReforma?.Nombre;
+                            Listgral[index - 1].TipoAsamblea?.Nombre != p.TipoAsamblea?.Nombre;
                         }
 
                         @if (esNuevaSociedad)
@@ -86,7 +86,7 @@
 
                                 <!-- Celda del cargo que hereda el ancho exacto (15%) y se resalta -->
                                 <td class="text-start text-dark py-2" style="width: 15%; font-size: 0.85rem; letter-spacing: 0.3px;">
-                                    📌 @p.TipoReforma?.Nombre
+                                    📌 @p.TipoAsamblea?.Nombre
                                 </td>
 
                                 <!-- Celdas vacías para rellenar las 6 columnas restantes de la cuadrícula -->
@@ -98,8 +98,8 @@
                             <td class="text-muted small ps-3" style="width: 20%;">-</td>
                             <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
                             <td class="text-start text-muted small" style="width: 10%; font-style: italic;">↳</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.FechaCelebracion.ToShortDateString()</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.FechaRegistro.ToShortDateString()</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 20%;">@p.Registro.Nombre</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@p.NumeroRegistro</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@p.Tomo</td>
@@ -209,7 +209,7 @@
         try
         {
             var listAsamblea = await repository.GetAllAsync();
-            Listgral = listAsamblea.OrderBy(x => x.Sociedad.Empresa.Id).Where(x => x.Sociedad.EstatusSociedad.Id == 1).ToList();
+            Listgral = listAsamblea.OrderBy(x => x.Sociedad?.Empresa?.Id).Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)

@@ -47,27 +47,7 @@ namespace SociePolar.Domain.Dtos
 
         [Required(ErrorMessage = "Aplica Reforma es requerido.")]
         public int? AplicaReforma { get; set; }
-
-        // Quitamos el [Range] de aquí para que no valide siempre
         public int? TipoReformaId { get; set; }
-
-        // Agregamos la lógica de validación condicional aquí
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            // Si el usuario selecciona "Sí" (1)
-            if (AplicaReforma == 1)
-            {
-                // Validamos que el TipoReformaId sea mayor o igual a 1
-                if (!TipoReformaId.HasValue || TipoReformaId < 1)
-                {
-                    yield return new ValidationResult(
-                        "Debe seleccionar un Tipo de Reforma válido.",
-                        new[] { nameof(TipoReformaId) }
-                    );
-                }
-            }
-        }
-
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

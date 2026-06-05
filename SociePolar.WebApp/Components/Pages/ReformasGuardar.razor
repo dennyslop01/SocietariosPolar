@@ -9,7 +9,7 @@
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Asamblea" : "Modificar Asamblea")
+                        @(entidadEditando.Id == 0 ? "Agregar Reforma" : "Modificar Reforma")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
@@ -161,6 +161,7 @@
                                        id="reformaSi"
                                        class="form-check-input"
                                        value="1"
+                                       disabled
                                        checked="@(entidadEditando.AplicaReforma == 1)"
                                        @onchange="() => ActualizarReforma(1)" />
                                 <label class="form-check-label small text-secondary" for="reformaSi">Sí</label>
@@ -172,6 +173,7 @@
                                        id="reformaNo"
                                        class="form-check-input"
                                        value="0"
+                                       disabled
                                        checked="@(entidadEditando.AplicaReforma == 0)"
                                        @onchange="() => ActualizarReforma(0)" />
                                 <label class="form-check-label small text-secondary" for="reformaNo">No</label>
@@ -290,8 +292,8 @@
             entidadEditando.RegistroId = 0;
             entidadEditando.NombreDiarioId = 0;
             entidadEditando.TipoReformaId = 0;
-            entidadEditando.IndicadorAsamblea = 1;
-            entidadEditando.AplicaReforma = 0;
+            entidadEditando.IndicadorAsamblea = 0;
+            entidadEditando.AplicaReforma = 1;
             entidadEditando.CreateDate = DateTime.Now;
             entidadEditando.UpdateDate = DateTime.Now;
             editContext = new EditContext(entidadEditando);
@@ -317,7 +319,7 @@
                     NombreDiarioId = item.NombreDiario.Id,
                     NumeroPublicacion = item.NumeroPublicacion,
                     AplicaReforma = item.AplicaReforma,
-                    TipoReformaId = item.TipoReforma != null ? item.TipoReforma.Id : 0,                    
+                    TipoReformaId = item.TipoReforma != null ? item.TipoReforma.Id : 0,
                     CreateDate = item.CreateDate,
                     CreateUserId = item.CreateUserId,
                     UpdateDate = item.UpdateDate,
@@ -405,7 +407,8 @@
                 if (entidadEditando.AplicaReforma == 1)
                 {
                     if (entidadEditando.TipoReformaId == 0)
-                    {   mensajeAlerta = "Debe seleccionar el tipo de reforma";
+                    {
+                        mensajeAlerta = "Debe seleccionar el tipo de reforma";
                         await MostrarNotificacion("Debe seleccionar el tipo de reforma", true);
                         return;
                     }
@@ -461,7 +464,7 @@
     {
         entidadEditando.AplicaReforma = aplica;
 
-        if (aplica==0)
+        if (aplica == 0)
         {
             entidadEditando.TipoReformaId = null;
         }

@@ -1,4 +1,4 @@
-﻿@page "/autoridades"
+﻿@page "/certificaciones"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -11,7 +11,7 @@
                         <i class="bi bi-person-vcard text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Autoridades
+                        Certificaciones
                     </h5>
                 </div>
 
@@ -40,14 +40,13 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="Autoridad" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="Certificacion" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Ejercicio</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Cargo</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nombre</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Duración</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
@@ -56,15 +55,10 @@
                     <ChildContentRow Context="p">
                         @{
                             var index = Listgral.IndexOf(p);
-            
+
                             // 1. Ruptura para Sociedad
-                            bool esNuevaSociedad = index == 0 || 
-                                                   Listgral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
-            
-                            // 2. Ruptura para Cargo (Se dispara si es una nueva sociedad O si dentro de la misma sociedad cambia el cargo)
-                            bool esNuevoCargo = index == 0 || 
-                                                 esNuevaSociedad || 
-                                                 Listgral[index - 1].Cargo?.Nombre != p.Cargo?.Nombre;
+                            bool esNuevaSociedad = index == 0 ||
+                            Listgral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
                         }
 
                         @if (esNuevaSociedad)
@@ -77,30 +71,12 @@
                             </tr>
                         }
 
-                        @if (esNuevoCargo)
-                        {
-                            <!-- Fila divisoria de Cargo alineada estrictamente en su columna -->
-                            <tr class="align-middle border-bottom fw-bold" style="background-color: #fcfcfc;">
-                                <!-- Celda vacía para mantener el espacio de la columna Sociedad -->
-                                <td style="width: 20%;"></td> 
-                
-                                <!-- Celda del cargo que hereda el ancho exacto (15%) y se resalta -->
-                                <td class="text-start text-dark py-2" style="width: 15%; font-size: 0.85rem; letter-spacing: 0.3px;">
-                                    📌 @p.Cargo?.Nombre
-                                </td>
-                
-                                <!-- Celdas vacías para rellenar las 6 columnas restantes de la cuadrícula -->
-                                <td colspan="6"></td>
-                            </tr>
-                        }
-
                         <tr class="align-middle border-bottom">
                             <td class="text-muted small ps-3" style="width: 20%;">-</td>
                             <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
-                            <td class="text-start text-muted small" style="width: 15%; font-style: italic;">↳</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@(p.Duracion != null ? $"{p.Duracion} años" : "")</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Sociedad.EjercicioEconomico</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Fecha?.ToString("dd/MM/yyyy")</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Cargo?.Nombre</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
@@ -157,7 +133,7 @@
 
 @if (mostrarModal)
 {
-    <AutoridadesGuardar id="@idAutoridad.ToString()" OnFinalizado="ManejarCierreModal" />
+    <CertificacionesGuardar id="@idCertificacion.ToString()" OnFinalizado="ManejarCierreModal" />
 }
 
 
@@ -184,19 +160,19 @@
 
 
 @code {
-    private List<Autoridad> Listgral = new();
-    private List<Autoridad> ListgralBuscar = new();
+    private List<Certificacion> Listgral = new();
+    private List<Certificacion> ListgralBuscar = new();
     private string searchTerm = ""; private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
-    private Autoridad? entidadParaEliminar;
+    private Certificacion? entidadParaEliminar;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    int idAutoridad = 0;
+    int idCertificacion = 0;
 
-    [Inject] private IAutoridad repository { get; set; } = null!;
+    [Inject] private ICertificacion repository { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -208,8 +184,8 @@
         cargando = true;
         try
         {
-            var listAutoridad = await repository.GetAllAsync();
-            Listgral = listAutoridad.OrderBy(x => x.Sociedad.Empresa.Id).Where(x => x.Sociedad.EstatusSociedad.Id == 1).ToList();
+            var listCertificaciones = await repository.GetAllAsync();
+            Listgral = listCertificaciones.OrderBy(x => x.Sociedad.Empresa.Id).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -224,7 +200,7 @@
 
     private void AbrirModalNuevo()
     {
-        idAutoridad = 0;
+        idCertificacion = 0;
         mostrarModal = true;
     }
 
@@ -240,13 +216,6 @@
             Listgral = ListgralBuscar
                 .Where(b => b.Sociedad.Empresa.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-
-            if(Listgral.Count() == 0)
-            {
-                Listgral = ListgralBuscar
-                .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            }
         }
     }
 
@@ -264,13 +233,13 @@
         StateHasChanged();
     }
 
-    private void Editar(Autoridad item)
+    private void Editar(Certificacion item)
     {
-        idAutoridad = item.Id;
+        idCertificacion = item.Id;
         mostrarModal = true;
     }
 
-    private void VerificarEliminar(Autoridad item)
+    private void VerificarEliminar(Certificacion item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -288,7 +257,7 @@
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Autoridad eliminado correctamente");
+            await MostrarNotificacion($"Certificación eliminada correctamente");
         }
         catch (Exception ex)
         {
@@ -312,9 +281,10 @@
         if (guardadoExitoso)
         {
             await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Autoridad guardada correctamente");
+            await MostrarNotificacion($"Certificación guardada correctamente");
         }
 
         cargando = false; // Oculta el spinner después de todo
     }
 }
+

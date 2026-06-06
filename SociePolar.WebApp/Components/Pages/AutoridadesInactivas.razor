@@ -1,4 +1,4 @@
-﻿@page "/autoridades"
+﻿@page "/autoridadesinactivas"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -14,13 +14,6 @@
                         Autoridades
                     </h5>
                 </div>
-
-                <!-- Parte Derecha: Botón Agregar -->
-                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="AbrirModalNuevo"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-plus-lg me-2"></i> Agregar
-                </button>
             </div>
         </div>
 
@@ -50,21 +43,20 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Duración</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         @{
                             var index = Listgral.IndexOf(p);
-            
+
                             // 1. Ruptura para Sociedad
-                            bool esNuevaSociedad = index == 0 || 
-                                                   Listgral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
-            
+                            bool esNuevaSociedad = index == 0 ||
+                            Listgral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
+
                             // 2. Ruptura para Cargo (Se dispara si es una nueva sociedad O si dentro de la misma sociedad cambia el cargo)
-                            bool esNuevoCargo = index == 0 || 
-                                                 esNuevaSociedad || 
-                                                 Listgral[index - 1].Cargo?.Nombre != p.Cargo?.Nombre;
+                            bool esNuevoCargo = index == 0 ||
+                            esNuevaSociedad ||
+                            Listgral[index - 1].Cargo?.Nombre != p.Cargo?.Nombre;
                         }
 
                         @if (esNuevaSociedad)
@@ -82,13 +74,13 @@
                             <!-- Fila divisoria de Cargo alineada estrictamente en su columna -->
                             <tr class="align-middle border-bottom fw-bold" style="background-color: #fcfcfc;">
                                 <!-- Celda vacía para mantener el espacio de la columna Sociedad -->
-                                <td style="width: 20%;"></td> 
-                
+                                <td style="width: 20%;"></td>
+
                                 <!-- Celda del cargo que hereda el ancho exacto (15%) y se resalta -->
                                 <td class="text-start text-dark py-2" style="width: 15%; font-size: 0.85rem; letter-spacing: 0.3px;">
                                     📌 @p.Cargo?.Nombre
                                 </td>
-                
+
                                 <!-- Celdas vacías para rellenar las 6 columnas restantes de la cuadrícula -->
                                 <td colspan="6"></td>
                             </tr>
@@ -103,14 +95,6 @@
                             <td class="text-start text-secondary small" style="width: 5%;">@(p.Duracion != null ? $"{p.Duracion} años" : "")</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                    <i class="bi bi-trash3 fs-6"></i>
-                                </button>
-                            </td>
                         </tr>
                     </ChildContentRow>
                 </PaginationComponent>
@@ -155,46 +139,15 @@
 }
 
 
-@if (mostrarModal)
-{
-    <AutoridadesGuardar id="@idAutoridad.ToString()" OnFinalizado="ManejarCierreModal" />
-}
-
-
-@if (mostrarModalEliminar)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
-                    <h5 class="fw-bold">¿Estás seguro?</h5>
-                    <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.Sociedad.Empresa.Nombre</strong>. Esta acción no se puede deshacer.
-                    </p>
-                </div>
-                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-
 @code {
     private List<Autoridad> Listgral = new();
     private List<Autoridad> ListgralBuscar = new();
     private string searchTerm = ""; private bool cargando = false;
-    private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
-    private bool mostrarModalEliminar = false;
     private Autoridad? entidadParaEliminar;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    int idAutoridad = 0;
 
     [Inject] private IAutoridad repository { get; set; } = null!;
 
@@ -209,7 +162,7 @@
         try
         {
             var listAutoridad = await repository.GetAllAsync();
-            Listgral = listAutoridad.OrderBy(x => x.Sociedad.Empresa.Id).Where(x => x.Sociedad.EstatusSociedad.Id == 1).ToList();
+            Listgral = listAutoridad.OrderBy(x => x.Sociedad.Empresa.Id).Where(x => x.Sociedad.EstatusSociedad.Id == 2).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -220,12 +173,6 @@
         {
             cargando = false;
         }
-    }
-
-    private void AbrirModalNuevo()
-    {
-        idAutoridad = 0;
-        mostrarModal = true;
     }
 
     private void FiltrarBusqueda(ChangeEventArgs e)
@@ -241,7 +188,7 @@
                 .Where(b => b.Sociedad.Empresa.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            if(Listgral.Count() == 0)
+            if (Listgral.Count() == 0)
             {
                 Listgral = ListgralBuscar
                 .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
@@ -262,59 +209,5 @@
         await Task.Delay(4000); // 4 segundos para errores es mejor
         mostrarAlerta = false;
         StateHasChanged();
-    }
-
-    private void Editar(Autoridad item)
-    {
-        idAutoridad = item.Id;
-        mostrarModal = true;
-    }
-
-    private void VerificarEliminar(Autoridad item)
-    {
-        entidadParaEliminar = item;
-        mostrarModalEliminar = true;
-    }
-
-    private void CerrarModalEliminar() => mostrarModalEliminar = false;
-
-    private async Task ConfirmarEliminar()
-    {
-        if (entidadParaEliminar == null) return;
-
-        cargando = true;
-        try
-        {
-            repository.Delete(entidadParaEliminar.Id);
-            mostrarModalEliminar = false;
-            await LoadGenericDataAsync();
-            await MostrarNotificacion($"Autoridad eliminado correctamente");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al eliminar: {ex.Message}");
-            await MostrarNotificacion("No se pudo eliminar el registro", true);
-        }
-        finally
-        {
-            cargando = false;
-            entidadParaEliminar = null;
-        }
-    }
-
-    private async Task ManejarCierreModal(bool guardadoExitoso)
-    {
-        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
-        // 1. Cierra el modal en cualquier caso (true o false)
-        mostrarModal = false;
-
-        // 2. Si se guardó con éxito, refresca los datos
-        if (guardadoExitoso)
-        {
-            await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Autoridad guardada correctamente");
-        }
-
-        cargando = false; // Oculta el spinner después de todo
     }
 }

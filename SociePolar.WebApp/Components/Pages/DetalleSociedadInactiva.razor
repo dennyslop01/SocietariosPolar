@@ -1,4 +1,4 @@
-﻿@page "/detallesociedad/{id}"
+﻿@page "/detallesociedadinactiva/{id}"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -11,7 +11,7 @@
                         <i class="bi bi-bezier text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Detalle Sociedad
+                        Detalle Sociedad Inactiva
                     </h5>
                 </div>
 
@@ -606,24 +606,24 @@
         try
         {
             entidadActual = await repository.GetByIdAsync(int.Parse(id));
-
-            if(entidadActual.EstatusSociedad?.Id != 1)
+            
+            if(entidadActual.EstatusSociedad.Id != 2)
             {
-                await MostrarNotificacion("La sociedad seleccionada no está activa o no existe.", true);
+                await MostrarNotificacion("La sociedad no está inactiva o no existe", true);
+                Regresar();
                 return;
             }
-
             var listAutoridad = await repoAutoridad.GetAllAsync();
             ListAutoridadGral = listAutoridad.Where(x => x.Sociedad.Id == int.Parse(id)).OrderBy(x => x.Sociedad.Empresa.Id).ToList();
 
             var listAsamblea = await repoAsamblea.GetAllAsync();
             ListAsambleaGral = listAsamblea.OrderBy(x => x.Sociedad?.Empresa?.Id)
                                            .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1 && x.Sociedad.Id == int.Parse(id)).ToList();
-        
+
             ListReformaGral = listAsamblea.OrderBy(x => x.Sociedad?.Empresa?.Id)
                                           .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == int.Parse(id) && (x.IndicadorAsamblea == 0 || x.TipoReforma != null)).ToList();
-        
-        
+
+
             var listCertificaciones = await repoCertificacion.GetAllAsync();
             ListCertificacionGral = listCertificaciones.OrderBy(x => x.Sociedad.Empresa.Id)
                                     .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == int.Parse(id))

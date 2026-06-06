@@ -22,6 +22,7 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Moneda> Monedas { get; set; }
         public DbSet<Autoridad> Autoridades { get; set; }
         public DbSet<Asamblea> Asambleas { get; set; }
+        public DbSet<Certificacion> Certificaciones { get; set; }
 
     }
 }

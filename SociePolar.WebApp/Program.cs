@@ -46,6 +46,7 @@ builder.Services.AddScoped<IMoneda, MonedaRepository>();
 builder.Services.AddScoped<ISociedad, SociedadRepository>();
 builder.Services.AddScoped<IAutoridad, AutoridadRepository>();
 builder.Services.AddScoped<IAsamblea, AsambleaRepository>();
+builder.Services.AddScoped<ICertificacion, CertificacionRepository>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpClient();

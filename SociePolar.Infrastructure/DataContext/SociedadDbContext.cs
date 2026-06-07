@@ -23,6 +23,8 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Autoridad> Autoridades { get; set; }
         public DbSet<Asamblea> Asambleas { get; set; }
         public DbSet<Certificacion> Certificaciones { get; set; }
+        public DbSet<TipoLibro> TiposLibros { get; set; }
+        public DbSet<LibroSocietario> LibrosSocietarios { get; set; }
 
     }
 }

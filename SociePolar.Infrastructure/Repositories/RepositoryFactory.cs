@@ -27,6 +27,7 @@ namespace SociePolar.Infrastructure.Repositories
                 { "tiporeformas", typeof(TipoReforma) },
                 { "tiposociedad", typeof(TipoSociedad) },
                 { "tiposociedadactiva", typeof(TipoSociedadActiva) },
+                { "tipolibros", typeof(TipoLibro) },
             };
         }
 

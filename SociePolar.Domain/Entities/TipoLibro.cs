@@ -1,11 +1,11 @@
-﻿namespace SociePolar.Domain.Entities
+﻿using SociePolar.Domain.Interfaces;
+
+namespace SociePolar.Domain.Entities
 {
-    public class Certificacion
+    public class TipoLibro : IBaseEntity
     {
         public int Id { get; set; }
-        public Sociedad Sociedad { get; set; }
-        public Cargo Cargo { get; set; }
-        public DateTime? Fecha { get; set; }
+        public string? Nombre { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

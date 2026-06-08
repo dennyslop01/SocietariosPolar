@@ -21,8 +21,8 @@ namespace SociePolar.Domain.Dtos
         [Required(ErrorMessage = "El Número SAP es requerido.")]
         public string? NumeroSap { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad.")]
-        public int? TipoSociedadId { get; set; }
+        //[Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad.")]
+        //public int? TipoSociedadId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Estatus.")]
         public int? EstatusSociedadId { get; set; }
@@ -38,7 +38,7 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaConstitucion { get; set; }
         public DateTime? FechaVencimiento { get; set; }
         public int? Duracion { get; set; }
-        public int? NumeroAcciones { get; set; }
+        public string? NumeroAcciones { get; set; }
         public int? AplicaCapital { get; set; }
         public decimal? CapitalSuscrito { get; set; }
         public decimal? CapitalPagado { get; set; }
@@ -53,5 +53,12 @@ namespace SociePolar.Domain.Dtos
         public DateTime? UpdateDate { get; set; }
         public int? CreateUserId { get; set; }
         public int? UpdateUserId { get; set; }
+
+        public decimal? ValorAccion { get; set; }
+        public int? AnoPublicacion { get; set; }
+        public string? NumeroPublicacion { get; set; }
+        public DateTime? FechaPublicacion { get; set; }
+        public int? NombreDiarioId { get; set; }
+
     }
 }

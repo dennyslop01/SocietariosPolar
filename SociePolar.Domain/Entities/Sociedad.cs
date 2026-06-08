@@ -7,7 +7,7 @@
         public UnidadNegocio? UnidadNegocio { get; set; }
         public Empresa? Empresa { get; set; }
         public string? NumeroSap { get; set; }
-        public TipoSociedad? TipoSociedad { get; set; }
+        //public TipoSociedad? TipoSociedad { get; set; }
         public EstatusSociedad? EstatusSociedad { get; set; }
         public TipoSociedadActiva? TipoSociedadActiva { get; set; }
         public string? Objeto { get; set; }
@@ -17,7 +17,7 @@
         public DateTime? FechaConstitucion { get; set; }
         public DateTime? FechaVencimiento { get; set; }
         public int? Duracion { get; set; }
-        public int? NumeroAcciones { get; set; }
+        public string? NumeroAcciones { get; set; }
         public int? AplicaCapital { get; set; }
         public Moneda? Moneda { get; set; }
         public decimal? CapitalSuscrito { get; set; }
@@ -33,5 +33,12 @@
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }
         public int UpdateUserId { get; set; }
+
+        public decimal? ValorAccion { get; set; }
+        public int? AnoPublicacion { get; set; }
+        public string? NumeroPublicacion { get; set; }
+        public DateTime? FechaPublicacion { get; set; }
+        public NombreDiario? NombreDiario { get; set; }
+
     }
 }

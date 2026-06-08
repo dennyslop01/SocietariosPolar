@@ -79,12 +79,10 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.NumeroSap"
                                    placeholder="Ingrese número sap..."
-                                   maxlength="5"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   maxlength="8" />
                             <ValidationMessage For="@(() => entidadEditando.NumeroSap)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
-                        <div class="col-md-6 mb-3">
+                       @*  <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Sociedad</label>
                             <select class="form-select form-select-sm" @bind="entidadEditando.TipoSociedadId">
                                 <option value="0" selected>Seleccione ...</option>
@@ -97,7 +95,7 @@
                                 }
                             </select>
                             <ValidationMessage For="@(() => entidadEditando.TipoSociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
+                        </div> *@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Estatus de la Sociedad</label>
                             <!-- Se cambia @bind por value y @onchange -->
@@ -201,7 +199,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.NumeroAcciones"
                                    placeholder="Ingrese número de acciones..."
-                                   maxlength="7"
+                                   maxlength="12"
                                    inputmode="numeric"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
                         </div>
@@ -260,6 +258,12 @@
                                    inputmode="text" />
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Valor de Acción</label>
+                            <input type="number" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.ValorAccion"
+                                   placeholder="0.00" step="0.01" />
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Forma de Administración</label>
                             <textarea class="form-control form-control-sm small"
                                       @bind="entidadEditando.FormaAdministracion"
@@ -297,10 +301,10 @@
                                         </textarea>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Rif</label>
+                            <label class="form-label fw-bold text-secondary small">Tax Id</label>
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Rif"
-                                   placeholder="Ingrese el rif..."
+                                   placeholder="Ingrese el Tax Id..."
                                    maxlength="9"
                                    inputmode="text" />
                         </div>
@@ -311,6 +315,48 @@
                                    placeholder="Ingrese el nit..."
                                    maxlength="9"
                                    inputmode="text" />
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <hr />
+                            <label class="form-label fw-bold text-primary small">Datos de Publicación</label>
+                            <hr />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Año</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.AnoPublicacion"
+                                   placeholder="Ingrese el año..."
+                                   maxlength="4"
+                                   inputmode="numeric"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaPublicacion" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Número</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.NumeroPublicacion"
+                                   placeholder="Ingrese el número..."
+                                   maxlength="12"
+                                   inputmode="numeric"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                        </div>
+                         <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Nombre Diario</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.NombreDiarioId">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listNombreDiario != null)
+                                {
+                                    @foreach (var nombre in listNombreDiario)
+                                    {
+                                        <option value="@nombre.Id">@nombre.Nombre</option>
+                                    }
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => entidadEditando.NombreDiarioId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                     </div>
                 </div>
@@ -363,6 +409,7 @@
     private List<IBaseEntity> listRegiones = new();
     private List<IBaseEntity> listEmpresas = new();
     private List<IBaseEntity> listTipoSociedad = new();
+    private List<IBaseEntity> listNombreDiario = new();
     private List<IBaseEntity> listEstatusSociedad = new();
     private List<IBaseEntity> listTipoSociedadActiva = new();
     private List<Moneda> listMoneda = new();
@@ -400,7 +447,8 @@
             entidadEditando.UnidadNegocioId ??= 0;
             entidadEditando.EmpresaId ??= 0;
             entidadEditando.MonedaId ??= 0;
-            entidadEditando.TipoSociedadId ??= 0;
+            entidadEditando.NombreDiarioId ??= 0;
+            //entidadEditando.TipoSociedadId ??= 0;
             entidadEditando.CreateDate = DateTime.Now;
             entidadEditando.UpdateDate = DateTime.Now;
             editContext = new EditContext(entidadEditando);
@@ -417,7 +465,7 @@
                     EmpresaId = item.Empresa?.Id,
                     UnidadNegocioId = item.UnidadNegocio?.Id,
                     RegionId = item.Region?.Id,
-                    TipoSociedadId = item.TipoSociedad?.Id,
+                    //TipoSociedadId = item.TipoSociedad?.Id,
                     TipoSociedadActivaId = item.TipoSociedadActiva?.Id,
                     Objeto = item.Objeto,
                     Domicilio = item.Domicilio,
@@ -443,6 +491,11 @@
                     CreateUserId = item.CreateUserId,
                     UpdateDate = item.UpdateDate,
                     UpdateUserId = item.UpdateUserId,
+                    AnoPublicacion = item.AnoPublicacion,
+                    FechaPublicacion = item.FechaPublicacion,
+                    NumeroPublicacion = item.NumeroPublicacion,
+                    NombreDiarioId = item.NombreDiario?.Id,
+                    ValorAccion = item.ValorAccion
                 };
 
                 if (dto.RegionId > 0)
@@ -494,6 +547,7 @@
             listEstatusSociedad = await GetEntityListAsync("estatussociedad");
             listTipoSociedad = await GetEntityListAsync("tiposociedad");
             listTipoSociedadActiva = await GetEntityListAsync("tiposociedadactiva");
+            listNombreDiario = await GetEntityListAsync("nombrediarios");
 
             listMoneda = await repoMoneda.GetAllAsync();
             listUnidad = await repoUnidadNegocio.GetAllAsync();

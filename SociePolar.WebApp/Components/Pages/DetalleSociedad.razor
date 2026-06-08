@@ -112,10 +112,10 @@
                                     </div>
 
                                     <!-- Sociedad -->
-                                    <div class="col-md-6 mb-3">
+                                    @* <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Sociedad</label>
                                         <label class="form-label text-secondary small">@entidadActual.TipoSociedad?.Nombre</label>
-                                    </div>
+                                    </div> *@
 
                                     <!-- Estatus de la Sociedad -->
                                     <div class="col-md-6 mb-3">
@@ -246,6 +246,27 @@
                                         <label class="form-label text-secondary small">@entidadActual.Nit</label>
                                     </div>
 
+                                    <div class="col-md-12 mb-3">
+                                        <hr />
+                                        <label class="form-label fw-bold text-primary small">Datos de Publicación</label>
+                                        <hr />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Año</label>
+                                        <label class="form-label text-secondary small">@entidadActual.AnoPublicacion</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Fecha</label>
+                                        <label class="form-label text-secondary small">@entidadActual.FechaPublicacion</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Número</label>
+                                        <label class="form-label text-secondary small">@entidadActual.NumeroPublicacion</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Nombre Diario</label>
+                                        <label class="form-label text-secondary small">@entidadActual.NombreDiario?.Nombre</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>

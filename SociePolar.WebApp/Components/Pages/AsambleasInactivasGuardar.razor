@@ -9,7 +9,7 @@
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Reforma" : "Modificar Reforma")
+                        @(entidadEditando.Id == 0 ? "Agregar Asamblea Inactiva" : "Modificar Asamblea Inactiva")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
@@ -18,7 +18,7 @@
                     <!-- Iniciamos la grilla de filas y columnas -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                            <label class="form-label fw-bold text-secondary small">Sociedad Inactiva</label>
                             <select class="form-select form-select-sm" value="@entidadEditando.SociedadId" @onchange="OnSociedadChanged">
                                 <option value="0">Seleccione ...</option>
                                 @if (listSociedad != null)
@@ -161,7 +161,6 @@
                                        id="reformaSi"
                                        class="form-check-input"
                                        value="1"
-                                       disabled
                                        checked="@(entidadEditando.AplicaReforma == 1)"
                                        @onchange="() => ActualizarReforma(1)" />
                                 <label class="form-check-label small text-secondary" for="reformaSi">Sí</label>
@@ -173,7 +172,6 @@
                                        id="reformaNo"
                                        class="form-check-input"
                                        value="0"
-                                       disabled
                                        checked="@(entidadEditando.AplicaReforma == 0)"
                                        @onchange="() => ActualizarReforma(0)" />
                                 <label class="form-check-label small text-secondary" for="reformaNo">No</label>
@@ -292,8 +290,8 @@
             entidadEditando.RegistroId = 0;
             entidadEditando.NombreDiarioId = 0;
             entidadEditando.TipoReformaId = 0;
-            entidadEditando.IndicadorAsamblea = 0;
-            entidadEditando.AplicaReforma = 1;
+            entidadEditando.IndicadorAsamblea = 1;
+            entidadEditando.AplicaReforma = 0;
             entidadEditando.CreateDate = DateTime.Now;
             entidadEditando.UpdateDate = DateTime.Now;
             editContext = new EditContext(entidadEditando);
@@ -366,7 +364,7 @@
             listTipoReforma = await GetEntityListAsync("tiporeformas");
 
             var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 2).ToList();
 
             listAsamblea = await repository.GetAllAsync();
         }
@@ -423,7 +421,7 @@
                     await repository.AddAsync(entidadEditando);
 
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Reforma guardada correctamente");
+                    await MostrarNotificacion($"Asamblea guardada correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
                 else
@@ -432,7 +430,7 @@
                     repository.Update(entidadEditando);
 
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Reforma actualizado correctamente");
+                    await MostrarNotificacion($"Asamblea actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
             }

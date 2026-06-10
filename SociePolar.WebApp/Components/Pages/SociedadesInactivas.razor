@@ -1,4 +1,4 @@
-﻿@page "/sociedadesinactivas"
+﻿@page "/asambleasinactivas"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -14,9 +14,15 @@
                         Sociedades Inactivas
                     </h5>
                 </div>
+
+                <!-- Parte Derecha: Botón Agregar -->
+                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                        @onclick="AbrirModalNuevo"
+                        style="height: 32px; font-weight: 500;">
+                    <i class="bi bi-plus-lg me-2"></i> Agregar
+                </button>
             </div>
         </div>
-
 
         <div class="card-body">
             <!-- Buscador Global por Nombre -->
@@ -61,6 +67,13 @@
                             <td class="text-center text-secondary small" style="width: 5%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 5%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
+                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
+                                    <i class="bi bi-pencil-square fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-danger p-0"
+                                        @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                    <i class="bi bi-trash3 fs-6"></i>
+                                </button>
                                 <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
                                         @onclick="() => Detalle(p)" title="Detalle Sociedad">
                                     <i class="bi bi-eye fs-6"></i>
@@ -72,6 +85,19 @@
             </div>
         </div>
     </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 @if (cargando)
@@ -96,6 +122,36 @@
     </div>
 }
 
+
+
+@if (mostrarModal)
+{
+    <SociedadesGuardarInactivas id="@idSociedad.ToString()" OnFinalizado="ManejarCierreModal" />
+}
+
+
+@if (mostrarModalEliminar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold">¿Estás seguro?</h5>
+                    <p class="text-secondary small">
+                        Vas a eliminar <strong>@entidadParaEliminar?.Empresa.Nombre</strong>. Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
+                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
 @code {
     private List<Sociedad> Listgral = new();
     private List<Sociedad> ListgralBuscar = new();
@@ -107,10 +163,9 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private bool mostrarModalEliminar = false;
-    private Sociedad entidadEditando = default!;
     private Sociedad? entidadParaEliminar;
-    private string nombreRegion = "";
-    private Region regionEntity = new();
+
+    private int idSociedad = 0;
 
     [Inject] private ISociedad repository { get; set; } = null!;
 
@@ -124,20 +179,6 @@
         cargando = true;
         try
         {
-            var repo = RepoFactory.GetRepository("regiones");
-            var method = repo.GetType().GetMethod("GetByIdAsync");
-            var task = (Task)method!.Invoke(repo, new object[] { 0 })!;
-            await task;
-
-            dynamic resultRegiones = task.GetType().GetProperty("Result")?.GetValue(task)!;
-            regionEntity = resultRegiones != null ? new Region
-            {
-                Id = resultRegiones.Id,
-                Nombre = resultRegiones.Nombre
-            } : new Region();
-
-            nombreRegion = regionEntity?.Nombre ?? "Región desconocida";
-
             var listSociedades = await repository.GetAllAsync();
             Listgral = listSociedades.Where(x => x.EstatusSociedad.Id == 2).ToList();
             ListgralBuscar = Listgral;
@@ -152,6 +193,18 @@
         }
     }
 
+    private void AbrirModalNuevo()
+    {
+        idSociedad = 0;
+        mostrarModal = true;
+    }
+
+    private void Editar(Sociedad item)
+    {
+        idSociedad = item.Id;
+        mostrarModal = true;
+    }
+
     private void FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
@@ -164,6 +217,38 @@
             Listgral = ListgralBuscar
                 .Where(b => b.Empresa.Nombre != null && b.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+        }
+    }
+
+    private void VerificarEliminar(Sociedad item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalEliminar = true;
+    }
+
+    private void CerrarModalEliminar() => mostrarModalEliminar = false;
+
+    private async Task ConfirmarEliminar()
+    {
+        if (entidadParaEliminar == null) return;
+
+        cargando = true;
+        try
+        {
+            repository.Delete(entidadParaEliminar.Id);
+            mostrarModalEliminar = false;
+            await LoadGenericDataAsync();
+            await MostrarNotificacion($"Sociedad eliminado correctamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar: {ex.Message}");
+            await MostrarNotificacion("No se pudo eliminar el registro", true);
+        }
+        finally
+        {
+            cargando = false;
+            entidadParaEliminar = null;
         }
     }
 
@@ -183,6 +268,22 @@
 
     private void Detalle(Sociedad item)
     {
-        navManager.NavigateTo($"/detallesociedadinactiva/{item.Id}");
+        navManager.NavigateTo($"/detallesociedad/{item.Id}");
+    }
+
+    private async Task ManejarCierreModal(bool guardadoExitoso)
+    {
+        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
+        // 1. Cierra el modal en cualquier caso (true o false)
+        mostrarModal = false;
+
+        // 2. Si se guardó con éxito, refresca los datos
+        if (guardadoExitoso)
+        {
+            await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
+            await MostrarNotificacion($"Sociedad guardada correctamente");
+        }
+
+        cargando = false; // Oculta el spinner después de todo
     }
 }

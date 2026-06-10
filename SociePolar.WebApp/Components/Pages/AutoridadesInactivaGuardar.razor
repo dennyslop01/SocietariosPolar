@@ -1,0 +1,330 @@
+﻿@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        @(entidadEditando.Id == 0 ? "Agregar Autoridad Inactiva" : "Modificar Autoridad Inactiva")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Sociedad Inactiva</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.SociedadId">
+                                <option value="0">Seleccione ...</option>
+                                @if (listSociedad != null)
+                                {
+                                    @foreach (var sociedad in listSociedad)
+                                    {
+                                        <option value="@sociedad.Id">@sociedad.Empresa.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Cargo</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.CargoId">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listCargos != null)
+                                {
+                                    @foreach (var cargo in listCargos)
+                                    {
+                                        <option value="@cargo.Id">@cargo.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadEditando.CargoId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Duración</label>
+                            <InputNumber class="form-control form-control-sm small"
+                                         @bind-Value="entidadEditando.Duracion"
+                                         placeholder="Ingrese la duración..."
+                                         maxlength="2" />
+                            <ValidationMessage For="@(() => entidadEditando.Duracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Nombre</label>
+                            <InputText type="text" class="form-control form-control-sm small"
+                                       @bind-Value="entidadEditando.Nombre"
+                                       placeholder="Ingrese nombre..."
+                                       maxlength="150" />
+                            <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
+
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tipoDocumentoGroup" id="inlineRadio1"
+                                       value="V"
+                                       checked="@(entidadEditando.TipoDocumento == "V")"
+                                       @onchange="@(() => entidadEditando.TipoDocumento = "V")">
+                                <label class="form-check-label small text-secondary" for="inlineRadio1">V</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tipoDocumentoGroup" id="inlineRadio2"
+                                       value="E"
+                                       checked="@(entidadEditando.TipoDocumento == "E")"
+                                       @onchange="@(() => entidadEditando.TipoDocumento = "E")">
+                                <label class="form-check-label small text-secondary" for="inlineRadio2">E</label>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.TipoDocumento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Número Documento</label>
+                            <InputText type="text" class="form-control form-control-sm small"
+                                       @bind-Value="entidadEditando.Documento"
+                                       placeholder="Ingrese número de documento..."
+                                       maxlength="9"
+                                       inputmode="numeric"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                            <ValidationMessage For="@(() => entidadEditando.Documento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;">
+
+        <div class="modal-dialog modal-dialog-centered justify-content-center h-100 m-0" style="max-width: 100%;">
+            <div class="modal-content border-0 bg-transparent shadow-none">
+                <div class="modal-body text-center">
+                    @* Spinner más fino y con el color principal de tu app *@
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
+                        Procesando
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+
+    private AutoridadDto entidadEditando = new();
+
+    private List<Sociedad> listSociedad = new();
+    private List<Autoridad> listAutoridad = new();
+
+    private List<IBaseEntity> listCargos = new();
+    private List<IBaseEntity> listCargosFiltrado = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+
+    [Inject] private ISociedad reposociedad { get; set; } = null!;
+    [Inject] private IAutoridad repository { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
+        await LoadGenericDataAsync();
+
+        if (id == "0")
+        {
+            entidadEditando = new();
+            entidadEditando.SociedadId = 0;
+            entidadEditando.CargoId = 0;
+            entidadEditando.CreateDate = DateTime.Now;
+            entidadEditando.UpdateDate = DateTime.Now;
+            editContext = new EditContext(entidadEditando);
+        }
+        else
+        {
+            try
+            {
+                var item = await repository.GetByIdAsync(int.Parse(id));
+                AutoridadDto dto = new()
+                {
+                    Id = item.Id,
+                    SociedadId = item.Sociedad.Id,
+                    CargoId = item.Cargo.Id,
+                    Nombre = item.Nombre,
+                    TipoDocumento = item.TipoDocumento,
+                    Documento = item.Documento,
+                    Duracion = item.Duracion,
+                    CreateDate = item.CreateDate,
+                    CreateUserId = item.CreateUserId,
+                    UpdateDate = item.UpdateDate,
+                    UpdateUserId = item.UpdateUserId
+                };
+
+                entidadEditando = dto;
+                editContext = new EditContext(entidadEditando);
+            }
+            catch (Exception ex)
+            {
+                await MostrarNotificacion("No se pudieron cargar los datos", true);
+            }
+        }
+        cargando = false;
+    }
+
+    public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        // Invocamos el método asíncrono
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        // Obtenemos el resultado de la Task dinámica
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.ToList();
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            listCargos = await GetEntityListAsync("cargos");
+
+            var listSociedades = await reposociedad.GetAllAsync();
+            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 2).ToList();
+
+            listAutoridad = await repository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("No se pudieron cargar los datos", true);
+        }
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+
+                entidadEditando.UpdateDate = DateTime.Now;
+                entidadEditando.UpdateUserId = userid;
+
+                if (entidadEditando.Id == 0)
+                {
+                    // var existeAutoSociedad = listAutoridad.Any(x => x.Cargo.Id == entidadEditando.CargoId && x.Sociedad.Id == entidadEditando.SociedadId);
+                    // if (existeAutoSociedad)
+                    // {
+                    //     mensajeAlerta = "Ya existe esta autoridad para esta sociedad";
+                    //     await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
+                    //     return;
+                    // }
+                    cargando = true;
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+
+                    await repository.AddAsync(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Autoridad guardada correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+                else
+                {
+                    cargando = true;
+                    repository.Update(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Autoridad actualizado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Si hay error en base de datos (ej. nombre duplicado)
+            Console.WriteLine($"Error: {ex.Message}");
+            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+        }
+        cargando = false;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+}

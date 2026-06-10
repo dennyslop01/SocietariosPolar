@@ -9,7 +9,7 @@
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Reforma" : "Modificar Reforma")
+                        @(entidadEditando.Id == 0 ? "Agregar Reforma Inactiva" : "Modificar Reforma Inactiva")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
@@ -18,7 +18,7 @@
                     <!-- Iniciamos la grilla de filas y columnas -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                            <label class="form-label fw-bold text-secondary small">Sociedad Inactiva</label>
                             <select class="form-select form-select-sm" value="@entidadEditando.SociedadId" @onchange="OnSociedadChanged">
                                 <option value="0">Seleccione ...</option>
                                 @if (listSociedad != null)
@@ -366,7 +366,7 @@
             listTipoReforma = await GetEntityListAsync("tiporeformas");
 
             var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 2).ToList();
 
             listAsamblea = await repository.GetAllAsync();
         }

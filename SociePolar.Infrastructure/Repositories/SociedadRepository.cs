@@ -104,6 +104,7 @@ namespace SociePolar.Infrastructure.Repositories
                 CreateUserId = entity.CreateUserId ?? 0,
                 UpdateUserId = entity.UpdateUserId ?? 0,
                 ValorAccion = entity.ValorAccion,
+                ValorPatrimonial = entity.ValorPatrimonial,
                 AnoPublicacion = entity.AnoPublicacion,
                 NumeroPublicacion = entity.NumeroPublicacion,
                 FechaPublicacion = entity.FechaPublicacion,
@@ -205,6 +206,7 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.UpdateDate = DateTime.UtcNow;
             editsociedad.UpdateUserId = entity.UpdateUserId ?? 0;
             editsociedad.ValorAccion = entity.ValorAccion;
+            editsociedad.ValorPatrimonial = entity.ValorPatrimonial;
             editsociedad.AnoPublicacion = entity.AnoPublicacion;
             editsociedad.NumeroPublicacion = entity.NumeroPublicacion;
             editsociedad.FechaPublicacion = entity.FechaPublicacion;

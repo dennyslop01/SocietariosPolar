@@ -35,6 +35,7 @@
         public int UpdateUserId { get; set; }
 
         public decimal? ValorAccion { get; set; }
+        public decimal? ValorPatrimonial { get; set; }
         public int? AnoPublicacion { get; set; }
         public string? NumeroPublicacion { get; set; }
         public DateTime? FechaPublicacion { get; set; }

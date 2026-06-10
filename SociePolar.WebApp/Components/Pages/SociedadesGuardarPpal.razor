@@ -258,9 +258,15 @@
                                    inputmode="text" />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Valor de Acción</label>
+                            <label class="form-label fw-bold text-secondary small">Valor Nominal</label>
                             <input type="number" class="form-control form-control-sm small"
                                    @bind="entidadEditando.ValorAccion"
+                                   placeholder="0.00" step="0.01" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Valor Patrimonial</label>
+                            <input type="number" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.ValorPatrimonial"
                                    placeholder="0.00" step="0.01" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -495,7 +501,8 @@
                     FechaPublicacion = item.FechaPublicacion,
                     NumeroPublicacion = item.NumeroPublicacion,
                     NombreDiarioId = item.NombreDiario?.Id,
-                    ValorAccion = item.ValorAccion
+                    ValorAccion = item.ValorAccion,
+                    ValorPatrimonial = item.ValorPatrimonial
                 };
 
                 if (dto.RegionId > 0)

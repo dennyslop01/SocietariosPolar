@@ -25,6 +25,10 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Certificacion> Certificaciones { get; set; }
         public DbSet<TipoLibro> TiposLibros { get; set; }
         public DbSet<LibroSocietario> LibrosSocietarios { get; set; }
-
+        public DbSet<TipoAccionista> TiposAccionistas { get; set; }
+        public DbSet<EstatusAccionista> EstatusAccionistas { get; set; }
+        public DbSet<ModalidadPago> ModalidadesPago { get; set; }
+        public DbSet<TipoCuenta> TiposCuentas { get; set; }
+        public DbSet<Banco> Bancos { get; set; }
     }
 }

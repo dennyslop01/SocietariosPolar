@@ -28,6 +28,11 @@ namespace SociePolar.Infrastructure.Repositories
                 { "tiposociedad", typeof(TipoSociedad) },
                 { "tiposociedadactiva", typeof(TipoSociedadActiva) },
                 { "tipolibros", typeof(TipoLibro) },
+                { "tipoaccionistas", typeof(TipoAccionista) },
+                { "estatusaccionistas", typeof(EstatusAccionista) },
+                { "modalidadpago", typeof(ModalidadPago) },
+                { "tipocuenta", typeof(TipoCuenta) },
+                { "banco", typeof(Banco) },
             };
         }
 

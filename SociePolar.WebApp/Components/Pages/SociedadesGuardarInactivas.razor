@@ -411,7 +411,7 @@
     private string iconoAlerta = "bi-check-circle-fill";
     private bool cargando = false;
 
-    private SociedadDto entidadEditando = new();
+    private SociedadInactivaDto entidadEditando = new();
     private List<IBaseEntity> listRegiones = new();
     private List<IBaseEntity> listEmpresas = new();
     private List<IBaseEntity> listTipoSociedad = new();
@@ -465,7 +465,7 @@
             try
             {
                 var item = await repository.GetByIdAsync(int.Parse(id));
-                SociedadDto dto = new()
+                SociedadInactivaDto dto = new()
                 {
                     Id = item.Id,
                     NumeroSap = item.NumeroSap,

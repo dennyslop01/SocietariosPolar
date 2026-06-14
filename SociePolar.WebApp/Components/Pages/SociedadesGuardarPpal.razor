@@ -99,7 +99,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Estatus de la Sociedad</label>
                             <!-- Se cambia @bind por value y @onchange -->
-                            <select class="form-select form-select-sm" value="@entidadEditando.EstatusSociedadId" @onchange="OnEstatusChanged">
+                            <select class="form-select form-select-sm" value="@entidadEditando.EstatusSociedadId" @onchange="OnEstatusChanged" disabled>
                                 <option value="0">Seleccione ...</option>
                                 @if (listEstatusSociedad != null)
                                 {
@@ -125,7 +125,8 @@
                                         }
                                     }
                                 </select>
-                            </div>
+                                <ValidationMessage For="@(() => entidadEditando.TipoSociedadActivaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>                            
                         }
 
                         <hr />
@@ -449,7 +450,8 @@
         {
             entidadEditando = new();
             entidadEditando.RegionId ??= 0;
-            entidadEditando.EstatusSociedadId ??= 0;
+            entidadEditando.EstatusSociedadId ??= 1;
+            entidadEditando.TipoSociedadActivaId ??= 0;
             entidadEditando.UnidadNegocioId ??= 0;
             entidadEditando.EmpresaId ??= 0;
             entidadEditando.MonedaId ??= 0;
@@ -472,7 +474,7 @@
                     UnidadNegocioId = item.UnidadNegocio?.Id,
                     RegionId = item.Region?.Id,
                     //TipoSociedadId = item.TipoSociedad?.Id,
-                    TipoSociedadActivaId = item.TipoSociedadActiva?.Id,
+                    TipoSociedadActivaId = item.TipoSociedadActiva?.Id ?? 0,
                     Objeto = item.Objeto,
                     Domicilio = item.Domicilio,
                     DireccionFiscal = item.DireccionFiscal,

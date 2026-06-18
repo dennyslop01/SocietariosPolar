@@ -200,7 +200,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.NumeroAcciones"
                                    placeholder="Ingrese número de acciones..."
-                                   maxlength="12"
+                                   maxlength="20"
                                    inputmode="numeric"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
                         </div>
@@ -312,7 +312,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Rif"
                                    placeholder="Ingrese el Tax Id..."
-                                   maxlength="9"
+                                   maxlength="20"
                                    inputmode="text" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -320,7 +320,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Nit"
                                    placeholder="Ingrese el nit..."
-                                   maxlength="9"
+                                   maxlength="20"
                                    inputmode="text" />
                         </div>
                         <div class="col-md-12 mb-3">

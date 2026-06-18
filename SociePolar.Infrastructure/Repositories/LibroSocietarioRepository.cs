@@ -68,13 +68,17 @@ namespace SociePolar.Infrastructure.Repositories
                 TipoLibro = tipoLibro,
                 TomoUso = entity.TomoUso,
                 Folios = entity.Folios,
-                UltimoAsiento = entity.UltimoAsiento,
-                LibrosSellados = entity.LibrosSellados,
+                LibrosSellados = entity.LibrosSellados.ToString(),
                 Observaciones = entity.Observaciones,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
-                UpdateUserId = entity.UpdateUserId
+                UpdateUserId = entity.UpdateUserId,
+                FechaDesde = entity.FechaDesde,
+                FechaHasta = entity.FechaHasta,
+                FechaSello = entity.FechaSello,
+                Vacio = entity.Vacio,
+                Ubicacion = entity.Ubicacion
             };
 
             await context.Set<LibroSocietario>().AddAsync(newLibroSocietario);
@@ -112,11 +116,15 @@ namespace SociePolar.Infrastructure.Repositories
             editLibroSocietario.TipoLibro = tipoLibro;
             editLibroSocietario.TomoUso = entity.TomoUso;
             editLibroSocietario.Folios = entity.Folios;
-            editLibroSocietario.UltimoAsiento = entity.UltimoAsiento;
-            editLibroSocietario.LibrosSellados = entity.LibrosSellados;
-            editLibroSocietario.Observaciones = entity.Observaciones;
+            editLibroSocietario.LibrosSellados = entity.LibrosSellados.ToString();
+            editLibroSocietario.Ubicacion = entity.Ubicacion;
             editLibroSocietario.UpdateDate = DateTime.UtcNow;
             editLibroSocietario.UpdateUserId = entity.UpdateUserId;
+            editLibroSocietario.FechaDesde = entity.FechaDesde;
+            editLibroSocietario.FechaHasta = entity.FechaHasta;
+            editLibroSocietario.FechaSello = entity.FechaSello;
+            editLibroSocietario.Observaciones = entity.Observaciones;
+            editLibroSocietario.Vacio = entity.Vacio;
 
             context.Set<LibroSocietario>().Update(editLibroSocietario);
             context.SaveChanges();

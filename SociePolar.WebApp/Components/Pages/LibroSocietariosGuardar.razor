@@ -60,7 +60,7 @@
                             <ValidationMessage For="@(() => entidadEditando.TipoLibroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tomo Uso</label>
+                            <label class="form-label fw-bold text-secondary small">Tomo</label>
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.TomoUso"
                                    placeholder="Ingrese el tomo de uso..."
@@ -80,22 +80,83 @@
                             <ValidationMessage For="@(() => entidadEditando.Folios)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Último Asiento</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.UltimoAsiento"
-                                   placeholder="Ingrese el último asiento..."
-                                   maxlength="200" />
-                            <ValidationMessage For="@(() => entidadEditando.UltimoAsiento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            <label class="form-label fw-bold text-secondary small">Fecha Desde</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaDesde" @bind:format="yyyy-MM-dd" />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Libros Sellados</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.LibrosSellados"
-                                   placeholder="Ingrese el número de libros sellados..."
-                                   maxlength="3"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
-                            <ValidationMessage For="@(() => entidadEditando.LibrosSellados)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            <label class="form-label fw-bold text-secondary small">Fecha Hasta</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaHasta" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">¿Esta Sellado?</label>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaReformaGroup"
+                                       id="reformaSi"
+                                       class="form-check-input"
+                                       value="1"
+                                       checked="@(entidadEditando.LibrosSellados == 1)"
+                                       @onchange="() => ActualizarSello(1)" />
+                                <label class="form-check-label small text-secondary" for="reformaSi">Sí</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaReformaGroup"
+                                       id="reformaNo
+                                       class="form-check-input"
+                                       value="0"
+                                       checked="@(entidadEditando.LibrosSellados == 0)"
+                                       @onchange="() => ActualizarSello(0)" />
+                                <label class="form-check-label small text-secondary" for="reformaNo">No</label>
+                            </div>
+                        </div>
+                        @if (entidadEditando.LibrosSellados == 1)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Sello</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaSello" @bind:format="yyyy-MM-dd" />
+                            </div>
+                        }
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">¿Esta Vacío?</label>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaVacioGroup"
+                                       id="vacioSi"
+                                       class="form-check-input"
+                                       value="1"
+                                       checked="@(entidadEditando.Vacio == 1)"
+                                       @onchange="() => ActualizarVacio(1)" />
+                                <label class="form-check-label small text-secondary" for="vacioSi">Sí</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaVacioGroup"
+                                       id="vacioNo"
+                                       class="form-check-input"
+                                       value="0"
+                                       checked="@(entidadEditando.Vacio == 0)"
+                                       @onchange="() => ActualizarVacio(0)" />
+                                <label class="form-check-label small text-secondary" for="vacioNo">No</label>
+                            </div>
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Ubicación</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Ubicacion"
+                                      @bind:event="oninput"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Ingrese la ubicación (máximo 2,000 caracteres)...">
+                                    </textarea>
+                            <ValidationMessage For="@(() => entidadEditando.Ubicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-10 mb-3">
                             <label class="form-label fw-bold text-secondary small">Observaciones</label>
@@ -191,6 +252,8 @@
             entidadEditando.SociedadId = 0;
             entidadEditando.ClaseLibroId = 0;
             entidadEditando.TipoLibroId = 0;
+            entidadEditando.LibrosSellados = 0;
+            entidadEditando.Vacio = 0;
             entidadEditando.CreateDate = DateTime.Now;
             entidadEditando.UpdateDate = DateTime.Now;
             editContext = new EditContext(entidadEditando);
@@ -208,13 +271,17 @@
                     TipoLibroId = item.TipoLibro.Id,
                     TomoUso = item.TomoUso,
                     Folios = item.Folios,
-                    UltimoAsiento = item.UltimoAsiento,
-                    LibrosSellados = item.LibrosSellados,
+                    LibrosSellados = int.Parse(item.LibrosSellados ?? "0"),
                     Observaciones = item.Observaciones,
                     CreateDate = item.CreateDate,
                     CreateUserId = item.CreateUserId,
                     UpdateDate = item.UpdateDate,
                     UpdateUserId = item.UpdateUserId,
+                    FechaDesde = item.FechaDesde,
+                    FechaHasta = item.FechaHasta,
+                    FechaSello = item.FechaSello,
+                    Vacio = item.Vacio,
+                    Ubicacion = item.Ubicacion
                 };
 
                 entidadEditando = dto;
@@ -359,5 +426,24 @@
             entidadEditando.ClaseLibroId = idSeleccionado;
         }
     }
+
+    private void ActualizarSello(int aplica)
+    {
+        entidadEditando.LibrosSellados = aplica;
+
+        if (aplica == 0)
+        {
+            entidadEditando.FechaSello = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ActualizarVacio(int aplica)
+    {
+        entidadEditando.Vacio = aplica;
+        StateHasChanged();
+    }
+
 }
 

@@ -237,7 +237,7 @@
             listCargos = await GetEntityListAsync("cargos");
 
             var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+            listSociedad = listSociedades.OrderBy(x=> x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
 
             listAutoridad = await repository.GetAllAsync();
         }

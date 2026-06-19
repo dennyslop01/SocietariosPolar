@@ -71,35 +71,35 @@ namespace SociePolar.Infrastructure.Repositories
             if (tipoAccionista == null) throw new Exception($"Tipo de accionista con ID {entity.TipoAccionistaId} no existe.");
 
             DirigidoA dirigidoa = null;
-            if (entity.DirigidoAId.HasValue)
+            if (entity.DirigidoAId != 0)
             {
                 dirigidoa = await context.Set<DirigidoA>().FindAsync(entity.DirigidoAId.Value);
                 if (dirigidoa == null) throw new Exception($"DirigidoA con ID {entity.DirigidoAId.Value} no existe.");
             }
 
             EstadoCivil estadocivil = null;
-            if (entity.EstadoCivilId.HasValue)
+            if (entity.EstadoCivilId != 0)
             {
                 estadocivil = await context.Set<EstadoCivil>().FindAsync(entity.EstadoCivilId.Value);
                 if (estadocivil == null) throw new Exception($"Estado Civil con ID {entity.EstadoCivilId.Value} no existe.");
             }
 
             Banco banco = null;
-            if (entity.BancoId.HasValue)
+            if (entity.BancoId != 0)
             {
                 banco = await context.Set<Banco>().FindAsync(entity.BancoId.Value);
                 if (banco == null) throw new Exception($"Banco con ID {entity.BancoId.Value} no existe.");
             }
 
             TipoCuenta tipocuenta = null;
-            if (entity.TipoCuentaId.HasValue)
+            if (entity.TipoCuentaId != 0)
             {
                 tipocuenta = await context.Set<TipoCuenta>().FindAsync(entity.TipoCuentaId.Value);
                 if (tipocuenta == null) throw new Exception($"Tipo de Cuenta con ID {entity.TipoCuentaId.Value} no existe.");
             }
 
             CondicionEspecial condicionespecial = null;
-            if (entity.CondicionEspecialId.HasValue)
+            if (entity.CondicionEspecialId != 0)
             {
                 condicionespecial = await context.Set<CondicionEspecial>().FindAsync(entity.CondicionEspecialId.Value);
                 if (condicionespecial == null) throw new Exception($"Condición Especial con ID {entity.CondicionEspecialId.Value} no existe.");
@@ -217,35 +217,35 @@ namespace SociePolar.Infrastructure.Repositories
             if (editaccionista == null) throw new Exception($"Accionista con ID {entity.Id} no existe.");
 
             DirigidoA dirigidoa = null;
-            if (entity.DirigidoAId.HasValue)
+            if (entity.DirigidoAId != 0)
             {
                 dirigidoa = await context.Set<DirigidoA>().FindAsync(entity.DirigidoAId.Value);
                 if (dirigidoa == null) throw new Exception($"DirigidoA con ID {entity.DirigidoAId.Value} no existe.");
             }
 
             EstadoCivil estadocivil = null;
-            if (entity.EstadoCivilId.HasValue)
+            if (entity.EstadoCivilId != 0)
             {
                 estadocivil = await context.Set<EstadoCivil>().FindAsync(entity.EstadoCivilId.Value);
                 if (estadocivil == null) throw new Exception($"Estado Civil con ID {entity.EstadoCivilId.Value} no existe.");
             }
 
             Banco banco = null;
-            if (entity.BancoId.HasValue)
+            if (entity.BancoId != 0)
             {
                 banco = await context.Set<Banco>().FindAsync(entity.BancoId.Value);
                 if (banco == null) throw new Exception($"Banco con ID {entity.BancoId.Value} no existe.");
             }
 
             TipoCuenta tipocuenta = null;
-            if (entity.TipoCuentaId.HasValue)
+            if (entity.TipoCuentaId != 0)
             {
                 tipocuenta = await context.Set<TipoCuenta>().FindAsync(entity.TipoCuentaId.Value);
                 if (tipocuenta == null) throw new Exception($"Tipo de Cuenta con ID {entity.TipoCuentaId.Value} no existe.");
             }
 
             CondicionEspecial condicionespecial = null;
-            if (entity.CondicionEspecialId.HasValue)
+            if (entity.CondicionEspecialId != 0)
             {
                 condicionespecial = await context.Set<CondicionEspecial>().FindAsync(entity.CondicionEspecialId.Value);
                 if (condicionespecial == null) throw new Exception($"Condición Especial con ID {entity.CondicionEspecialId.Value} no existe.");

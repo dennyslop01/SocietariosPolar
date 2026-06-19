@@ -59,7 +59,7 @@
         public string? NombreContacto { get; set; }
         public string? TelefonoContacto { get; set; }
         public string? EmailContacto { get; set; }
-        public CondicionEspecial CondicionEspecial { get; set; }
+        public CondicionEspecial? CondicionEspecial { get; set; }
         public string? Observaciones { get; set; }
         public string? DocumentosRelacionados { get; set; }
 

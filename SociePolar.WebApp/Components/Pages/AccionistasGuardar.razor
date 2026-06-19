@@ -1003,7 +1003,7 @@
             listCondicionEspecial = await GetEntityListAsync("condicionesespeciales");
 
             var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+            listSociedad = listSociedades.OrderBy(x=> x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
 
             listAccionista = await repository.GetAllAsync();
         }

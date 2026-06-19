@@ -321,7 +321,7 @@
             listTipoLibro = await GetEntityListAsync("tipolibros");
 
             var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+            listSociedad = listSociedades.OrderBy(x=> x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
         }
         catch (Exception ex)
         {

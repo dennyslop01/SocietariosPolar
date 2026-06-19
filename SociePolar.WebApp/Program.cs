@@ -48,6 +48,7 @@ builder.Services.AddScoped<IAutoridad, AutoridadRepository>();
 builder.Services.AddScoped<IAsamblea, AsambleaRepository>();
 builder.Services.AddScoped<ICertificacion, CertificacionRepository>();
 builder.Services.AddScoped<ILibroSocietario, LibroSocietarioRepository>();
+builder.Services.AddScoped<IAccionista, AccionistaRepository>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpClient();

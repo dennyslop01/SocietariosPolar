@@ -33,6 +33,9 @@ namespace SociePolar.Infrastructure.Repositories
                 { "modalidadpago", typeof(ModalidadPago) },
                 { "tipocuenta", typeof(TipoCuenta) },
                 { "banco", typeof(Banco) },
+                { "dirigidosa", typeof(DirigidoA) },
+                { "estadosciviles", typeof(EstadoCivil)  },
+                { "condicionesespeciales", typeof(CondicionEspecial) },
             };
         }
 

@@ -1,0 +1,89 @@
+﻿namespace SociePolar.Domain.Entities
+{
+    public class Accionista
+    {
+        public int Id { get; set; }
+        public Sociedad? Sociedad { get; set; }
+        public TipoAccionista? TipoAccionista { get; set; }
+        public string? Nombre { get; set; }
+        public string? Cedula { get; set; }
+        public DateTime? FechaEmision { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public string? OtroDocumento { get; set; }
+        public DateTime? FechaEmisionOtro { get; set; }
+        public DateTime? FechaVencimientoOtro { get; set; }
+        public string? Rif { get; set; }
+        public DateTime? FechaEmisionRif { get; set; }
+        public DateTime? FechaVencimientoRif { get; set; }
+        public DirigidoA? DirigidoA { get; set; }
+        public EstadoCivil? EstadoCivil { get; set; }
+        public string? NombreConyuge { get; set; }
+        public string? CedulaConyuge { get; set; }
+        public DateTime? FechaEmisionConyuge { get; set; }
+        public DateTime? FechaVencimientoConyuge { get; set; }
+        public string? OtroDocumentoConyuge { get; set; }
+        public DateTime? FechaEmisionOtroConyuge { get; set; }
+        public DateTime? FechaVencimientoOtroConyuge { get; set; }
+        public int? SeparacionBienes { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
+        public DateTime? FechaIngreso { get; set; }
+        public string? Email1 { get; set; }
+        public string? Email2 { get; set; }
+        public string? Email3 { get; set; }
+        public string? TelefonoMovil { get; set; }
+        public string? Telefono1 { get; set; }
+        public string? Telefono2 { get; set; }
+        public string? Telefono3 { get; set; }
+        public string? Telefono4 { get; set; }
+        public string? Direccion1 { get; set; }
+        public string? Direccion2 { get; set; }
+        public string? GrupoFamiliar { get; set; }
+        public string? Nacionalidad { get; set; }
+        public string? DomiciliadoEn { get; set; }
+        public Banco? Banco { get; set; }
+        public string? NumeroCuenta { get; set; }
+        public TipoCuenta? TipoCuenta { get; set; }
+        public string? NombreTitularCuenta { get; set; }
+        public DateTime? UltimaActualizacion { get; set; }
+        public int? AnoActualizacion { get; set; }
+        public int? FaltaActualizar { get; set; }
+        public int? TieneApoderado { get; set; }
+        public string? NombreApoderado { get; set; }
+        public string? DatosPoder { get; set; }
+        public string? CedulaApoderado { get; set; }
+        public DateTime? FechaEmisionApoderado { get; set; }
+        public DateTime? FechaVencimientoApoderado { get; set; }
+        public string? OtroDocumentoApoderado { get; set; }
+        public DateTime? FechaEmisionOtroApoderado { get; set; }
+        public DateTime? FechaVencimientoOtroApoderado { get; set; }
+        public string? NombreContacto { get; set; }
+        public string? TelefonoContacto { get; set; }
+        public string? EmailContacto { get; set; }
+        public CondicionEspecial CondicionEspecial { get; set; }
+        public string? Observaciones { get; set; }
+        public string? DocumentosRelacionados { get; set; }
+
+
+        public int? AnoDuracion { get; set; }
+        public string? JuntaDirectiva { get; set; }
+        public int? VigenciaJunta { get; set; }
+        public DateTime? FechaVencimientoJunta { get; set; }
+        public string? RegistradaEn { get; set; }
+
+
+        public string? NombreSusesion { get; set; }
+        public string? CedulaSusesion { get; set; }
+        public string? FechaEmisionSucesion { get; set; }
+        public string? FechaVencimientoSucesion { get; set; }
+        public string? OtroDocumentoSucesion { get; set; }
+        public string? FechaEmisionOtroSucesion { get; set; }
+        public string? FechaVencimientoOtroSucesion { get; set; }
+
+
+
+        public DateTime CreateDate { get; set; }
+        public DateTime UpdateDate { get; set; }
+        public int CreateUserId { get; set; }
+        public int UpdateUserId { get; set; }
+    }
+}

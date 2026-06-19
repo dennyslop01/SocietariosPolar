@@ -1,0 +1,1141 @@
+﻿@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        @(entidadEditando.Id == 0 ? "Agregar Accionista" : "Modificar Accionista")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Pestañas de Navegación -->
+                    <ul class="nav nav-tabs mb-4" id="accionistaTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active btn-sm" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Básicos</button>
+                        </li>
+                        @if (entidadEditando.TipoAccionistaId != 0)
+                        {
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm" id="contacto-tab" data-bs-toggle="tab" data-bs-target="#contacto" type="button" role="tab">Contacto y Ubicación</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm" id="conyuge-tab" data-bs-toggle="tab" data-bs-target="#conyuge" type="button" role="tab">@tabConyuge</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm" id="banco-tab" data-bs-toggle="tab" data-bs-target="#banco" type="button" role="tab">Finanzas y Apoderado</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm" id="junta-tab" data-bs-toggle="tab" data-bs-target="#junta" type="button" role="tab">Junta y Otros</button>
+                            </li>
+                        }
+                    </ul>
+                    <div class="tab-content" id="accionistaTabsContent">
+                        <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                                    <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.SociedadId">
+                                        <option value="0">Seleccione ...</option>
+                                        @if (listSociedad != null)
+                                        {
+                                            @foreach (var sociedad in listSociedad)
+                                            {
+                                                <option value="@sociedad.Id">@sociedad.Empresa.Nombre</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Tipo Accionista</label>
+                                    <InputSelect class="form-select form-select-sm"
+                                                 ValueExpression="@(() => entidadEditando.TipoAccionistaId)"
+                                                 Value="@entidadEditando.TipoAccionistaId"
+                                                 ValueChanged="@((int? val) => OnTipoChanged(val))">
+                                        <option value="0">Seleccione ...</option>
+                                        @if (listTipoAccionista != null)
+                                        {
+                                            @foreach (var tipo in listTipoAccionista)
+                                            {
+                                                <option value="@tipo.Id">@tipo.Nombre</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                </div>
+                                @if (entidadEditando.TipoAccionistaId != 0)
+                                {
+                                    @if (entidadEditando.TipoAccionistaId == 1)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Nombre</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                            @bind-Value="entidadEditando.Nombre"
+                                            placeholder="Ingrese nombre..."
+                                            maxlength="200" />
+                                            <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tax Id</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                            @bind-Value="entidadEditando.Cedula"
+                                            placeholder="Ingrese número de documento..."
+                                            maxlength="20"
+                                            inputmode="numeric"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                            <ValidationMessage For="@(() => entidadEditando.Cedula)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                            @bind="entidadEditando.FechaEmision" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                            @bind="entidadEditando.FechaVencimiento" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Otro Documento</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                            @bind-Value="entidadEditando.OtroDocumento"
+                                            placeholder="Ingrese número de documento..."
+                                            maxlength="20"
+                                            inputmode="numeric"
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión Otro</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                            @bind="entidadEditando.FechaEmisionOtro" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento Otro</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                            @bind="entidadEditando.FechaVencimientoOtro" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                        </div>
+                                    }
+                                    @if (entidadEditando.TipoAccionistaId == 3)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Nombre Sucesión</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.NombreSusesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tax Id Sucesión</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.CedulaSusesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.FechaEmisionSucesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.FechaVencimientoSucesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Otro Documento Sucesión</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.OtroDocumentoSucesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión Otro</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.FechaEmisionOtroSucesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento Otro</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.FechaVencimientoOtroSucesion"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="2000" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                        </div>
+                                    }
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Rif</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Rif"
+                                        placeholder="Ingrese número de rif..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión Rif</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaEmisionRif" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento Rif</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaVencimientoRif" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                    </div>
+                                    @if (entidadEditando.TipoAccionistaId == 2)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Nombre del Representante Legal</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.Nombre"
+                                                       placeholder="Ingrese nombre..."
+                                                       maxlength="200" />
+                                            <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tax Id del Representante Legal</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.Cedula"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       inputmode="numeric"
+                                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                            <ValidationMessage For="@(() => entidadEditando.Cedula)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmision" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimiento" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Otro Documento</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.OtroDocumento"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       inputmode="numeric"
+                                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión Otro</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmisionOtro" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento Otro</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimientoOtro" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Años de duración de la compañía</label>
+                                            <InputNumber class="form-control form-control-sm small"
+                                                         @bind-Value="entidadEditando.AnoDuracion"
+                                                         placeholder="Ingrese años de duración..."
+                                                         maxlength="3"
+                                                         inputmode="numeric"
+                                                         oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3);" />
+                                        </div>
+                                        <div class="col-md-10 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Junta Directiva</label>
+                                            <textarea class="form-control form-control-sm small"
+                                                      @bind="entidadEditando.JuntaDirectiva"
+                                                      @bind:event="oninput"
+                                                      rows="4"
+                                                      maxlength="4000"
+                                                      placeholder="Ingrese la junta directiva (máximo 4,000 caracteres)...">
+                                            </textarea>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Años de Vigencia de la Junta</label>
+                                            <InputNumber class="form-control form-control-sm small"
+                                                         @bind-Value="entidadEditando.VigenciaJunta"
+                                                         placeholder="Ingrese años de vigencia..."
+                                                         maxlength="2"
+                                                         inputmode="numeric"
+                                                         oninput="if(this.value.length > 2) this.value = this.value.slice(0, 2);" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento de la Junta</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimientoJunta" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-10 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Registrada En</label>
+                                            <textarea class="form-control form-control-sm small"
+                                                      @bind="entidadEditando.JuntaDirectiva"
+                                                      @bind:event="oninput"
+                                                      rows="4"
+                                                      maxlength="2000"
+                                                      placeholder="Ingrese donde esta registrada la junta (máximo 2,000 caracteres)...">
+                                            </textarea>
+                                        </div>
+                                    }
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Dirigido A</label>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.DirigidoAId">
+                                            <option value="0">Seleccione ...</option>
+                                            @if (listDirigidoA != null)
+                                            {
+                                                @foreach (var item in listDirigidoA)
+                                                {
+                                                    <option value="@item.Id">@item.Nombre</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Estado Civil</label>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.EstadoCivilId">
+                                            <option value="0">Seleccione ...</option>
+                                            @if (listEstadoCivil != null)
+                                            {
+                                                @foreach (var estado in listEstadoCivil)
+                                                {
+                                                    <option value="@estado.Id">@estado.Nombre</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Nacionalidad</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Nacionalidad"
+                                        placeholder="Ingrese la nacionalidad..."
+                                        maxlength="200" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Nacimiento</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaNacimiento" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Ingreso</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaIngreso" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Última Actualización</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.UltimaActualizacion" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Año Actualización</label>
+                                        <InputNumber class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.AnoActualizacion"
+                                        placeholder="Ingrese año actualización..."
+                                        maxlength="4"
+                                        inputmode="numeric"
+                                        oninput="if(this.value.length > 4) this.value = this.value.slice(0, 4);" />
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">¿Hace falta actualizar?</label>
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio"
+                                            name="faltaGroup"
+                                            id="faltaSi"
+                                            class="form-check-input"
+                                            value="1"
+                                            checked="@(entidadEditando.FaltaActualizar == 1)" />
+                                            <label class="form-check-label small text-secondary" for="faltaSi">Sí</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio"
+                                            name="faltaGroup"
+                                            id="faltaNo"
+                                            class="form-check-input"
+                                            value="0"
+                                            checked="@(entidadEditando.FaltaActualizar == 0)" />
+                                            <label class="form-check-label small text-secondary" for="faltaNo">No</label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="tab-pane" id="contacto" role="tabpanel">
+                            <div class="row">
+                                @if (entidadEditando.TipoAccionistaId != 0)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Email 1</label>
+                                        <InputText type="email" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Email1"
+                                        placeholder="ejemplo@correo.com"
+                                        maxlength="100"
+                                        inputmode="email" />
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Email 2</label>
+                                        <InputText type="email" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Email2"
+                                        placeholder="ejemplo@correo.com"
+                                        maxlength="100"
+                                        inputmode="email" />
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Email 3</label>
+                                        <InputText type="email" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Email3"
+                                        placeholder="ejemplo@correo.com"
+                                        maxlength="100"
+                                        inputmode="email" />
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Teléfono Móvil</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.TelefonoMovil"
+                                        placeholder="Ingrese número de teléfono móvil..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Teléfono 1</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Telefono1"
+                                        placeholder="Ingrese número de teléfono..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Teléfono 2</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Telefono2"
+                                        placeholder="Ingrese número de teléfono..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Teléfono 3</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Telefono3"
+                                        placeholder="Ingrese número de teléfono..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Teléfono 4</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.Telefono4"
+                                        placeholder="Ingrese número de teléfono..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-10 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Grupo Familiar</label>
+                                        <textarea class="form-control form-control-sm small"
+                                        @bind="entidadEditando.GrupoFamiliar"
+                                        @bind:event="oninput"
+                                        rows="4"
+                                        maxlength="1000"
+                                        placeholder="Ingrese el grupo familiar (máximo 1,000 caracteres)...">
+                                        </textarea>
+                                    </div>
+                                    <div class="col-md-10 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Dirección 1</label>
+                                        <textarea class="form-control form-control-sm small"
+                                        @bind="entidadEditando.Direccion1"
+                                        @bind:event="oninput"
+                                        rows="4"
+                                        maxlength="4000"
+                                        placeholder="Ingrese la dirección (máximo 4,000 caracteres)...">
+                                        </textarea>
+                                    </div>
+                                    <div class="col-md-10 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Dirección 2</label>
+                                        <textarea class="form-control form-control-sm small"
+                                        @bind="entidadEditando.Direccion2"
+                                        @bind:event="oninput"
+                                        rows="4"
+                                        maxlength="4000"
+                                        placeholder="Ingrese la dirección (máximo 4,000 caracteres)...">
+                                        </textarea>
+                                    </div>
+                                    <div class="col-md-10 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Domiciliado En</label>
+                                        <textarea class="form-control form-control-sm small"
+                                        @bind="entidadEditando.DomiciliadoEn"
+                                        @bind:event="oninput"
+                                        rows="4"
+                                        maxlength="4000"
+                                        placeholder="Ingrese la dirección de domicilio (máximo 4,000 caracteres)...">
+                                        </textarea>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="conyuge" role="tabpanel">
+                            <div class="row">
+                                @if (entidadEditando.TipoAccionistaId != 0)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Nombre Cónyuge</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.NombreConyuge"
+                                        placeholder="Ingrese nombre..."
+                                        maxlength="200" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Tax Id</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.CedulaConyuge"
+                                        placeholder="Ingrese número de documento..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaEmisionConyuge" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaVencimientoConyuge" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Otro Documento</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.OtroDocumentoConyuge"
+                                        placeholder="Ingrese número de documento..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión Otro</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaEmisionOtroConyuge" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento Otro</label>
+                                        <input type="date" class="form-control form-control-sm small"
+                                        @bind="entidadEditando.FechaVencimientoOtroConyuge" @bind:format="yyyy-MM-dd" />
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">¿Separación o Capitulación de Bienes?</label>
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio"
+                                            name="bienesGroup"
+                                            id="bienesSi"
+                                            class="form-check-input"
+                                            value="1"
+                                            checked="@(entidadEditando.SeparacionBienes == 1)" />
+                                            <label class="form-check-label small text-secondary" for="bienesSi">Sí</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio"
+                                            name="bienesGroup"
+                                            id="bienesNo"
+                                            class="form-check-input"
+                                            value="0"
+                                            checked="@(entidadEditando.SeparacionBienes == 0)" />
+                                            <label class="form-check-label small text-secondary" for="bienesNo">No</label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="banco" role="tabpanel">
+                            <div class="row">
+                                @if (entidadEditando.TipoAccionistaId != 0)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Banco</label>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.BancoId">
+                                            <option value="0">Seleccione ...</option>
+                                            @if (listBanco != null)
+                                            {
+                                                @foreach (var banco in listBanco)
+                                                {
+                                                    <option value="@banco.Id">@banco.Nombre</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Tipo Cuenta</label>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoCuentaId">
+                                            <option value="0">Seleccione ...</option>
+                                            @if (listTipoCuenta != null)
+                                            {
+                                                @foreach (var tipo in listTipoCuenta)
+                                                {
+                                                    <option value="@tipo.Id">@tipo.Nombre</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Número de Cuenta</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                                   @bind-Value="entidadEditando.NumeroCuenta"
+                                                   placeholder="Ingrese número de cuenta..."
+                                                   maxlength="20"
+                                                   inputmode="numeric"
+                                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Nombre Titular</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                                   @bind-Value="entidadEditando.NombreTitularCuenta"
+                                                   placeholder="Ingrese nombre titular..."
+                                                   maxlength="200" />
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">¿Tiene Apoderado?:</label>
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio"
+                                                   name="apoderadoGroup"
+                                                   id="apoderadoSi"
+                                                   class="form-check-input"
+                                                   value="1"
+                                                   checked="@(entidadEditando.TieneApoderado == 1)"
+                                                   @onchange="() => ActualizarApoderado(1)" />
+                                            <label class="form-check-label small text-secondary" for="apoderadoSi">Sí</label>
+                                        </div>
+
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio"
+                                                   name="apoderadoGroup"
+                                                   id="apoderadoNo"
+                                                   class="form-check-input"
+                                                   value="0"
+                                                   checked="@(entidadEditando.TieneApoderado == 0)" 
+                                                   @onchange="() => ActualizarApoderado(0)" />
+                                            <label class="form-check-label small text-secondary" for="apoderadoNo">No</label>
+                                        </div>
+                                    </div>
+                                    @if(entidadEditando.TieneApoderado == 1)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Nombre Apoderado</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.NombreApoderado"
+                                                       placeholder="Ingrese nombre apoderado..."
+                                                       maxlength="200" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tax Id</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.CedulaApoderado"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       inputmode="numeric"
+                                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmisionApoderado" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimientoApoderado" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Otro Documento</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.OtroDocumentoApoderado"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       inputmode="numeric"
+                                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión Otro</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmisionOtroApoderado" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento Otro</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimientoOtroApoderado" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-10 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Datos Poder</label>
+                                            <textarea class="form-control form-control-sm small"
+                                                      @bind="entidadEditando.DatosPoder"
+                                                      @bind:event="oninput"
+                                                      rows="4"
+                                                      maxlength="4000"
+                                                      placeholder="Ingrese los datos del poder (máximo 4,000 caracteres)...">
+                                            </textarea>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="junta" role="tabpanel">
+                            <div class="row">
+                                @if (entidadEditando.TipoAccionistaId != 0)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Nombre Contacto</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.NombreContacto"
+                                        placeholder="Ingrese nombre contacto..."
+                                        maxlength="200" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Email Contacto</label>
+                                        <InputText type="email" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.EmailContacto"
+                                        placeholder="ejemplo@correo.com"
+                                        maxlength="100"
+                                        inputmode="email" />
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Teléfono Contacto</label>
+                                        <InputText type="text" class="form-control form-control-sm small"
+                                        @bind-Value="entidadEditando.TelefonoContacto"
+                                        placeholder="Ingrese número de teléfono..."
+                                        maxlength="20"
+                                        inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Condición Especial</label>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.CondicionEspecialId">
+                                            <option value="0">Seleccione ...</option>
+                                            @if (listCondicionEspecial != null)
+                                            {
+                                                @foreach (var tipo in listCondicionEspecial)
+                                                {
+                                                    <option value="@tipo.Id">@tipo.Nombre</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-10 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Observaciones</label>
+                                        <textarea class="form-control form-control-sm small"
+                                        @bind="entidadEditando.Observaciones"
+                                        @bind:event="oninput"
+                                        rows="4"
+                                        maxlength="4000"
+                                        placeholder="Ingrese las observaciones (máximo 4,000 caracteres)...">
+                                        </textarea>
+                                    </div>
+                                    <div class="col-md-10 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Documentos Relacionados</label>
+                                        <textarea class="form-control form-control-sm small"
+                                        @bind="entidadEditando.DocumentosRelacionados"
+                                        @bind:event="oninput"
+                                        rows="4"
+                                        maxlength="4000"
+                                        placeholder="Ingrese los documentos relacionados (máximo 4,000 caracteres)...">
+                                        </textarea>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>                    
+                </div>
+
+                
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    @if (entidadEditando.TipoAccionistaId != 0)
+                    {
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                            <i class="bi bi-save me-1"></i> Guardar
+                        </button>
+                    }
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;">
+
+        <div class="modal-dialog modal-dialog-centered justify-content-center h-100 m-0" style="max-width: 100%;">
+            <div class="modal-content border-0 bg-transparent shadow-none">
+                <div class="modal-body text-center">
+                    @* Spinner más fino y con el color principal de tu app *@
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
+                        Procesando
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+
+    private AccionistaDto entidadEditando = new();
+
+    private List<Sociedad> listSociedad = new();
+    private List<Accionista> listAccionista = new();
+
+    private List<IBaseEntity> listTipoAccionista = new();
+    private List<IBaseEntity> listDirigidoA = new();
+    private List<IBaseEntity> listEstadoCivil = new();
+    private List<IBaseEntity> listBanco = new();
+    private List<IBaseEntity> listTipoCuenta = new();
+    private List<IBaseEntity> listCondicionEspecial = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+    private string tabConyuge = "Cónyuge";
+
+    [Inject] private ISociedad reposociedad { get; set; } = null!;
+    [Inject] private IAccionista repository { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
+        await LoadGenericDataAsync();
+
+        if (id == "0")
+        {
+            entidadEditando = new();
+            entidadEditando.SociedadId = 0;
+            entidadEditando.TipoAccionistaId = 0;
+            entidadEditando.DirigidoAId = 0;
+            entidadEditando.EstadoCivilId = 0;
+            entidadEditando.BancoId = 0;
+            entidadEditando.TipoCuentaId = 0;
+            entidadEditando.CondicionEspecialId = 0;
+            entidadEditando.CreateDate = DateTime.Now;
+            entidadEditando.UpdateDate = DateTime.Now;
+            editContext = new EditContext(entidadEditando);
+        }
+        else
+        {
+            try
+            {
+                var entity = await repository.GetByIdAsync(int.Parse(id));
+                AccionistaDto dto = new()
+                {
+                    Id = entity.Id,
+                    SociedadId = entity.Sociedad.Id,
+                    TipoAccionistaId = entity.TipoAccionista.Id,
+                    Nombre = entity.Nombre,
+                    Cedula = entity.Cedula,
+                    FechaEmision = entity.FechaEmision,
+                    FechaVencimiento = entity.FechaVencimiento,
+                    OtroDocumento = entity.OtroDocumento,
+                    FechaEmisionOtro = entity.FechaEmisionOtro,
+                    FechaVencimientoOtro = entity.FechaVencimientoOtro,
+                    Rif = entity.Rif,
+                    FechaEmisionRif = entity.FechaEmisionRif,
+                    FechaVencimientoRif = entity.FechaVencimientoRif,
+                    DirigidoAId = entity.DirigidoA.Id,
+                    EstadoCivilId = entity.EstadoCivil.Id,
+                    NombreConyuge = entity.NombreConyuge,
+                    CedulaConyuge = entity.CedulaConyuge,
+                    FechaEmisionConyuge = entity.FechaEmisionConyuge,
+                    FechaVencimientoConyuge = entity.FechaVencimientoConyuge,
+                    OtroDocumentoConyuge = entity.OtroDocumentoConyuge,
+                    FechaEmisionOtroConyuge = entity.FechaEmisionOtroConyuge,
+                    FechaVencimientoOtroConyuge = entity.FechaVencimientoOtroConyuge,
+                    SeparacionBienes = entity.SeparacionBienes,
+                    FechaNacimiento = entity.FechaNacimiento,
+                    FechaIngreso = entity.FechaIngreso,
+                    Email1 = entity.Email1,
+                    Email2 = entity.Email2,
+                    Email3 = entity.Email3,
+                    TelefonoMovil = entity.TelefonoMovil,
+                    Telefono1 = entity.Telefono1,
+                    Telefono2 = entity.Telefono2,
+                    Telefono3 = entity.Telefono3,
+                    Telefono4 = entity.Telefono4,
+                    Direccion1 = entity.Direccion1,
+                    Direccion2 = entity.Direccion2,
+                    GrupoFamiliar = entity.GrupoFamiliar,
+                    Nacionalidad = entity.Nacionalidad,
+                    DomiciliadoEn = entity.DomiciliadoEn,
+                    BancoId = entity.Banco.Id,
+                    NumeroCuenta = entity.NumeroCuenta,
+                    TipoCuentaId = entity.TipoCuenta.Id,
+                    NombreTitularCuenta = entity.NombreTitularCuenta,
+                    UltimaActualizacion = entity.UltimaActualizacion,
+                    AnoActualizacion = entity.AnoActualizacion,
+                    FaltaActualizar = entity.FaltaActualizar,
+                    TieneApoderado = entity.TieneApoderado,
+                    NombreApoderado = entity.NombreApoderado,
+                    DatosPoder = entity.DatosPoder,
+                    CedulaApoderado = entity.CedulaApoderado,
+                    FechaEmisionApoderado = entity.FechaEmisionApoderado,
+                    FechaVencimientoApoderado = entity.FechaVencimientoApoderado,
+                    OtroDocumentoApoderado = entity.OtroDocumentoApoderado,
+                    FechaEmisionOtroApoderado = entity.FechaEmisionOtroApoderado,
+                    FechaVencimientoOtroApoderado = entity.FechaVencimientoOtroApoderado,
+                    NombreContacto = entity.NombreContacto,
+                    TelefonoContacto = entity.TelefonoContacto,
+                    EmailContacto = entity.EmailContacto,
+                    CondicionEspecialId = entity.CondicionEspecial.Id,
+                    Observaciones = entity.Observaciones,
+                    DocumentosRelacionados = entity.DocumentosRelacionados,
+                    AnoDuracion = entity.AnoDuracion,
+                    JuntaDirectiva = entity.JuntaDirectiva,
+                    VigenciaJunta = entity.VigenciaJunta,
+                    FechaVencimientoJunta = entity.FechaVencimientoJunta,
+                    RegistradaEn = entity.RegistradaEn,
+                    NombreSusesion = entity.NombreSusesion,
+                    CedulaSusesion = entity.CedulaSusesion,
+                    FechaEmisionSucesion = entity.FechaEmisionSucesion,
+                    FechaVencimientoSucesion = entity.FechaVencimientoSucesion,
+                    OtroDocumentoSucesion = entity.OtroDocumentoSucesion,
+                    FechaEmisionOtroSucesion = entity.FechaEmisionOtroSucesion,
+                    FechaVencimientoOtroSucesion = entity.FechaVencimientoOtroSucesion,
+                    CreateDate = entity.CreateDate,
+                    CreateUserId = entity.CreateUserId,
+                    UpdateDate = entity.UpdateDate,
+                    UpdateUserId = entity.UpdateUserId
+                };
+
+                entidadEditando = dto;
+                editContext = new EditContext(entidadEditando);
+            }
+            catch (Exception ex)
+            {
+                await MostrarNotificacion("No se pudieron cargar los datos", true);
+            }
+        }
+        cargando = false;
+    }
+
+    public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        // Invocamos el método asíncrono
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        // Obtenemos el resultado de la Task dinámica
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.ToList();
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            listTipoAccionista = await GetEntityListAsync("tipoaccionistas");
+            listDirigidoA = await GetEntityListAsync("dirigidosa");
+            listEstadoCivil = await GetEntityListAsync("estadosciviles");
+            listBanco = await GetEntityListAsync("banco");
+            listTipoCuenta = await GetEntityListAsync("tipocuenta");
+            listCondicionEspecial = await GetEntityListAsync("condicionesespeciales");
+
+            var listSociedades = await reposociedad.GetAllAsync();
+            listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 1).ToList();
+
+            listAccionista = await repository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("No se pudieron cargar los datos", true);
+        }
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+
+                entidadEditando.UpdateDate = DateTime.Now;
+                entidadEditando.UpdateUserId = userid;
+
+                if (entidadEditando.Id == 0)
+                {
+                    cargando = true;
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+
+                    await repository.AddAsync(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Accionista guardada correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+                else
+                {
+                    cargando = true;
+                    repository.Update(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Accionista actualizado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Si hay error en base de datos (ej. nombre duplicado)
+            Console.WriteLine($"Error: {ex.Message}");
+            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+        }
+        cargando = false;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private void ActualizarApoderado(int valor)
+    {
+        entidadEditando.TieneApoderado = valor;
+        if (valor == 0)
+        {
+            // Limpiar campos relacionados al apoderado
+            entidadEditando.NombreApoderado = string.Empty;
+            entidadEditando.CedulaApoderado = string.Empty;
+            entidadEditando.FechaEmisionApoderado = null;
+            entidadEditando.FechaVencimientoApoderado = null;
+            entidadEditando.OtroDocumentoApoderado = string.Empty;
+            entidadEditando.FechaEmisionOtroApoderado = null;
+            entidadEditando.FechaVencimientoOtroApoderado = null;
+            entidadEditando.DatosPoder = string.Empty;
+        }
+        StateHasChanged();
+    }
+
+    private async Task OnTipoChanged(int? nuevoTipoId)
+    {
+        entidadEditando.TipoAccionistaId = nuevoTipoId;
+        if (entidadEditando.TipoAccionistaId == 1) // Persona Natural
+        {
+            tabConyuge = "Cónyuge";
+            entidadEditando.NombreSusesion = string.Empty;
+            entidadEditando.CedulaSusesion = null;
+            entidadEditando.FechaEmisionSucesion = null;
+            entidadEditando.FechaVencimientoSucesion = null;
+            entidadEditando.OtroDocumentoSucesion = null;
+            entidadEditando.FechaEmisionOtroSucesion = null;
+            entidadEditando.FechaVencimientoOtroSucesion = null;
+        }
+        
+        if (entidadEditando.TipoAccionistaId == 2) // Persona Natural
+        {
+            tabConyuge = "Cónyuge";
+            entidadEditando.NombreSusesion = string.Empty;
+            entidadEditando.CedulaSusesion = null;
+            entidadEditando.FechaEmisionSucesion = null;
+            entidadEditando.FechaVencimientoSucesion = null;
+            entidadEditando.OtroDocumentoSucesion = null;
+            entidadEditando.FechaEmisionOtroSucesion = null;
+            entidadEditando.FechaVencimientoOtroSucesion = null;
+        }
+
+        if (entidadEditando.TipoAccionistaId == 3) // Persona Natural
+        {
+            tabConyuge = "Cónyuge";
+        }
+        StateHasChanged();
+    }
+}

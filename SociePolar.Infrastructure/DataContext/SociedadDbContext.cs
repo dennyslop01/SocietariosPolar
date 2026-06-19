@@ -30,5 +30,9 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<ModalidadPago> ModalidadesPago { get; set; }
         public DbSet<TipoCuenta> TiposCuentas { get; set; }
         public DbSet<Banco> Bancos { get; set; }
+        public DbSet<Accionista> Accionistas { get; set; }
+        public DbSet<DirigidoA> DirigidosA { get; set; }
+        public DbSet<EstadoCivil> EstadosCiviles { get; set; }
+        public DbSet<CondicionEspecial> CondicionesEspeciales { get; set; }
     }
 }

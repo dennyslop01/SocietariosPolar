@@ -5,20 +5,10 @@ namespace SociePolar.Domain.Dtos
     public class AccionistaDto
     {
         public int Id { get; set; }
-
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad válida.")] 
         public int? SociedadId { get; set; }
-
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Accionista válida.")] 
         public int? TipoAccionistaId { get; set; }
-
-
-        [Required(ErrorMessage = "El Nombre es requerido.")] 
         public string? Nombre { get; set; }
-        
-        [Required(ErrorMessage = "El Número de Documento es requerido.")] 
         public string? Cedula { get; set; }
-
         public DateTime? FechaEmision { get; set; }
         public DateTime? FechaVencimiento { get; set; }
         public string? OtroDocumento { get; set; }
@@ -82,6 +72,10 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaVencimientoOtroApoderado { get; set; }
         public string? NombreContacto { get; set; }
         public string? TelefonoContacto { get; set; }
+
+        [StringLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
+        [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? EmailContacto { get; set; }
         public int? CondicionEspecialId { get; set; }
         public string? Observaciones { get; set; }

@@ -39,6 +39,13 @@
                     <div class="tab-content" id="accionistaTabsContent">
                         <div class="tab-pane fade show active" id="datos" role="tabpanel">
                             <div class="row">
+                                @if (mensajeAlerta != string.Empty)
+                                {
+                                    <div class="col-md-10 mb-3">
+                                        @* Se agregó style="white-space: pre-line;" *@
+                                        <label class="form-label fw-bold text-danger small" style="white-space: pre-line;">@mensajeAlerta</label>
+                                    </div>
+                                }
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold text-secondary small">Sociedad</label>
                                     <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.SociedadId">
@@ -775,12 +782,6 @@
                     </div>                    
                 </div>
 
-                
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                </div>
-
                 <div class="modal-footer bg-light">
                     @if (entidadEditando.TipoAccionistaId != 0)
                     {
@@ -1031,6 +1032,49 @@
             return;
         }
 
+        if (entidadEditando.SociedadId == 0)
+        {
+            mensajeAlerta = "La sociedad es obligatoria \n";
+        }
+        if (entidadEditando.TipoAccionistaId == 0)
+        {
+            mensajeAlerta += "El tipo de accionista es obligatorio \n";
+        }
+        if (entidadEditando.TipoAccionistaId == 1 || entidadEditando.TipoAccionistaId == 2)
+        {
+            if (string.IsNullOrEmpty(entidadEditando.Nombre))
+            {
+                mensajeAlerta += "El nombre es obligatorio \n";
+            }
+            if (string.IsNullOrEmpty(entidadEditando.Cedula))
+            {
+                mensajeAlerta += "La tax id es obligatoria \n";
+            }
+        }
+        if (entidadEditando.TipoAccionistaId == 3)
+        {
+            if (string.IsNullOrEmpty(entidadEditando.NombreSusesion))
+            {
+                mensajeAlerta += "El nombre sucesión es obligatorio \n";
+            }
+            if (string.IsNullOrEmpty(entidadEditando.CedulaSusesion))
+            {
+                mensajeAlerta += "La yax id sucesión es obligatoria \n";
+            }
+        }
+
+        if (!string.IsNullOrEmpty(mensajeAlerta))
+        {
+            await MostrarNotificacion(mensajeAlerta, true); 
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                                                document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                                                document.body.scrollTo({ top: 0, behavior: 'smooth' });
+                                            ");
+            return;
+        }
+
         try
         {
             var useridaux = await SessionStorage.GetAsync<string>("UserId");
@@ -1107,6 +1151,7 @@
 
     private async Task OnTipoChanged(int? nuevoTipoId)
     {
+        mensajeAlerta = string.Empty;
         entidadEditando.TipoAccionistaId = nuevoTipoId;
         if (entidadEditando.TipoAccionistaId == 1) // Persona Natural
         {

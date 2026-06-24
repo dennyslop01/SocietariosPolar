@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public Sociedad? Sociedad { get; set; }
+        public EstatusAccionista? EstatusAccionista { get; set; }
         public TipoAccionista? TipoAccionista { get; set; }
         public string? Nombre { get; set; }
         public string? Cedula { get; set; }

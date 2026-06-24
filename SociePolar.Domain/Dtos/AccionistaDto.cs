@@ -6,6 +6,7 @@ namespace SociePolar.Domain.Dtos
     {
         public int Id { get; set; }
         public int? SociedadId { get; set; }
+        public int? EstatusAccionistaId { get; set; }
         public int? TipoAccionistaId { get; set; }
         public string? Nombre { get; set; }
         public string? Cedula { get; set; }

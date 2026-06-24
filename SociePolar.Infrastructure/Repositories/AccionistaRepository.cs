@@ -17,6 +17,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.EstatusAccionista)
                 .Include(b => b.TipoAccionista)
                 .Include(b => b.DirigidoA)
                 .Include(b => b.EstadoCivil)
@@ -33,6 +34,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.EstatusAccionista)
                 .Include(b => b.TipoAccionista)
                 .Include(b => b.DirigidoA)
                 .Include(b => b.EstadoCivil)
@@ -50,6 +52,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.EstatusAccionista)
                 .Include(b => b.TipoAccionista)
                 .Include(b => b.DirigidoA)
                 .Include(b => b.EstadoCivil)
@@ -70,45 +73,64 @@ namespace SociePolar.Infrastructure.Repositories
             var tipoAccionista = await context.Set<TipoAccionista>().FindAsync(entity.TipoAccionistaId);
             if (tipoAccionista == null) throw new Exception($"Tipo de accionista con ID {entity.TipoAccionistaId} no existe.");
 
+            var estatusAccionista = await context.Set<EstatusAccionista>().FindAsync(entity.EstatusAccionistaId);
+            if (estatusAccionista == null) throw new Exception($"Estatus de accionista con ID {entity.EstatusAccionistaId} no existe.");
+
             DirigidoA dirigidoa = null;
-            if (entity.DirigidoAId != 0)
+            if (entity.DirigidoAId != null)
             {
-                dirigidoa = await context.Set<DirigidoA>().FindAsync(entity.DirigidoAId.Value);
-                if (dirigidoa == null) throw new Exception($"DirigidoA con ID {entity.DirigidoAId.Value} no existe.");
+                if (entity.DirigidoAId != 0)
+                {
+                    dirigidoa = await context.Set<DirigidoA>().FindAsync(entity.DirigidoAId.Value);
+                    if (dirigidoa == null) throw new Exception($"DirigidoA con ID {entity.DirigidoAId.Value} no existe.");
+                }
             }
 
             EstadoCivil estadocivil = null;
-            if (entity.EstadoCivilId != 0)
+            if (entity.EstadoCivilId != null)
             {
-                estadocivil = await context.Set<EstadoCivil>().FindAsync(entity.EstadoCivilId.Value);
-                if (estadocivil == null) throw new Exception($"Estado Civil con ID {entity.EstadoCivilId.Value} no existe.");
+                if (entity.EstadoCivilId != 0)
+                {
+                    estadocivil = await context.Set<EstadoCivil>().FindAsync(entity.EstadoCivilId.Value);
+                    if (estadocivil == null) throw new Exception($"Estado Civil con ID {entity.EstadoCivilId.Value} no existe.");
+                }
             }
 
             Banco banco = null;
-            if (entity.BancoId != 0)
+            if (entity.BancoId != null)
             {
-                banco = await context.Set<Banco>().FindAsync(entity.BancoId.Value);
-                if (banco == null) throw new Exception($"Banco con ID {entity.BancoId.Value} no existe.");
+                if (entity.BancoId != 0)
+                {
+                    banco = await context.Set<Banco>().FindAsync(entity.BancoId.Value);
+                    if (banco == null) throw new Exception($"Banco con ID {entity.BancoId.Value} no existe.");
+                }
             }
 
             TipoCuenta tipocuenta = null;
-            if (entity.TipoCuentaId != 0)
+            if (entity.TipoCuentaId != null)
             {
-                tipocuenta = await context.Set<TipoCuenta>().FindAsync(entity.TipoCuentaId.Value);
-                if (tipocuenta == null) throw new Exception($"Tipo de Cuenta con ID {entity.TipoCuentaId.Value} no existe.");
+                if (entity.TipoCuentaId != 0)
+                {
+                    tipocuenta = await context.Set<TipoCuenta>().FindAsync(entity.TipoCuentaId.Value);
+                    if (tipocuenta == null) throw new Exception($"Tipo de Cuenta con ID {entity.TipoCuentaId.Value} no existe.");
+                }
             }
 
             CondicionEspecial condicionespecial = null;
-            if (entity.CondicionEspecialId != 0)
+            if (entity.CondicionEspecialId != null)
             {
-                condicionespecial = await context.Set<CondicionEspecial>().FindAsync(entity.CondicionEspecialId.Value);
-                if (condicionespecial == null) throw new Exception($"Condición Especial con ID {entity.CondicionEspecialId.Value} no existe.");
+                if (entity.CondicionEspecialId != 0)
+                {
+                    condicionespecial = await context.Set<CondicionEspecial>().FindAsync(entity.CondicionEspecialId.Value);
+                    if (condicionespecial == null) throw new Exception($"Condición Especial con ID {entity.CondicionEspecialId.Value} no existe.");
+                }
             }
 
             Accionista newAccionista = new()
             {
                 Sociedad = sociedad,
                 TipoAccionista = tipoAccionista,
+                EstatusAccionista = estatusAccionista,
                 Nombre = entity.Nombre,
                 Cedula = entity.Cedula,
                 FechaEmision = entity.FechaEmision,
@@ -181,13 +203,14 @@ namespace SociePolar.Infrastructure.Repositories
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
-                UpdateUserId = entity.UpdateUserId
+                UpdateUserId = entity.UpdateUserId,
             };
 
             await context.Set<Accionista>().AddAsync(newAccionista);
             context.Entry(newAccionista.Sociedad).State = EntityState.Unchanged;
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Unchanged;
-            if(dirigidoa != null) context.Entry(newAccionista.DirigidoA).State = EntityState.Unchanged;
+            context.Entry(newAccionista.EstatusAccionista).State = EntityState.Unchanged;
+            if (dirigidoa != null) context.Entry(newAccionista.DirigidoA).State = EntityState.Unchanged;
             if(estadocivil != null) context.Entry(newAccionista.EstadoCivil).State = EntityState.Unchanged;
             if(banco != null) context.Entry(newAccionista.Banco).State = EntityState.Unchanged;
             if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta).State = EntityState.Unchanged;
@@ -196,7 +219,8 @@ namespace SociePolar.Infrastructure.Repositories
             await context.SaveChangesAsync();
             context.Entry(newAccionista.Sociedad).State = EntityState.Detached;
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Detached;
-            if(dirigidoa != null) context.Entry(newAccionista.DirigidoA).State = EntityState.Detached;
+            context.Entry(newAccionista.EstatusAccionista).State = EntityState.Detached;
+            if (dirigidoa != null) context.Entry(newAccionista.DirigidoA).State = EntityState.Detached;
             if(estadocivil != null) context.Entry(newAccionista.EstadoCivil).State = EntityState.Detached;
             if(banco != null) context.Entry(newAccionista.Banco).State = EntityState.Detached;
             if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta).State = EntityState.Detached;
@@ -213,46 +237,65 @@ namespace SociePolar.Infrastructure.Repositories
             var tipoAccionista = await context.Set<TipoAccionista>().FindAsync(entity.TipoAccionistaId);
             if (tipoAccionista == null) throw new Exception($"Tipo de accionista con ID {entity.TipoAccionistaId} no existe.");
 
+            var estatusAccionista = await context.Set<EstatusAccionista>().FindAsync(entity.EstatusAccionistaId);
+            if (estatusAccionista == null) throw new Exception($"Estatus de accionista con ID {entity.EstatusAccionistaId} no existe.");
+
             Accionista editaccionista = await context.Accionistas.FindAsync(entity.Id);
             if (editaccionista == null) throw new Exception($"Accionista con ID {entity.Id} no existe.");
 
             DirigidoA dirigidoa = null;
-            if (entity.DirigidoAId != 0)
+            if (entity.DirigidoAId != null)
             {
-                dirigidoa = await context.Set<DirigidoA>().FindAsync(entity.DirigidoAId.Value);
-                if (dirigidoa == null) throw new Exception($"DirigidoA con ID {entity.DirigidoAId.Value} no existe.");
+                if (entity.DirigidoAId != 0)
+                {
+                    dirigidoa = await context.Set<DirigidoA>().FindAsync(entity.DirigidoAId.Value);
+                    if (dirigidoa == null) throw new Exception($"DirigidoA con ID {entity.DirigidoAId.Value} no existe.");
+                }
             }
 
             EstadoCivil estadocivil = null;
-            if (entity.EstadoCivilId != 0)
+            if (entity.EstadoCivilId != null)
             {
-                estadocivil = await context.Set<EstadoCivil>().FindAsync(entity.EstadoCivilId.Value);
-                if (estadocivil == null) throw new Exception($"Estado Civil con ID {entity.EstadoCivilId.Value} no existe.");
+                if (entity.EstadoCivilId != 0)
+                {
+                    estadocivil = await context.Set<EstadoCivil>().FindAsync(entity.EstadoCivilId.Value);
+                    if (estadocivil == null) throw new Exception($"Estado Civil con ID {entity.EstadoCivilId.Value} no existe.");
+                }
             }
 
             Banco banco = null;
-            if (entity.BancoId != 0)
+            if (entity.BancoId != null)
             {
-                banco = await context.Set<Banco>().FindAsync(entity.BancoId.Value);
-                if (banco == null) throw new Exception($"Banco con ID {entity.BancoId.Value} no existe.");
+                if (entity.BancoId != 0)
+                {
+                    banco = await context.Set<Banco>().FindAsync(entity.BancoId.Value);
+                    if (banco == null) throw new Exception($"Banco con ID {entity.BancoId.Value} no existe.");
+                }
             }
 
             TipoCuenta tipocuenta = null;
-            if (entity.TipoCuentaId != 0)
+            if (entity.TipoCuentaId != null)
             {
-                tipocuenta = await context.Set<TipoCuenta>().FindAsync(entity.TipoCuentaId.Value);
-                if (tipocuenta == null) throw new Exception($"Tipo de Cuenta con ID {entity.TipoCuentaId.Value} no existe.");
+                if (entity.TipoCuentaId != 0)
+                {
+                    tipocuenta = await context.Set<TipoCuenta>().FindAsync(entity.TipoCuentaId.Value);
+                    if (tipocuenta == null) throw new Exception($"Tipo de Cuenta con ID {entity.TipoCuentaId.Value} no existe.");
+                }
             }
 
             CondicionEspecial condicionespecial = null;
-            if (entity.CondicionEspecialId != 0)
+            if (entity.CondicionEspecialId != null)
             {
-                condicionespecial = await context.Set<CondicionEspecial>().FindAsync(entity.CondicionEspecialId.Value);
-                if (condicionespecial == null) throw new Exception($"Condición Especial con ID {entity.CondicionEspecialId.Value} no existe.");
+                if (entity.CondicionEspecialId != 0)
+                {
+                    condicionespecial = await context.Set<CondicionEspecial>().FindAsync(entity.CondicionEspecialId.Value);
+                    if (condicionespecial == null) throw new Exception($"Condición Especial con ID {entity.CondicionEspecialId.Value} no existe.");
+                }
             }
 
             editaccionista.Sociedad = sociedad;
             editaccionista.TipoAccionista = tipoAccionista;
+            editaccionista.EstatusAccionista = estatusAccionista;
             editaccionista.Nombre = entity.Nombre;
             editaccionista.Cedula = entity.Cedula;
             editaccionista.FechaEmision = entity.FechaEmision;

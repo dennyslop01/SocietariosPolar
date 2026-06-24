@@ -9,7 +9,7 @@
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Accionista" : "Modificar Accionista")
+                        @(entidadEditando.Id == 0 ? "Agregar Accionista Inactivos" : "Modificar Accionista Inactivos")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
@@ -108,12 +108,12 @@
                                             }
                                         }
                                     </InputSelect>
-                                </div>
+                                </div> 
                                 @if (entidadEditando.TipoAccionistaId != 0)
                                 {
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small">Estatus Accionista</label>
-                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.EstatusAccionistaId" disabled>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.EstatusAccionistaId">
                                             <option value="0">Seleccione ...</option>
                                             @if (listEstatusAccionista != null)
                                             {
@@ -886,7 +886,7 @@
     private List<Accionista> listAccionista = new();
 
     private List<IBaseEntity> listTipoAccionista = new();
-    private List<IBaseEntity> listDirigidoA = new();
+    private List<IBaseEntity> listDirigidoA = new();    
     private List<IBaseEntity> listEstadoCivil = new();
     private List<IBaseEntity> listBanco = new();
     private List<IBaseEntity> listTipoCuenta = new();
@@ -900,9 +900,11 @@
     [Inject] private ISociedad reposociedad { get; set; } = null!;
     [Inject] private IAccionista repository { get; set; } = null!;
 
+
     private bool isDropdownOpen = false;
     private string textoBusqueda = "";
     private ElementReference searchInputRef;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -930,7 +932,7 @@
             entidadEditando.BancoId = 0;
             entidadEditando.TipoCuentaId = 0;
             entidadEditando.CondicionEspecialId = 0;
-            entidadEditando.EstatusAccionistaId = 1;
+            entidadEditando.EstatusAccionistaId = 2;
             entidadEditando.CreateDate = DateTime.Now;
             entidadEditando.UpdateDate = DateTime.Now;
             editContext = new EditContext(entidadEditando);
@@ -1061,6 +1063,7 @@
             listTipoCuenta = await GetEntityListAsync("tipocuenta");
             listCondicionEspecial = await GetEntityListAsync("condicionesespeciales");
             listEstatusAccionista = await GetEntityListAsync("estatusaccionistas");
+            listEstatusAccionista = listEstatusAccionista.Where(x => x.Id != 1).ToList(); // Solo inactivos
 
             var listSociedades = await reposociedad.GetAllAsync();
             listSociedad = listSociedades.OrderBy(x => x.Empresa.Nombre).ToList();//.Where(x => x.EstatusSociedad.Id == 1)

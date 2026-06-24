@@ -1,4 +1,4 @@
-﻿@page "/accionistas"
+﻿@page "/accionistasinactivas"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -11,7 +11,7 @@
                         <i class="bi bi-person-vcard text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Accionistas Activos
+                        Accionistas Inactivos
                     </h5>
                 </div>
 
@@ -143,7 +143,7 @@
 
 @if (mostrarModal)
 {
-    <AccionistasGuardar id="@idAccionista.ToString()" OnFinalizado="ManejarCierreModal" />
+    <AccionistasInactivaGuardar id="@idAccionista.ToString()" OnFinalizado="ManejarCierreModal" />
 }
 
 
@@ -197,7 +197,7 @@
         try
         {
             var listAaccionista = await repository.GetAllAsync();
-            Listgral = listAaccionista.OrderBy(x => x.Sociedad.Empresa.Nombre).Where(x => x.Sociedad.EstatusSociedad.Id == 1  && x.EstatusAccionista.Id == 1).ToList();
+            Listgral = listAaccionista.OrderBy(x => x.Sociedad.Empresa.Nombre).Where(x => x.Sociedad.EstatusSociedad.Id == 1 && x.EstatusAccionista.Id != 1).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -353,5 +353,4 @@
         }
         return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
     }
-}
 }

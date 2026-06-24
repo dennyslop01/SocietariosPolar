@@ -252,15 +252,7 @@
         mostrarModalEliminar = true;
     }
 
-    private void VerificarActivar(Sociedad item)
-    {
-        entidadParaEliminar = item;
-        mostrarModalActivar = true;
-    }
-
     private void CerrarModalEliminar() => mostrarModalEliminar = false;
-
-    private void CerrarModalActivar() => mostrarModalActivar = false;
 
     private async Task ConfirmarEliminar()
     {
@@ -285,6 +277,14 @@
             entidadParaEliminar = null;
         }
     }
+
+    private void VerificarActivar(Sociedad item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalActivar = true;
+    }
+
+    private void CerrarModalActivar() => mostrarModalActivar = false;
 
     private async Task ConfirmarActivar()
     {

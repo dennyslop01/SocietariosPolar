@@ -382,5 +382,22 @@ namespace SociePolar.Infrastructure.Repositories
                 context.SaveChanges();
             }
         }
+
+        public async void Activar(int Id, int status)
+        {
+            using var context = _contextFactory.CreateDbContext();
+
+            var estatusAccionista = await context.Set<EstatusAccionista>().FindAsync(status);
+            if (estatusAccionista == null) throw new Exception($"Estatus de accionista con ID {status} no existe.");
+
+            Accionista editaccionista = await context.Accionistas.FindAsync(Id);
+            if (editaccionista == null) throw new Exception($"Accionista con ID {Id} no existe.");
+
+
+            editaccionista.EstatusAccionista = estatusAccionista;
+
+            context.Set<Accionista>().Update(editaccionista);
+            context.SaveChanges();
+        }
     }
 }

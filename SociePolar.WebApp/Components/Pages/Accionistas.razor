@@ -93,8 +93,12 @@
                                 <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
                                     <i class="bi bi-pencil-square fs-6"></i>
                                 </button>
-                                <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                     <i class="bi bi-trash3 fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-danger p-0 me-2"
+                                        @onclick="() => VerificarInactivar(p)" title="Inactivar">
+                                    <i class="bi bi-x-circle fs-6"></i>
                                 </button>
                             </td>
                         </tr>
@@ -168,6 +172,26 @@
     </div>
 }
 
+@if (mostrarModalInactivar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold">¿Estás seguro?</h5>
+                    <p class="text-secondary small">
+                        Vas a inactivar <strong>@entidadParaEliminar?.Nombre</strong>. Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalInactivar">Cancelar</button>
+                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarInactivar">Inactivar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<Accionista> Listgral = new();
@@ -183,6 +207,7 @@
     int idAccionista = 0;
     private string columnaActual = "";
     private bool ordenAscendente = true;
+    private bool mostrarModalInactivar = false;
 
     [Inject] private IAccionista repository { get; set; } = null!;
 
@@ -282,6 +307,39 @@
         {
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
+        }
+        finally
+        {
+            cargando = false;
+            entidadParaEliminar = null;
+        }
+    }
+
+    private void VerificarInactivar(Accionista item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalInactivar = true;
+    }
+
+    private void CerrarModalInactivar() => mostrarModalInactivar = false;
+
+    private async Task ConfirmarInactivar()
+    {
+        if (entidadParaEliminar == null) return;
+
+        cargando = true;
+        try
+        {
+            repository.Activar(entidadParaEliminar.Id, 2); // 2 para inactivar
+            mostrarModalInactivar = false;
+            await MostrarNotificacion($"");
+            await LoadGenericDataAsync();
+            await MostrarNotificacion($"Accionista inactivado correctamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inactivar: {ex.Message}");
+            await MostrarNotificacion("No se pudo inactivar el registro", true);
         }
         finally
         {

@@ -413,7 +413,7 @@
                                     <td class="text-end pe-3" style="width: 10%;">
                                         <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
                                                 @onclick="() => Detalle(p)" title="Detalle Asamblea">
-                                            <i class="bi bi-eye fs-6"></i>
+                                            <i class="bi bi-file-earmark-text fs-6"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -491,7 +491,7 @@
                                     <td class="text-end pe-3" style="width: 10%;">
                                         <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
                                                 @onclick="() => Detalle(p)" title="Detalle Reforma">
-                                            <i class="bi bi-eye fs-6"></i>
+                                            <i class="bi bi-file-earmark-text fs-6"></i>
                                         </button>
                                     </td>
                                 </tr>
@@ -680,7 +680,7 @@
 
     private void Regresar()
     {
-        navManager.NavigateTo($"/sociedades");
+        navManager.NavigateTo($"/sociedadesinactivas");
     }
 
     private void Detalle(Asamblea item)

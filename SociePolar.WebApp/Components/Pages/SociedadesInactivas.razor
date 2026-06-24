@@ -76,7 +76,11 @@
                                 </button>
                                 <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
                                         @onclick="() => Detalle(p)" title="Detalle Sociedad">
-                                    <i class="bi bi-eye fs-6"></i>
+                                    <i class="bi bi-file-earmark-text fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
+                                        @onclick="() => VerificarActivar(p)" title="Activar Sociedad">
+                                    <i class="bi bi-check2-circle fs-6"></i>
                                 </button>
                             </td>
                         </tr>
@@ -151,6 +155,26 @@
     </div>
 }
 
+@if (mostrarModalActivar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-octagon text-secondary fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold">¿Estás seguro?</h5>
+                    <p class="text-secondary small">
+                        Vas a activar <strong>@entidadParaEliminar?.Empresa.Nombre</strong>. Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalActivar">Cancelar</button>
+                    <button class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="ConfirmarActivar">Activar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<Sociedad> Listgral = new();
@@ -163,6 +187,7 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private bool mostrarModalEliminar = false;
+    private bool mostrarModalActivar = false;
     private Sociedad? entidadParaEliminar;
 
     private int idSociedad = 0;
@@ -191,6 +216,7 @@
         {
             cargando = false;
         }
+        StateHasChanged();
     }
 
     private void AbrirModalNuevo()
@@ -226,7 +252,15 @@
         mostrarModalEliminar = true;
     }
 
+    private void VerificarActivar(Sociedad item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalActivar = true;
+    }
+
     private void CerrarModalEliminar() => mostrarModalEliminar = false;
+
+    private void CerrarModalActivar() => mostrarModalActivar = false;
 
     private async Task ConfirmarEliminar()
     {
@@ -252,6 +286,31 @@
         }
     }
 
+    private async Task ConfirmarActivar()
+    {
+        if (entidadParaEliminar == null) return;
+
+        cargando = true;
+        try
+        {
+            repository.Activar(entidadParaEliminar.Id, 1); // 1 para activar
+            mostrarModalActivar = false;
+            await MostrarNotificacion($"");
+            await LoadGenericDataAsync();
+            await MostrarNotificacion($"Sociedad activada correctamente");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al activar: {ex.Message}");
+            await MostrarNotificacion("No se pudo activar el registro", true);
+        }
+        finally
+        {
+            cargando = false;
+            entidadParaEliminar = null;
+        }
+    }
+
     private async Task MostrarNotificacion(string mensaje, bool esError = false)
     {
         mensajeAlerta = mensaje;
@@ -268,7 +327,7 @@
 
     private void Detalle(Sociedad item)
     {
-        navManager.NavigateTo($"/detallesociedad/{item.Id}");
+        navManager.NavigateTo($"/detallesociedadinactiva/{item.Id}");
     }
 
     private async Task ManejarCierreModal(bool guardadoExitoso)

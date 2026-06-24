@@ -12,5 +12,6 @@ namespace SociePolar.Application.Interfaces
         Task AddAsync(SociedadInactivaDto entity);
         void Update(SociedadInactivaDto entity);
         void Delete(int id);
+        void Activar(int id, int accion);
     }
 }

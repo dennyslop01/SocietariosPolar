@@ -402,5 +402,29 @@ namespace SociePolar.Infrastructure.Repositories
                 context.SaveChanges();
             }
         }
+
+        public async void Activar(int Id, int accion)
+        {
+            using var context = _contextFactory.CreateDbContext();
+
+            Sociedad editsociedad = await context.Sociedades.FindAsync(Id);
+            if (editsociedad == null) throw new Exception($"Sociedad con ID {Id} no existe.");
+
+            var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(accion);
+            if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {accion} no existe.");
+
+            TipoSociedadActiva tipoSociedadActiva = null;
+            if (accion != 1)
+            {
+                tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(1);
+                if (tipoSociedadActiva == null) throw new Exception($"TipoSociedadActiva con ID {1} no existe.");
+            }
+
+            editsociedad.EstatusSociedad = estatusSociedad;
+            editsociedad.TipoSociedadActiva = tipoSociedadActiva;            
+
+            context.Set<Sociedad>().Update(editsociedad);
+            context.SaveChanges();
+        }
     }
 }

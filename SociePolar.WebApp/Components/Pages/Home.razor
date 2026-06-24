@@ -1,11 +1,14 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 
-@* <PageTitle>Home</PageTitle> *@
-
-Welcome to your new app.
+@if (!string.IsNullOrEmpty(usuario))
+{
+    <h6 class="fw-bold text-primary mt-3">Bienvenido: @usuario</h6>
+    <ListarVencimientoDocs />
+}
 
 @code {
+    private string usuario = string.Empty;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -13,6 +16,11 @@ Welcome to your new app.
             var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
             if (string.IsNullOrEmpty(useremailaux.Value))
                 navManager.NavigateTo($"/authsessionuser");
+            else
+            {
+                usuario = useremailaux.Value;
+                StateHasChanged();
+            }
         }
     }
 }

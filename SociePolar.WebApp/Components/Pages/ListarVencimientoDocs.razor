@@ -1,0 +1,255 @@
+﻿@rendermode InteractiveServer
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-file-earmark-x text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Documentos Vencidos o por Vencer
+                    </h5>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Buscador Global por Nombre -->
+            <div class="row mb-3">
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Buscar por nombre..."
+                               @oninput="FiltrarBusqueda" />
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <PaginationComponent TItem="DocumentosVencidos" Items="Listgral" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Módulo</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nombre</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha Vencimiento</th>
+                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Modulo</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.FechaVencimiento?.ToShortDateString()</td>
+                            <td class="text-end pe-3" style="width: 10%;">
+                                @* <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
+                                        @onclick="() => Detalle(p)" title="Detalle Sociedad">
+                                    <i class="bi bi-file-earmark-text fs-6"></i>
+                                </button> *@
+                            </td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+        </div>
+    </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@if (cargando)
+{
+    <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;">
+
+        <div class="modal-dialog modal-dialog-centered justify-content-center h-100 m-0" style="max-width: 100%;">
+            <div class="modal-content border-0 bg-transparent shadow-none">
+                <div class="modal-body text-center">
+                    @* Spinner más fino y con el color principal de tu app *@
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
+                        Procesando
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<DocumentosVencidos> Listgral = new();
+    private List<DocumentosVencidos> ListgralBuscar = new();
+    private string searchTerm = "";
+    private bool cargando = false;
+    private bool mostrarModal = false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+
+    [Inject] private ISociedad repoSociedad { get; set; } = null!;
+    [Inject] private IAccionista repoAccionista { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGenericDataAsync();
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        cargando = true;
+        try
+        {
+            var listSociedades = await repoSociedad.GetAllAsync();
+            listSociedades = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.FechaVencimiento < DateTime.Now.AddDays(30)).ToList();            
+            foreach (var item in listSociedades)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Sociedades",
+                    Documento = "Rif",
+                    NroDocumento = item.Rif,
+                    FechaVencimiento = item.FechaVencimiento,
+                    Nombre = item.Empresa.Nombre
+                });
+            }
+
+            var listAccionista = await repoAccionista.GetAllAsync();
+            foreach (var item in listAccionista)
+            {
+                string documento = string.Empty;
+                string nrodocumento = string.Empty;
+                string nombreper = string.Empty;
+
+                if(item.FechaVencimiento < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.Cedula;
+                    nombreper = item.Nombre;
+                }
+                if (item.FechaVencimientoApoderado < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.CedulaApoderado;
+                    nombreper = item.NombreApoderado;
+                }
+                if (item.FechaVencimientoConyuge < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.CedulaConyuge;
+                    nombreper = item.NombreConyuge;
+                }
+                if (item.FechaVencimientoOtro < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.OtroDocumento;
+                    nombreper = item.Nombre;
+                }
+                if (item.FechaEmisionOtroApoderado < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.OtroDocumentoApoderado;
+                    nombreper = item.NombreApoderado;
+                }
+                if (item.FechaEmisionOtroConyuge < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.OtroDocumentoConyuge;
+                    nombreper = item.NombreConyuge;
+                }
+                if (item.FechaVencimientoRif < DateTime.Now.AddDays(30))
+                {
+                    documento = "Rif";
+                    nrodocumento = item.Rif;
+                    nombreper = item.Nombre;
+                }
+
+                if (!string.IsNullOrEmpty(documento))
+                {
+                    Listgral.Add(new DocumentosVencidos
+                        {
+                            Id = item.Id,
+                            Modulo = "Accionistas",
+                            Documento = documento,
+                            NroDocumento = nrodocumento,
+                            FechaVencimiento = item.FechaVencimiento,
+                            Nombre = nombreper
+                        });
+                }
+            }
+
+            Listgral = Listgral.OrderBy(x => x.FechaVencimiento).ToList();
+            ListgralBuscar = Listgral;
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("No se pudieron cargar los datos", true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+        StateHasChanged();
+    }
+
+    private void FiltrarBusqueda(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            Listgral = ListgralBuscar;
+        }
+        else
+        {
+            Listgral = ListgralBuscar
+                .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private void Detalle(Sociedad item)
+    {
+        //navManager.NavigateTo($"/detallesociedad/{item.Id}");
+    }
+}

@@ -12,7 +12,7 @@
                         <i class="bi bi-person-vcard text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Accionistas Activos
+                        Accionistas - Sociedades Activas
                     </h5>
                 </div>
 
@@ -41,23 +41,23 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="Accionista" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="AccionistaSociedadVerDto" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <!-- Columna 1: Sociedad -->
-                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("Sociedad")'>
+                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("Sociedad")'>
                                 Sociedad <i class="bi @ObtenerIconoOrden("Sociedad") ms-1 small"></i>
-                            </th>
-                            <!-- Columna 2: Nombre y Apellido -->
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("Nombre")'>
-                                Nombre y Apellido <i class="bi @ObtenerIconoOrden("Nombre") ms-1 small"></i>
                             </th>
                             <!-- Columna 3: Tipo Accionista -->
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("TipoAccionista")'>
                                 Tipo Accionista <i class="bi @ObtenerIconoOrden("TipoAccionista") ms-1 small"></i>
                             </th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Acciones</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">% Participación</th>
+                            <!-- Columna 2: Nombre y Apellido -->
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("Nombre")'>
+                                Nombre y Apellido <i class="bi @ObtenerIconoOrden("Nombre") ms-1 small"></i>
+                            </th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro. Acciones</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">% Participación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
@@ -69,7 +69,7 @@
 
                             // 1. Ruptura para Sociedad
                             bool esNuevaSociedad = index == 0 ||
-                                                   Listgral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
+                                                   Listgral[index - 1].SociedadNombre != p.SociedadNombre;
                         }
 
                         @if (esNuevaSociedad)
@@ -77,23 +77,23 @@
                             <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
                             <tr class="table-secondary fw-bold text-primary border-bottom">
                                 <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                    🏢 @p.Sociedad?.Empresa?.Nombre
+                                    🏢 @p.SociedadNombre
                                 </td>
                             </tr>
                         }
 
                         <tr class="align-middle border-bottom">
-                            <td class="text-muted small ps-3" style="width: 20%;">-</td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@p.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.TipoAccionista?.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Cedula</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Telefono1</td>
+                            <td class="text-muted small ps-3" style="width: 15%;">-</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.TipoAccionistaNombre</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.AccionistaNombre</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroAcciones</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
+                                @* <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
                                     <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
+                                </button> *@
                                 <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                     <i class="bi bi-trash3 fs-6"></i>
                                 </button>
@@ -148,7 +148,7 @@
 
 @if (mostrarModal)
 {
-    <AccionistasGuardar id="@idAccionista.ToString()" OnFinalizado="ManejarCierreModal" />
+    <AccionistasSociedadesGuardar id="@idAccionista.ToString()" OnFinalizado="ManejarCierreModal" />
 }
 
 
@@ -161,7 +161,7 @@
                     <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
                     <h5 class="fw-bold">¿Estás seguro?</h5>
                     <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.Nombre</strong>. Esta acción no se puede deshacer.
+                        Vas a eliminar <strong>@entidadParaEliminar?.AccionistaNombre</strong>. Esta acción no se puede deshacer.
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
@@ -182,7 +182,7 @@
                     <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
                     <h5 class="fw-bold">¿Estás seguro?</h5>
                     <p class="text-secondary small">
-                        Vas a inactivar <strong>@entidadParaEliminar?.Nombre</strong>. Esta acción no se puede deshacer.
+                        Vas a inactivar <strong>@entidadParaEliminar?.AccionistaNombre</strong>. Esta acción no se puede deshacer.
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
@@ -195,14 +195,14 @@
 }
 
 @code {
-    private List<Accionista> Listgral = new();
-    private List<Accionista> ListgralBuscar = new();
+    private List<AccionistaSociedadVerDto> Listgral = new();
+    private List<AccionistaSociedadVerDto> ListgralBuscar = new();
     private string searchTerm = ""; private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
-    private Accionista? entidadParaEliminar;
+    private AccionistaSociedadVerDto? entidadParaEliminar;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     int idAccionista = 0;
@@ -210,7 +210,7 @@
     private bool ordenAscendente = true;
     private bool mostrarModalInactivar = false;
 
-    [Inject] private IAccionista repository { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repository { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -222,8 +222,29 @@
         cargando = true;
         try
         {
+            List<AccionistaSociedadVerDto> listNewAccionista = new();
+
             var listAaccionista = await repository.GetAllAsync();
-            Listgral = listAaccionista.OrderBy(x => x.Sociedad.Empresa.Nombre).Where(x => x.Sociedad.EstatusSociedad.Id == 1 && x.EstatusAccionista.Id == 1).ToList();
+            listAaccionista = listAaccionista.Where(x => x.EstatusAccionista.Id == 1).ToList();
+            foreach (var item in listAaccionista)
+            {
+                AccionistaSociedadVerDto accionista = new()
+                {
+                    Id = item.Id,
+                    SociedadNombre = item.Sociedad.Empresa.Nombre,
+                    TipoAccionistaNombre = item.Accionista.TipoAccionista.Nombre,
+                    AccionistaNombre = (item.Accionista.TipoAccionista.Id != 3) ? item.Accionista.Nombre : (item.Accionista.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista.NombreSusesion,
+                    NroAcciones = 0,
+                    Participacion = 0,
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                };
+
+                listNewAccionista.Add(accionista);
+            }
+
+
+            Listgral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -252,13 +273,13 @@
         else
         {
             Listgral = ListgralBuscar
-                .Where(b => b.Sociedad.Empresa.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.SociedadNombre != null && b.SociedadNombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             if (Listgral.Count() == 0)
             {
                 Listgral = ListgralBuscar
-                .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.AccionistaNombre != null && b.AccionistaNombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
             }
         }
@@ -278,13 +299,13 @@
         StateHasChanged();
     }
 
-    private void Editar(Accionista item)
+    private void Editar(AccionistaSociedadVerDto item)
     {
         idAccionista = item.Id;
         mostrarModal = true;
     }
 
-    private void VerificarEliminar(Accionista item)
+    private void VerificarEliminar(AccionistaSociedadVerDto item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -302,7 +323,7 @@
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Accionista eliminado correctamente");
+            await MostrarNotificacion($"Accionista - Sociedad eliminado correctamente");
         }
         catch (Exception ex)
         {
@@ -316,7 +337,7 @@
         }
     }
 
-    private void VerificarInactivar(Accionista item)
+    private void VerificarInactivar(AccionistaSociedadVerDto item)
     {
         entidadParaEliminar = item;
         mostrarModalInactivar = true;
@@ -335,7 +356,7 @@
             mostrarModalInactivar = false;
             await MostrarNotificacion($"");
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Accionista inactivado correctamente");
+            await MostrarNotificacion($"Accionista - Sociedad inactivado correctamente");
         }
         catch (Exception ex)
         {
@@ -359,7 +380,7 @@
         if (guardadoExitoso)
         {
             await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Accionista guardada correctamente");
+            await MostrarNotificacion($"Accionista - Sociedad guardada correctamente");
         }
 
         cargando = false; // Oculta el spinner después de todo
@@ -384,20 +405,20 @@
         if (columna == "Sociedad")
         {
             Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.Sociedad?.Empresa?.Nombre ?? "").ToList();
+                ? Listgral.OrderBy(x => x.SociedadNombre ?? "").ToList()
+                : Listgral.OrderByDescending(x => x.SociedadNombre ?? "").ToList();
         }
         else if (columna == "Nombre")
         {
             Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.Nombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.Nombre ?? "").ToList();
+                ? Listgral.OrderBy(x => x.AccionistaNombre ?? "").ToList()
+                : Listgral.OrderByDescending(x => x.AccionistaNombre ?? "").ToList();
         }
         else if (columna == "TipoAccionista")
         {
             Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.TipoAccionista?.Nombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.TipoAccionista?.Nombre ?? "").ToList();
+                ? Listgral.OrderBy(x => x.TipoAccionistaNombre ?? "").ToList()
+                : Listgral.OrderByDescending(x => x.TipoAccionistaNombre ?? "").ToList();
         }
 
         StateHasChanged(); // Forzar el refresco visual de la grilla en Blazor
@@ -412,5 +433,4 @@
         }
         return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
     }
-}
-}
+} 

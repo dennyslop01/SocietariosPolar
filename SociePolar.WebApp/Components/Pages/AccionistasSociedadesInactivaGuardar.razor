@@ -1,0 +1,457 @@
+﻿@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        @(entidadEditando.Id == 0 ? "Agregar Accionista - Sociedad" : "Modificar Accionista - Sociedad")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <!-- COMBO SOCIEDAD -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                            <div class="dropdown">
+                                <button class="form-select text-start d-flex justify-content-between align-items-center" type="button" style="font-size: 0.8rem;" @onclick="ToggleSociedadDropdown">
+                                    <span>@(ObtenerSociedadSeleccionada())</span>
+                                </button>
+                                <ul class="dropdown-menu w-100 p-2 @(isSociedadDropdownOpen ? "show" : "")" style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                    <li class="mb-2">
+                                        <input type="text" class="form-control" placeholder="Buscar..." style="font-size: 0.8rem;" @bind="textoBusquedaSociedad" @bind:event="oninput" />
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarSociedad(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+                                    @if (listSociedad != null)
+                                    {
+                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusquedaSociedad) || s.Empresa.Nombre.Contains(textoBusquedaSociedad, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <li>
+                                                <button type="button" class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarSociedad(sociedad.Id)">
+                                                    @sociedad.Empresa.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <!-- COMBO ACCIONISTA -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Accionista</label>
+                            <div class="dropdown">
+                                <button class="form-select text-start d-flex justify-content-between align-items-center" type="button" style="font-size: 0.8rem;" @onclick="ToggleAccionistaDropdown">
+                                    <span>@(ObtenerAccionistaSeleccionado())</span>
+                                </button>
+                                <ul class="dropdown-menu w-100 p-2 @(isAccionistaDropdownOpen ? "show" : "")" style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                    <li class="mb-2">
+                                        <input type="text" class="form-control" placeholder="Buscar..." style="font-size: 0.8rem;" @bind="textoBusquedaAccionista" @bind:event="oninput" />
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item @(entidadEditando.AccionistaId == 0 ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarAccionista(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+                                    @if (listAccionista != null)
+                                    {
+                                        @foreach (var accionista in listAccionista.Where(a => string.IsNullOrEmpty(textoBusquedaAccionista) || a.Nombre.Contains(textoBusquedaAccionista, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <li>
+                                                <button type="button" class="dropdown-item @(entidadEditando.AccionistaId == accionista.Id ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarAccionista(accionista.Id)">
+                                                    @accionista.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.AccionistaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Estatus</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.EstatusAccionistaId" disabled>
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listEstatus != null)
+                                {
+                                    @foreach (var estatus in listEstatus)
+                                    {
+                                        <option value="@estatus.Id">@estatus.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadEditando.EstatusAccionistaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
+    <div class="modal fade show d-block" tabindex="-1"
+         style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;">
+
+        <div class="modal-dialog modal-dialog-centered justify-content-center h-100 m-0" style="max-width: 100%;">
+            <div class="modal-content border-0 bg-transparent shadow-none">
+                <div class="modal-body text-center">
+                    @* Spinner más fino y con el color principal de tu app *@
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
+                        Procesando
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+
+    private AccionistaSociedadDto entidadEditando = new();
+
+    private List<Sociedad> listSociedad = new();
+    private List<AccionistaMostrarDto> listAccionista = new();
+    private List<AccionistaSociedad> listEntidades = new();
+
+    private List<IBaseEntity> listEstatus = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+
+    [Inject] private ISociedad reposociedad { get; set; } = null!;
+    [Inject] private IAccionista repoaccionista { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repository { get; set; } = null!;
+
+    // Variables de estado para Sociedad
+    private bool isSociedadDropdownOpen = false;
+    private string textoBusquedaSociedad = "";
+
+    // Variables de estado para Accionista
+    private bool isAccionistaDropdownOpen = false;
+    private string textoBusquedaAccionista = "";
+
+    private ElementReference searchInputRef;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
+        await LoadGenericDataAsync();
+
+        if (id == "0")
+        {
+            entidadEditando = new();
+            entidadEditando.SociedadId = 0;
+            entidadEditando.AccionistaId = 0;
+            entidadEditando.EstatusAccionistaId = 2;
+            entidadEditando.CreateDate = DateTime.Now;
+            entidadEditando.UpdateDate = DateTime.Now;
+            editContext = new EditContext(entidadEditando);
+        }
+        else
+        {
+            try
+            {
+                var item = await repository.GetByIdAsync(int.Parse(id));
+                AccionistaSociedadDto dto = new()
+                {
+                    Id = item.Id,
+                    SociedadId = item.Sociedad.Id,
+                    AccionistaId = item.Accionista.Id,
+                    EstatusAccionistaId = item.EstatusAccionista.Id,
+                    CreateDate = item.CreateDate,
+                    CreateUserId = item.CreateUserId,
+                    UpdateDate = item.UpdateDate,
+                    UpdateUserId = item.UpdateUserId
+                };
+
+                entidadEditando = dto;
+                editContext = new EditContext(entidadEditando);
+            }
+            catch (Exception ex)
+            {
+                await MostrarNotificacion("No se pudieron cargar los datos", true);
+            }
+        }
+        cargando = false;
+    }
+
+    public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        // Invocamos el método asíncrono
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        // Obtenemos el resultado de la Task dinámica
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.ToList();
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            listEstatus = await GetEntityListAsync("estatusaccionistas");
+
+            listEntidades = await repository.GetAllAsync();
+
+            var listSociedades = await reposociedad.GetAllAsync();
+            listSociedad = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
+
+            var listAaccionista = await repoaccionista.GetAllAsync();
+            List<AccionistaMostrarDto> accionistas = new();
+
+            foreach (var item in listAaccionista)
+            {
+                accionistas.Add(new AccionistaMostrarDto
+                {
+                    Id = item.Id,
+                    TipoAccionistaV = item.TipoAccionista.Nombre,
+                    Nombre = (item.TipoAccionista.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
+                    TipoDocumentoV = (item.TipoAccionista.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
+                    Documento = (item.TipoAccionista.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
+                    Telefono = item.Telefono1,
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                });
+            }
+
+            listAccionista = accionistas.OrderBy(x => x.Nombre).ToList();
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("No se pudieron cargar los datos", true);
+        }
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+
+                entidadEditando.UpdateDate = DateTime.Now;
+                entidadEditando.UpdateUserId = userid;
+
+                if (entidadEditando.Id == 0)
+                {
+                    var existeAutoSociedad = listEntidades.Any(x => x.Sociedad.Id == entidadEditando.SociedadId && x.Accionista.Id == entidadEditando.AccionistaId);
+                    if (existeAutoSociedad)
+                    {
+                        mensajeAlerta = "Ya existe esta combinacion de Accionista - Sociedad";
+                        await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
+                        return;
+                    }
+                    cargando = true;
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+
+                    await repository.AddAsync(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Accionista - Sociedad guardada correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+                else
+                {
+                    cargando = true;
+                    repository.Update(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Accionista - Sociedad actualizado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Si hay error en base de datos (ej. nombre duplicado)
+            Console.WriteLine($"Error: {ex.Message}");
+            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+        }
+        cargando = false;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private void ToggleSociedadDropdown()
+    {
+        isSociedadDropdownOpen = !isSociedadDropdownOpen;
+        if (!isSociedadDropdownOpen)
+        {
+            textoBusquedaSociedad = "";
+        }
+    }
+
+    private string ObtenerSociedadSeleccionada()
+    {
+        if (entidadEditando?.SociedadId == 0 || listSociedad == null)
+        {
+            return "Seleccione ...";
+        }
+
+        var seleccionado = listSociedad.FirstOrDefault(s => s.Id == entidadEditando.SociedadId);
+        return seleccionado?.Empresa?.Nombre ?? "Seleccione ...";
+    }
+
+    private void SeleccionarSociedad(int id)
+    {
+        entidadEditando.SociedadId = id;
+        isSociedadDropdownOpen = false;
+        textoBusquedaSociedad = "";
+    }
+
+    // --- MÉTODOS PARA ACCIONISTA ---
+
+    private void ToggleAccionistaDropdown()
+    {
+        isAccionistaDropdownOpen = !isAccionistaDropdownOpen;
+        if (!isAccionistaDropdownOpen)
+        {
+            textoBusquedaAccionista = "";
+        }
+    }
+
+    private string ObtenerAccionistaSeleccionado()
+    {
+        if (entidadEditando?.AccionistaId == 0 || listAccionista == null)
+        {
+            return "Seleccione ...";
+        }
+
+        var seleccionado = listAccionista.FirstOrDefault(a => a.Id == entidadEditando.AccionistaId);
+        return seleccionado?.Nombre ?? "Seleccione ...";
+    }
+
+    private void SeleccionarAccionista(int id)
+    {
+        entidadEditando.AccionistaId = id;
+        isAccionistaDropdownOpen = false;
+        textoBusquedaAccionista = "";
+    }
+}

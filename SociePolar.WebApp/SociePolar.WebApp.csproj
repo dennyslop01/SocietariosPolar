@@ -9,7 +9,6 @@
   <ItemGroup>
     <Content Remove="Components\Pages\AccionistasInactivaGuardar.razor" />
     <Content Remove="Components\Pages\AccionistasInactivos.razor" />
-    <Content Remove="Components\Pages\AccionistasSociedad.razor" />
   </ItemGroup>
 
   <ItemGroup>

@@ -45,7 +45,7 @@
                                         <button type="button"
                                                 class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
                                                 style="font-size: 0.8rem;"
-                                                @onclick="() => SeleccionarOpción(0)">
+                                                @onclick="() => SeleccionarOpcion(0)">
                                             Seleccione ...
                                         </button>
                                     </li>
@@ -60,7 +60,7 @@
                                                 <button type="button"
                                                         class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
                                                         style="font-size: 0.8rem;"
-                                                        @onclick="() => SeleccionarOpción(sociedad.Id)">
+                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
                                                     @sociedad.Empresa.Nombre
                                                 </button>
                                             </li>
@@ -395,7 +395,7 @@
     }
 
     // Asigna el ID real a tu modelo y cierra el menú
-    private void SeleccionarOpción(int id)
+    private void SeleccionarOpcion(int id)
     {
         entidadEditando.SociedadId = id;
         isDropdownOpen = false;

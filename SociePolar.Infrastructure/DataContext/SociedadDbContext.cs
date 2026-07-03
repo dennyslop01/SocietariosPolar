@@ -35,5 +35,6 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<EstadoCivil> EstadosCiviles { get; set; }
         public DbSet<CondicionEspecial> CondicionesEspeciales { get; set; }
         public DbSet<TipoDocumento> TiposDocumentos { get; set; }
+        public DbSet<AccionistaSociedad> AccionistasSociedades { get; set; }
     }
 }

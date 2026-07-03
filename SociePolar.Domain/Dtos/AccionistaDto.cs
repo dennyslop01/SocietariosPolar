@@ -2,6 +2,18 @@
 
 namespace SociePolar.Domain.Dtos
 {
+    public class AccionistaMostrarDto
+    {
+        public int Id { get; set; }
+        public string? TipoAccionistaV { get; set; }
+        public string? Nombre { get; set; }
+        public string? TipoDocumentoV { get; set; }
+        public string? Documento { get; set; }
+        public string? Telefono { get; set; }
+        public DateTime CreateDate { get; set; }
+        public DateTime UpdateDate { get; set; }
+    }
+
     public class AccionistaDto
     {
         public int Id { get; set; }

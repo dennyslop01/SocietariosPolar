@@ -40,7 +40,7 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="Accionista" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="AccionistaMostrarDto" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <!-- Columna 3: Tipo Accionista -->
@@ -61,25 +61,11 @@
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.TipoAccionista?.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">
-                                @if (p.TipoAccionista.Id != 3)
-                                {
-                                    @p.Nombre
-                                }
-                                else
-                                {
-                                    @p.NombreSusesion
-                                }
-                            </td>
-                            <td class="text-start text-secondary small" style="width: 10%;">
-                                @if (p.TipoAccionista.Id != 3)
-                                {
-                                    @p.TipoDocumento1?.Nombre
-                                }
-                            </td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento1</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Telefono1</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.TipoAccionistaV</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.TipoDocumentoV</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Telefono</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
@@ -187,14 +173,14 @@
 }
 
 @code {
-    private List<Accionista> Listgral = new();
-    private List<Accionista> ListgralBuscar = new();
+    private List<AccionistaMostrarDto> Listgral = new();
+    private List<AccionistaMostrarDto> ListgralBuscar = new();
     private string searchTerm = ""; private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
-    private Accionista? entidadParaEliminar;
+    private AccionistaMostrarDto? entidadParaEliminar;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     int idAccionista = 0;
@@ -215,7 +201,24 @@
         try
         {
             var listAaccionista = await repository.GetAllAsync();
-            Listgral = listAaccionista.OrderBy(x => x.Nombre).ToList();
+            List<AccionistaMostrarDto> accionistas = new();
+
+            foreach (var item in listAaccionista)
+            {
+                accionistas.Add(new AccionistaMostrarDto
+                {
+                    Id = item.Id,
+                    TipoAccionistaV = item.TipoAccionista.Nombre,
+                    Nombre = (item.TipoAccionista.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
+                    TipoDocumentoV = (item.TipoAccionista.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
+                    Documento = (item.TipoAccionista.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
+                    Telefono = item.Telefono1,
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                });
+            }
+
+            Listgral = accionistas.OrderBy(x => x.Nombre).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -246,13 +249,6 @@
             Listgral = ListgralBuscar
                 .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
-
-            if (Listgral.Count() == 0)
-            {
-                Listgral = ListgralBuscar
-                .Where(b => b.NombreSusesion != null && b.NombreSusesion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            }
         }
     }
 
@@ -270,13 +266,13 @@
         StateHasChanged();
     }
 
-    private void Editar(Accionista item)
+    private void Editar(AccionistaMostrarDto item)
     {
         idAccionista = item.Id;
         mostrarModal = true;
     }
 
-    private void VerificarEliminar(Accionista item)
+    private void VerificarEliminar(AccionistaMostrarDto item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -308,7 +304,7 @@
         }
     }
 
-    private void VerificarInactivar(Accionista item)
+    private void VerificarInactivar(AccionistaMostrarDto item)
     {
         entidadParaEliminar = item;
         mostrarModalInactivar = true;
@@ -382,8 +378,8 @@
         else if (columna == "TipoAccionista")
         {
             Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.TipoAccionista?.Nombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.TipoAccionista?.Nombre ?? "").ToList();
+                ? Listgral.OrderBy(x => x.TipoAccionistaV ?? "").ToList()
+                : Listgral.OrderByDescending(x => x.TipoAccionistaV ?? "").ToList();
         }
 
         StateHasChanged(); // Forzar el refresco visual de la grilla en Blazor

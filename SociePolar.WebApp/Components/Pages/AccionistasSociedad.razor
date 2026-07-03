@@ -91,6 +91,9 @@
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
+                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => VerTitulos(p)" title="Ver Títulos">
+                                    <i class="bi bi-file-medical fs-6"></i>
+                                </button>
                                 @* <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
                                     <i class="bi bi-pencil-square fs-6"></i>
                                 </button> *@
@@ -305,6 +308,11 @@
         mostrarModal = true;
     }
 
+    private void VerTitulos(AccionistaSociedadVerDto item)
+    {
+        navManager.NavigateTo($"/vertitulos/{item.Id}");
+    }
+    
     private void VerificarEliminar(AccionistaSociedadVerDto item)
     {
         entidadParaEliminar = item;

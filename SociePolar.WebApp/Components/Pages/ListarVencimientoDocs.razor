@@ -147,50 +147,78 @@
                 string documento = string.Empty;
                 string nrodocumento = string.Empty;
                 string nombreper = string.Empty;
+                DateTime fechavencimiento =  DateTime.Now;
 
-                if(item.FechaVencimiento < DateTime.Now.AddDays(30))
+                if (item.FechaVencimiento1 < DateTime.Now.AddDays(30))
                 {
                     documento = "Cédula";
-                    nrodocumento = item.Cedula;
+                    nrodocumento = item.Documento1;
+                    nombreper = item.Nombre;
+                    fechavencimiento = (DateTime)item.FechaVencimiento1;
+                }
+                if (item.FechaVencimiento2 < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.Documento2;
+                    fechavencimiento = (DateTime)item.FechaVencimiento2;
                     nombreper = item.Nombre;
                 }
-                if (item.FechaVencimientoApoderado < DateTime.Now.AddDays(30))
+                if (item.FechaVencimiento3 < DateTime.Now.AddDays(30))
                 {
                     documento = "Cédula";
-                    nrodocumento = item.CedulaApoderado;
+                    nrodocumento = item.Documento3;
+                    nombreper = item.Nombre;
+                    fechavencimiento = (DateTime)item.FechaVencimiento3;
+                }
+                if (item.FechaVencimiento4 < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.Documento4;
+                    nombreper = item.Nombre;
+                    fechavencimiento = (DateTime)item.FechaVencimiento4;
+                }
+                if (item.FechaVencimientoApoderado1 < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.DocumentoApoderado1;
                     nombreper = item.NombreApoderado;
+                    fechavencimiento = (DateTime)item.FechaVencimientoApoderado1;
                 }
-                if (item.FechaVencimientoConyuge < DateTime.Now.AddDays(30))
+                if (item.FechaVencimientoApoderado2 < DateTime.Now.AddDays(30))
                 {
                     documento = "Cédula";
-                    nrodocumento = item.CedulaConyuge;
-                    nombreper = item.NombreConyuge;
-                }
-                if (item.FechaVencimientoOtro < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.OtroDocumento;
-                    nombreper = item.Nombre;
-                }
-                if (item.FechaEmisionOtroApoderado < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.OtroDocumentoApoderado;
+                    nrodocumento = item.DocumentoApoderado2;
                     nombreper = item.NombreApoderado;
+                    fechavencimiento = (DateTime)item.FechaVencimientoApoderado2;
                 }
-                if (item.FechaEmisionOtroConyuge < DateTime.Now.AddDays(30))
+                if (item.FechaVencimientoApoderado3 < DateTime.Now.AddDays(30))
                 {
                     documento = "Cédula";
-                    nrodocumento = item.OtroDocumentoConyuge;
-                    nombreper = item.NombreConyuge;
+                    nrodocumento = item.DocumentoApoderado3;
+                    nombreper = item.NombreApoderado;
+                    fechavencimiento = (DateTime)item.FechaVencimientoApoderado3;
                 }
-                if (item.FechaVencimientoRif < DateTime.Now.AddDays(30))
+                if (item.FechaVencimientoConyuge1 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Rif";
-                    nrodocumento = item.Rif;
-                    nombreper = item.Nombre;
+                    documento = "Cédula";
+                    nrodocumento = item.DocumentoConyuge1;
+                    nombreper = item.NombreConyuge;
+                    fechavencimiento = (DateTime)item.FechaVencimientoConyuge1;
                 }
-
+                if (item.FechaVencimientoConyuge2 < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.DocumentoConyuge2;
+                    nombreper = item.NombreConyuge;
+                    fechavencimiento = (DateTime)item.FechaVencimientoConyuge2;
+                }
+                if (item.FechaVencimientoConyuge3 < DateTime.Now.AddDays(30))
+                {
+                    documento = "Cédula";
+                    nrodocumento = item.DocumentoConyuge3;
+                    nombreper = item.NombreConyuge;
+                    fechavencimiento = (DateTime)item.FechaVencimientoConyuge3;
+                }
                 if (!string.IsNullOrEmpty(documento))
                 {
                     Listgral.Add(new DocumentosVencidos
@@ -199,7 +227,7 @@
                             Modulo = "Accionistas",
                             Documento = documento,
                             NroDocumento = nrodocumento,
-                            FechaVencimiento = item.FechaVencimiento,
+                        FechaVencimiento = (DateTime)fechavencimiento,
                             Nombre = nombreper
                         });
                 }

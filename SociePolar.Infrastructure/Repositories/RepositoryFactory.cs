@@ -36,6 +36,7 @@ namespace SociePolar.Infrastructure.Repositories
                 { "dirigidosa", typeof(DirigidoA) },
                 { "estadosciviles", typeof(EstadoCivil)  },
                 { "condicionesespeciales", typeof(CondicionEspecial) },
+                { "tipodocumento", typeof(TipoDocumento) },
             };
         }
 

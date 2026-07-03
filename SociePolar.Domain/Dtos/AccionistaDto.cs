@@ -5,45 +5,50 @@ namespace SociePolar.Domain.Dtos
     public class AccionistaDto
     {
         public int Id { get; set; }
-        public int? SociedadId { get; set; }
-        public int? EstatusAccionistaId { get; set; }
         public int? TipoAccionistaId { get; set; }
         public string? Nombre { get; set; }
-        public string? Cedula { get; set; }
-        public DateTime? FechaEmision { get; set; }
-        public DateTime? FechaVencimiento { get; set; }
-        public string? OtroDocumento { get; set; }
-        public DateTime? FechaEmisionOtro { get; set; }
-        public DateTime? FechaVencimientoOtro { get; set; }
-        public string? Rif { get; set; }
-        public DateTime? FechaEmisionRif { get; set; }
-        public DateTime? FechaVencimientoRif { get; set; }
+        public int? TipoDocumento1Id { get; set; }
+        public int? TipoDocumento2Id { get; set; }
+        public int? TipoDocumento3Id { get; set; }
+        public int? TipoDocumento4Id { get; set; }
+        public string? Documento1 { get; set; }
+        public string? Documento2 { get; set; }
+        public string? Documento3 { get; set; }
+        public string? Documento4 { get; set; }
+        public DateTime? FechaEmision1 { get; set; }
+        public DateTime? FechaVencimiento1 { get; set; }
+        public DateTime? FechaEmision2 { get; set; }
+        public DateTime? FechaVencimiento2 { get; set; }
+        public DateTime? FechaEmision3 { get; set; }
+        public DateTime? FechaVencimiento3 { get; set; }
+        public DateTime? FechaEmision4 { get; set; }
+        public DateTime? FechaVencimiento4 { get; set; }
         public int? DirigidoAId { get; set; }
         public int? EstadoCivilId { get; set; }
         public string? NombreConyuge { get; set; }
-        public string? CedulaConyuge { get; set; }
-        public DateTime? FechaEmisionConyuge { get; set; }
-        public DateTime? FechaVencimientoConyuge { get; set; }
-        public string? OtroDocumentoConyuge { get; set; }
-        public DateTime? FechaEmisionOtroConyuge { get; set; }
-        public DateTime? FechaVencimientoOtroConyuge { get; set; }
+        public int? TipoDocumentoConyugeId1 { get; set; }
+        public int? TipoDocumentoConyugeId2 { get; set; }
+        public int? TipoDocumentoConyugeId3 { get; set; }
+        public string? DocumentoConyuge1 { get; set; }
+        public DateTime? FechaEmisionConyuge1 { get; set; }
+        public DateTime? FechaVencimientoConyuge1 { get; set; }
+        public string? DocumentoConyuge2 { get; set; }
+        public DateTime? FechaEmisionConyuge2 { get; set; }
+        public DateTime? FechaVencimientoConyuge2 { get; set; }
+        public string? DocumentoConyuge3 { get; set; }
+        public DateTime? FechaEmisionConyuge3 { get; set; }
+        public DateTime? FechaVencimientoConyuge3 { get; set; }
         public int? SeparacionBienes { get; set; }
         public DateTime? FechaNacimiento { get; set; }
         public DateTime? FechaIngreso { get; set; }
 
-        [StringLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
-        [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
+        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? Email1 { get; set; }
 
-        [StringLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
-        [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
+        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? Email2 { get; set; }
 
-        [StringLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
-        [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
+        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? Email3 { get; set; }
         public string? TelefonoMovil { get; set; }
         public string? Telefono1 { get; set; }
@@ -65,18 +70,22 @@ namespace SociePolar.Domain.Dtos
         public int? TieneApoderado { get; set; }
         public string? NombreApoderado { get; set; }
         public string? DatosPoder { get; set; }
-        public string? CedulaApoderado { get; set; }
-        public DateTime? FechaEmisionApoderado { get; set; }
-        public DateTime? FechaVencimientoApoderado { get; set; }
-        public string? OtroDocumentoApoderado { get; set; }
-        public DateTime? FechaEmisionOtroApoderado { get; set; }
-        public DateTime? FechaVencimientoOtroApoderado { get; set; }
+        public int? TipoDocumentoApoderadoId1 { get; set; }
+        public int? TipoDocumentoApoderadoId2 { get; set; }
+        public int? TipoDocumentoApoderadoId3 { get; set; }
+        public string? DocumentoApoderado1 { get; set; }
+        public DateTime? FechaEmisionApoderado1 { get; set; }
+        public DateTime? FechaVencimientoApoderado1 { get; set; }
+        public string? DocumentoApoderado2 { get; set; }
+        public DateTime? FechaEmisionApoderado2 { get; set; }
+        public DateTime? FechaVencimientoApoderado2 { get; set; }
+        public string? DocumentoApoderado3 { get; set; }
+        public DateTime? FechaEmisionApoderado3 { get; set; }
+        public DateTime? FechaVencimientoApoderado3 { get; set; }
         public string? NombreContacto { get; set; }
         public string? TelefonoContacto { get; set; }
 
-        [StringLength(100, ErrorMessage = "El correo no puede exceder los 100 caracteres.")]
-        [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido.")]
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
+        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? EmailContacto { get; set; }
         public int? CondicionEspecialId { get; set; }
         public string? Observaciones { get; set; }
@@ -96,8 +105,6 @@ namespace SociePolar.Domain.Dtos
         public string? OtroDocumentoSucesion { get; set; }
         public string? FechaEmisionOtroSucesion { get; set; }
         public string? FechaVencimientoOtroSucesion { get; set; }
-
-
 
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }

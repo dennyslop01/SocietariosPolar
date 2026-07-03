@@ -7,7 +7,7 @@ namespace SociePolar.Application.Interfaces
     {
         Task<List<Accionista>> GetAllAsync();
         Task<Accionista?> GetByIdAsync(int id);
-        Task<List<Accionista>> GetBySociedadIdAsync(int sociedadId);
+        //Task<List<Accionista>> GetBySociedadIdAsync(int sociedadId);
         Task AddAsync(AccionistaDto entity);
         void Update(AccionistaDto entity);
         void Delete(int id);

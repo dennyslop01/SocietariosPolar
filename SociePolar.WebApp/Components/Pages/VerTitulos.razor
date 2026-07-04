@@ -12,7 +12,7 @@
                         <i class="bi bi-file-medical text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Titulos : @nombreComplemento
+                        Títulos : @nombreComplemento
                     </h5>
                 </div>
 
@@ -53,13 +53,15 @@
                     </div>
                 </div>
             </div>
-            @* <div class="table-responsive">
-                <PaginationComponent TItem="UnidadNegocio" Items="Listgral" DefaultPageSize="10">
+            <div class="table-responsive">
+                <PaginationComponent TItem="Titulo" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Región</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 30%; font-size: 0.85rem;">Descripción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Número</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acciones</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Preferente</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Ubicación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha de creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
@@ -68,8 +70,10 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Region.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 30%;">@p.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Numero</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Acciones</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Preferente</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@p.Ubicacion</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
@@ -84,7 +88,7 @@
                         </tr>
                     </ChildContentRow>
                 </PaginationComponent>
-            </div> *@
+            </div>
         </div>
     </div>
     @if (mostrarAlerta)
@@ -126,28 +130,34 @@
 {
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Unidad de Negocio" : "Modificar Unidad de Negocio")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Nombre</label>
-                        <input type="text" class="form-control" @bind="entidadEditando.Nombre"
-                               placeholder="Ingrese el nombre aquí..." />
+            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
+
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                            @(entidadEditando.Id == 0 ? "Agregar Título" : "Modificar Título")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary">Número</label>
+                            <input type="text" class="form-control" @bind="entidadEditando.Numero"
+                                   placeholder="Ingrese el número aquí..." />
+                            <ValidationMessage For="@(() => entidadEditando.Numero)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                        <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios">
+                            <i class="bi bi-save me-1"></i> Guardar
+                        </button>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios">
-                        <i class="bi bi-save me-1"></i> Guardar
-                    </button>
-                </div>
-            </div>
+            </EditForm>
+            
         </div>
     </div>
 }
@@ -162,7 +172,7 @@
                     <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
                     <h5 class="fw-bold">¿Estás seguro?</h5>
                     <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.Nombre</strong>. Esta acción no se puede deshacer.
+                        Vas a eliminar <strong>@entidadParaEliminar?.Numero</strong>. Esta acción no se puede deshacer.
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
@@ -178,8 +188,8 @@
 @code {
     [Parameter] public string id { get; set; } = "";
 
-    private List<UnidadNegocio> Listgral = new();
-    private List<UnidadNegocio> ListgralBuscar = new();
+    private List<Titulo> Listgral = new();
+    private List<Titulo> ListgralBuscar = new();
     private string searchTerm = "";
     private bool cargando = false;
     private bool mostrarModal = false;
@@ -188,12 +198,16 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private bool mostrarModalEliminar = false;
-    private UnidadNegocio entidadEditando = default!;
-    private UnidadNegocio? entidadParaEliminar;
+    private TituloDto entidadEditando = default!;
+    private Titulo? entidadParaEliminar;
     private string nombreComplemento = "";
-    private Region regionEntity = new();
+    private int Estado = 0;
 
-    [Inject] private IUnidadNegocio repository { get; set; } = null!;
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+
+    [Inject] private ITitulo repository { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoaccionista { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -203,23 +217,30 @@
     private async Task LoadGenericDataAsync()
     {
         cargando = true;
+
         try
         {
-            var repo = RepoFactory.GetRepository("regiones");
-            var method = repo.GetType().GetMethod("GetByIdAsync");
-            var task = (Task)method!.Invoke(repo, new object[] { int.Parse(id) })!;
-            await task;
+            var accionistaEntity = await repoaccionista.GetByIdAsync(int.Parse(id));
 
-            dynamic resultRegiones = task.GetType().GetProperty("Result")?.GetValue(task)!;
-            regionEntity = resultRegiones != null ? new Region
+            if (accionistaEntity == null)
             {
-                Id = resultRegiones.Id,
-                Nombre = resultRegiones.Nombre
-            } : new Region();
+                await MostrarNotificacion("No se encontró el accionista", true);
+                return;
+            }
 
-            nombreComplemento = regionEntity?.Nombre ?? "Región desconocida";
+            if(accionistaEntity.Accionista.TipoAccionista.Id == 3)
+            {
+                nombreComplemento = accionistaEntity.Accionista?.NombreSusesion;
+                nombreComplemento = (nombreComplemento.Length > 20) ? nombreComplemento.Substring(0, 20) + "..." : nombreComplemento + " -- ";
+            }
+            else
+                nombreComplemento = accionistaEntity.Accionista?.Nombre + " -- ";
+            
+            nombreComplemento += accionistaEntity.Sociedad?.Empresa?.Nombre;
 
-            Listgral = await repository.GetByIdRegionAllAsync(int.Parse(id));
+            Estado = accionistaEntity.EstatusAccionista.Id;
+
+            Listgral = await repository.GetByAccionistaSociedadIdAsync(int.Parse(id));
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -232,19 +253,56 @@
         }
     }
 
-    private void AbrirModalNuevo()
+    private async Task AbrirModalNuevo()
     {
         entidadEditando = new();
-        entidadEditando.Region = regionEntity;
         entidadEditando.CreateDate = DateTime.Now;
         entidadEditando.UpdateDate = DateTime.Now;
-
+        editContext = new EditContext(entidadEditando);
+        
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
         mostrarModal = true;
     }
 
-    private void Editar(UnidadNegocio item)
+    private async Task Editar(Titulo item)
     {
-        entidadEditando = item;
+        entidadEditando = new();
+        entidadEditando.Id = item.Id;
+        entidadEditando.AccionistaSociedadId = int.Parse(id);
+        entidadEditando.Numero = item.Numero;
+        entidadEditando.Acciones = item.Acciones;
+        entidadEditando.Preferente = item.Preferente;
+        entidadEditando.Ubicacion = item.Ubicacion;
+        entidadEditando.Anulado = item.Anulado;
+        entidadEditando.Endosado = item.Endosado;
+        entidadEditando.Fecha = item.Fecha;
+        entidadEditando.Observaciones = item.Observaciones;
+        entidadEditando.CreateDate = item.CreateDate;
+        entidadEditando.CreateUserId = item.CreateUserId;
+        entidadEditando.UpdateDate = item.UpdateDate;
+        entidadEditando.UpdateUserId = item.UpdateUserId;
+        editContext = new EditContext(entidadEditando);
+
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
         mostrarModal = true;
     }
 
@@ -252,9 +310,18 @@
 
     private async Task GuardarCambios()
     {
-        if (string.IsNullOrWhiteSpace(entidadEditando.Nombre))
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
         {
-            await MostrarNotificacion("El nombre es obligatorio", true);
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(entidadEditando.Numero))
+        {
+            await MostrarNotificacion("El número es obligatorio", true);
             return;
         }
 
@@ -278,7 +345,7 @@
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Unidad de negocio guardada correctamente");
+                    await MostrarNotificacion($"Título guardada correctamente");
                 }
                 else
                 {
@@ -286,7 +353,7 @@
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Unidad de negocio actualizado correctamente");
+                    await MostrarNotificacion($"Título actualizado correctamente");
                 }
             }
         }
@@ -312,12 +379,12 @@
         else
         {
             Listgral = ListgralBuscar
-                .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.Numero != null && b.Numero.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
     }
 
-    private void VerificarEliminar(UnidadNegocio item)
+    private void VerificarEliminar(Titulo item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -335,7 +402,7 @@
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Unidad de negocio eliminado correctamente");
+            await MostrarNotificacion($"Título eliminado correctamente");
         }
         catch (Exception ex)
         {
@@ -365,6 +432,10 @@
 
     private void Regresar()
     {
-        navManager.NavigateTo("/administrar/regiones");
+        if (Estado == 1)
+            navManager.NavigateTo("/accionistassociedad");
+        
+        if (Estado == 2)
+            navManager.NavigateTo("/accionistassociedadinactivas");
     }
 }

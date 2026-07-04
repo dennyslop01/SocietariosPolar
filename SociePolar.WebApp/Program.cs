@@ -50,6 +50,7 @@ builder.Services.AddScoped<ICertificacion, CertificacionRepository>();
 builder.Services.AddScoped<ILibroSocietario, LibroSocietarioRepository>();
 builder.Services.AddScoped<IAccionista, AccionistaRepository>();
 builder.Services.AddScoped<IAccionistaSociedad, AccionistaSociedadRepository>();
+builder.Services.AddScoped<ITitulo, TituloRepository>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpClient();

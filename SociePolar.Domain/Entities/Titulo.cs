@@ -10,7 +10,7 @@
         public string? Ubicacion { get; set; }
         public int? Anulado { get; set; }
         public int? Endosado { get; set; }
-        public DateTime Fecha { get; set; }
+        public DateTime? Fecha { get; set; }
         public string? Observaciones { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }

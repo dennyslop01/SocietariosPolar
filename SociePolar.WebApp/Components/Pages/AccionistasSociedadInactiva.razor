@@ -214,6 +214,7 @@
     private bool mostrarModalActivar = false;
 
     [Inject] private IAccionistaSociedad repository { get; set; } = null!;
+    [Inject] private ITitulo repotitulo { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -231,14 +232,31 @@
             listAaccionista = listAaccionista.Where(x => x.EstatusAccionista.Id == 2).ToList();
             foreach (var item in listAaccionista)
             {
+                int nroacciones = 0;
+                decimal porcparticipa = 0;
+
+                var titulos = await repotitulo.GetByAccionistaSociedadIdAsync(item.Id);
+                if (titulos != null && titulos.Count() > 0)
+                {
+                    nroacciones = (int)titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
+                }
+
+                if (item.Sociedad != null)
+                {
+                    if (item.Sociedad.NumeroAcciones != null)
+                    {
+                        porcparticipa = Math.Round((decimal)nroacciones / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
+                    }
+                }
+
                 AccionistaSociedadVerDto accionista = new()
                 {
                     Id = item.Id,
                     SociedadNombre = item.Sociedad.Empresa.Nombre,
                     TipoAccionistaNombre = item.Accionista.TipoAccionista.Nombre,
                     AccionistaNombre = (item.Accionista.TipoAccionista.Id != 3) ? item.Accionista.Nombre : (item.Accionista.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista.NombreSusesion,
-                    NroAcciones = 0,
-                    Participacion = 0,
+                    NroAcciones = nroacciones,
+                    Participacion = porcparticipa,
                     CreateDate = item.CreateDate,
                     UpdateDate = item.UpdateDate
                 };

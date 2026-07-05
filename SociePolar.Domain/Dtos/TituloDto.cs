@@ -25,7 +25,7 @@ namespace SociePolar.Domain.Dtos
         public int? Endosado { get; set; }
 
         [Required(ErrorMessage = "La Fecha es requerida.")] 
-        public DateTime Fecha { get; set; }
+        public DateTime? Fecha { get; set; }
         
         public string? Observaciones { get; set; }
         public DateTime CreateDate { get; set; }

@@ -38,7 +38,7 @@ namespace SociePolar.Domain.Dtos
         public string? DatosConstitucion { get; set; }
         public DateTime? FechaConstitucion { get; set; }
         public DateTime? FechaVencimiento { get; set; }
-        public int? Duracion { get; set; }
+        public string? Duracion { get; set; }
         public string? NumeroAcciones { get; set; }
         public int? AplicaCapital { get; set; }
         public decimal? CapitalSuscrito { get; set; }
@@ -48,7 +48,12 @@ namespace SociePolar.Domain.Dtos
         public string? EjercicioEconomico { get; set; }
         public string? NumeroExpediente { get; set; }
         public string? Observaciones { get; set; }
-        public string? Rif { get; set; }
+        public int? TipoDocumento1Id { get; set; }
+        public int? TipoDocumento2Id { get; set; }
+        public int? TipoDocumento3Id { get; set; }
+        public string? Documento1 { get; set; }
+        public string? Documento2 { get; set; }
+        public string? Documento3 { get; set; }
         public string? Nit { get; set; }
         public DateTime? CreateDate { get; set; }
         public DateTime? UpdateDate { get; set; }
@@ -100,7 +105,7 @@ namespace SociePolar.Domain.Dtos
         public string? DatosConstitucion { get; set; }
         public DateTime? FechaConstitucion { get; set; }
         public DateTime? FechaVencimiento { get; set; }
-        public int? Duracion { get; set; }
+        public string? Duracion { get; set; }
         public string? NumeroAcciones { get; set; }
         public int? AplicaCapital { get; set; }
         public decimal? CapitalSuscrito { get; set; }
@@ -110,7 +115,12 @@ namespace SociePolar.Domain.Dtos
         public string? EjercicioEconomico { get; set; }
         public string? NumeroExpediente { get; set; }
         public string? Observaciones { get; set; }
-        public string? Rif { get; set; }
+        public int? TipoDocumento1Id { get; set; }
+        public int? TipoDocumento2Id { get; set; }
+        public int? TipoDocumento3Id { get; set; }
+        public string? Documento1 { get; set; }
+        public string? Documento2 { get; set; }
+        public string? Documento3 { get; set; }
         public string? Nit { get; set; }
         public DateTime? CreateDate { get; set; }
         public DateTime? UpdateDate { get; set; }

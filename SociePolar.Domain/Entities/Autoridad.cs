@@ -6,9 +6,11 @@
         public Sociedad Sociedad { get; set; }
         public Cargo Cargo { get; set; }
         public string? Nombre { get; set; }
-        public string? Documento { get; set; }
-        public string? TipoDocumento { get; set; }
-        public int? Duracion { get; set; }
+        public TipoDocumento? TipoDocumento1 { get; set; }
+        public TipoDocumento? TipoDocumento2 { get; set; }
+        public string? Documento1 { get; set; }
+        public string? Documento2 { get; set; }
+        public string? Duracion { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

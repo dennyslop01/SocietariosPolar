@@ -16,7 +16,7 @@
         public string? DatosConstitucion { get; set; }
         public DateTime? FechaConstitucion { get; set; }
         public DateTime? FechaVencimiento { get; set; }
-        public int? Duracion { get; set; }
+        public string? Duracion { get; set; }
         public string? NumeroAcciones { get; set; }
         public int? AplicaCapital { get; set; }
         public Moneda? Moneda { get; set; }
@@ -27,7 +27,12 @@
         public string? EjercicioEconomico { get; set; }
         public string? NumeroExpediente { get; set; }
         public string? Observaciones { get; set; }
-        public string? Rif { get; set; }
+        public TipoDocumento? TipoDocumento1 { get; set; }
+        public TipoDocumento? TipoDocumento2 { get; set; }
+        public TipoDocumento? TipoDocumento3 { get; set; }
+        public string? Documento1 { get; set; }
+        public string? Documento2 { get; set; }
+        public string? Documento3 { get; set; }
         public string? Nit { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }

@@ -14,14 +14,16 @@ namespace SociePolar.Domain.Dtos
         [Required(ErrorMessage = "El Nombre es requerido.")] 
         public string? Nombre { get; set; }
 
-        [Required(ErrorMessage = "El Documento es requerido.")] 
-        public string? Documento { get; set; }
+        [Required(ErrorMessage = "El Documento es requerido.")]
+        public string? Documento1 { get; set; }
+        public string? Documento2 { get; set; }
 
-        [Required(ErrorMessage = "El Tipo de Documento es requerido.")] 
-        public string? TipoDocumento { get; set; }
+        [Required(ErrorMessage = "El Tipo de Documento es requerido.")]
+        public int? TipoDocumento1Id { get; set; }
+        public int? TipoDocumento2Id { get; set; }
 
         [Required(ErrorMessage = "La Duración es requerida.")]
-        public int? Duracion { get; set; }
+        public string? Duracion { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

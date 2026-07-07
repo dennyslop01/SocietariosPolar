@@ -17,6 +17,8 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.TipoDocumento1)
+                .Include(b => b.TipoDocumento2)
                 .Include(b => b.Cargo)
                 .ToListAsync();
         }
@@ -28,6 +30,8 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.TipoDocumento1)
+                .Include(b => b.TipoDocumento2)
                 .Include(b => b.Cargo)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
@@ -41,6 +45,8 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad.Empresa)
                 .Include(b => b.Sociedad.EstatusSociedad)
                 .Include(b => b.Cargo)
+                .Include(b => b.TipoDocumento1)
+                .Include(b => b.TipoDocumento2)
                 .Where(x => x.Sociedad.Id == sociedadId)
                 .ToListAsync();
         }
@@ -55,13 +61,35 @@ namespace SociePolar.Infrastructure.Repositories
             var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId);
             if (sociedad == null) throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
 
+            TipoDocumento tipodoc1 = null;
+            if (entity.TipoDocumento1Id != null)
+            {
+                if (entity.TipoDocumento1Id != 0)
+                {
+                    tipodoc1 = await context.Set<TipoDocumento>().FindAsync(entity.TipoDocumento1Id.Value);
+                    if (tipodoc1 == null) throw new Exception($"Tipo Documento con ID {entity.TipoDocumento1Id.Value} no existe.");
+                }
+            }
+
+            TipoDocumento tipodoc2 = null;
+            if (entity.TipoDocumento2Id != null)
+            {
+                if (entity.TipoDocumento2Id != 0)
+                {
+                    tipodoc2 = await context.Set<TipoDocumento>().FindAsync(entity.TipoDocumento2Id.Value);
+                    if (tipodoc2 == null) throw new Exception($"Tipo Documento con ID {entity.TipoDocumento2Id.Value} no existe.");
+                }
+            }
+
             Autoridad newAutoridad = new()
             {
                 Cargo = cargo,
                 Sociedad = sociedad,
                 Nombre = entity.Nombre,
-                Documento = entity.Documento,
-                TipoDocumento = entity.TipoDocumento,
+                Documento1 = entity.Documento1,
+                Documento2 = entity.Documento2,
+                TipoDocumento1 = tipodoc1,
+                TipoDocumento2 = tipodoc2,
                 Duracion = entity.Duracion,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
@@ -72,10 +100,14 @@ namespace SociePolar.Infrastructure.Repositories
             await context.Set<Autoridad>().AddAsync(newAutoridad);
             context.Entry(newAutoridad.Cargo).State = EntityState.Unchanged;
             context.Entry(newAutoridad.Sociedad).State = EntityState.Unchanged;
+            if (tipodoc1 != null) context.Entry(newAutoridad.TipoDocumento1).State = EntityState.Unchanged;
+            if (tipodoc2 != null) context.Entry(newAutoridad.TipoDocumento2).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
             context.Entry(newAutoridad.Cargo).State = EntityState.Detached;
             context.Entry(newAutoridad.Sociedad).State = EntityState.Detached;
+            if (tipodoc1 != null) context.Entry(newAutoridad.TipoDocumento1).State = EntityState.Detached;
+            if (tipodoc2 != null) context.Entry(newAutoridad.TipoDocumento2).State = EntityState.Detached;
         }
 
         public async void Update(AutoridadDto entity)
@@ -91,11 +123,33 @@ namespace SociePolar.Infrastructure.Repositories
             Autoridad editautoridad = await context.Autoridades.FindAsync(entity.Id);
             if (editautoridad == null) throw new Exception($"Autoridad con ID {entity.Id} no existe.");
 
+            TipoDocumento tipodoc1 = null;
+            if (entity.TipoDocumento1Id != null)
+            {
+                if (entity.TipoDocumento1Id != 0)
+                {
+                    tipodoc1 = await context.Set<TipoDocumento>().FindAsync(entity.TipoDocumento1Id.Value);
+                    if (tipodoc1 == null) throw new Exception($"Tipo Documento con ID {entity.TipoDocumento1Id.Value} no existe.");
+                }
+            }
+
+            TipoDocumento tipodoc2 = null;
+            if (entity.TipoDocumento2Id != null)
+            {
+                if (entity.TipoDocumento2Id != 0)
+                {
+                    tipodoc2 = await context.Set<TipoDocumento>().FindAsync(entity.TipoDocumento2Id.Value);
+                    if (tipodoc2 == null) throw new Exception($"Tipo Documento con ID {entity.TipoDocumento2Id.Value} no existe.");
+                }
+            }
+
             editautoridad.Cargo = cargo;
             editautoridad.Sociedad = sociedad;
             editautoridad.Nombre = entity.Nombre;
-            editautoridad.Documento = entity.Documento;
-            editautoridad.TipoDocumento = entity.TipoDocumento;
+            editautoridad.Documento1 = entity.Documento1;
+            editautoridad.Documento2 = entity.Documento2;
+            editautoridad.TipoDocumento1 = tipodoc1;
+            editautoridad.TipoDocumento2 = tipodoc2;
             editautoridad.Duracion = entity.Duracion;
             editautoridad.UpdateDate = DateTime.UtcNow;
             editautoridad.UpdateUserId = entity.UpdateUserId;

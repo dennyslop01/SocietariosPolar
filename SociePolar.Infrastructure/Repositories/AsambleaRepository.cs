@@ -97,7 +97,8 @@ namespace SociePolar.Infrastructure.Repositories
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
-                UpdateUserId = entity.UpdateUserId
+                UpdateUserId = entity.UpdateUserId,
+                Observacion = entity.Observacion
             };
 
             await context.Set<Asamblea>().AddAsync(newAsamblea);
@@ -164,6 +165,7 @@ namespace SociePolar.Infrastructure.Repositories
             editAsamblea.TipoReforma = tipoReforma;
             editAsamblea.UpdateDate = DateTime.UtcNow;
             editAsamblea.UpdateUserId = entity.UpdateUserId;
+            editAsamblea.Observacion = entity.Observacion;
 
 
             context.Set<Asamblea>().Update(editAsamblea);

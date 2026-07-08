@@ -190,18 +190,17 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Duracion"
                                    placeholder="Ingrese la duración..."
-                                   maxlength="2"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   maxlength="15" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Número Acciones</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.NumeroAcciones"
+                            <input type="text"
+                                   class="form-control form-control-sm small"
+                                   value="@FormatearMiles(entidadEditando.NumeroAcciones)"
+                                   @oninput="ProcesarEntradaAcciones"
                                    placeholder="Ingrese número de acciones..."
-                                   maxlength="20"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   maxlength="26"
+                                   inputmode="numeric" />
                         </div>
                         <!-- Fila Completa para la opción de Capital -->
                         <div class="col-12 mb-3">
@@ -232,9 +231,8 @@
                                 <label class="form-label fw-bold text-secondary small">Capital Suscrito</label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control form-control-sm small"
-                                           @bind="entidadEditando.CapitalSuscrito"
-                                           placeholder="0.00" step="0.01" />
+                                    <input type="text" class="form-control form-control-sm small"
+                                           @bind="CapitalSuscritoTexto" @bind:event="oninput" placeholder="0,00" />
                                 </div>
                             </div>
 
@@ -243,9 +241,8 @@
                                 <label class="form-label fw-bold text-secondary small">Capital Pagado</label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control form-control-sm small"
-                                           @bind="entidadEditando.CapitalPagado"
-                                           placeholder="0.00" step="0.01" />
+                                    <input type="text" class="form-control form-control-sm small"
+                                           @bind="CapitalPagadoTexto" @bind:event="oninput" placeholder="0,00" />
                                 </div>
                             </div>
                         }
@@ -307,10 +304,65 @@
                                         </textarea>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tax Id</label>
+                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.TipoDocumento1Id">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listTipoDoc != null)
+                                {
+                                    @foreach (var documento in listTipoDoc)
+                                    {
+                                        <option value="@documento.Id">@documento.Nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
                             <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.Rif"
-                                   placeholder="Ingrese el Tax Id..."
+                                   @bind="entidadEditando.Documento1"
+                                   placeholder="Ingrese el documento..."
+                                   maxlength="20"
+                                   inputmode="text" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.TipoDocumento2Id">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listTipoDoc != null)
+                                {
+                                    @foreach (var documento in listTipoDoc)
+                                    {
+                                        <option value="@documento.Id">@documento.Nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 2</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Documento2"
+                                   placeholder="Ingrese el documento..."
+                                   maxlength="20"
+                                   inputmode="text" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.TipoDocumento3Id">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listTipoDoc != null)
+                                {
+                                    @foreach (var documento in listTipoDoc)
+                                    {
+                                        <option value="@documento.Id">@documento.Nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 3</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Documento3"
+                                   placeholder="Ingrese el documento..."
                                    maxlength="20"
                                    inputmode="text" />
                         </div>
@@ -418,6 +470,8 @@
     private List<IBaseEntity> listNombreDiario = new();
     private List<IBaseEntity> listEstatusSociedad = new();
     private List<IBaseEntity> listTipoSociedadActiva = new();
+    private List<IBaseEntity> listTipoDoc = new();
+
     private List<Moneda> listMoneda = new();
     private List<UnidadNegocio> listUnidad = new();
     private List<UnidadNegocio> listUnidadFiltrado = new();
@@ -428,6 +482,18 @@
     [Inject] private IMoneda repoMoneda { get; set; } = null!;
     [Inject] private IUnidadNegocio repoUnidadNegocio { get; set; } = null!;
     [Inject] private ISociedad repository { get; set; } = null!;
+
+    private string CapitalSuscritoTexto
+    {
+        get => FormatearNumero((decimal?)entidadEditando.CapitalSuscrito!);
+        set => entidadEditando.CapitalSuscrito = LimpiarYConvertir(value);
+    }
+
+    private string CapitalPagadoTexto
+    {
+        get => FormatearNumero((decimal?)entidadEditando.CapitalPagado!);
+        set => entidadEditando.CapitalPagado = LimpiarYConvertir(value);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -492,7 +558,12 @@
                     EstatusSociedadId = item.EstatusSociedad?.Id,
                     MonedaId = item.Moneda?.Id,
                     Nit = item.Nit,
-                    Rif = item.Rif,
+                    TipoDocumento1Id = item.TipoDocumento1?.Id,
+                    TipoDocumento2Id = item.TipoDocumento2?.Id,
+                    TipoDocumento3Id = item.TipoDocumento3?.Id,
+                    Documento1 = item.Documento1,
+                    Documento2 = item.Documento2,
+                    Documento3 = item.Documento3,
                     Observaciones = item.Observaciones,
                     CreateDate = item.CreateDate,
                     CreateUserId = item.CreateUserId,
@@ -556,6 +627,7 @@
             listTipoSociedad = await GetEntityListAsync("tiposociedad");
             listTipoSociedadActiva = await GetEntityListAsync("tiposociedadactiva");
             listNombreDiario = await GetEntityListAsync("nombrediarios");
+            listTipoDoc = await GetEntityListAsync("tipodocumento");
 
             listMoneda = await repoMoneda.GetAllAsync();
             listUnidad = await repoUnidadNegocio.GetAllAsync();
@@ -699,4 +771,64 @@
         StateHasChanged();
     }
 
+    // Reemplaza 'int' por 'long' o 'decimal' según sea el tipo de tu propiedad
+    private void ProcesarEntradaAcciones(ChangeEventArgs e)
+    {
+        string input = e.Value?.ToString() ?? "";
+
+        // 1. Elimina todo lo que no sea un dígito numérico
+        string soloNumeros = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
+
+        // 2. Asigna el valor numérico limpio a tu propiedad de Blazor
+        if (long.TryParse(soloNumeros, out long resultado))
+        {
+            entidadEditando.NumeroAcciones = resultado.ToString();
+        }
+        else
+        {
+            entidadEditando.NumeroAcciones = "0"; // O el valor por defecto que manejes
+        }
+    }
+
+    private string FormatearMiles(string? valor)
+    {
+        if (valor == null || valor == "0") return string.Empty;
+
+        long? numero = long.TryParse(valor, out long resultado) ? resultado : (long?)null;
+
+        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
+        return numero.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture).ToString();
+    }
+
+    // Toma el número de tu clase y lo muestra con puntos/comas de tu región
+    private string FormatearNumero(decimal? valor)
+    {
+        if (valor == null) return "";
+        if (valor == 0) return "";
+        return valor?.ToString("N2", System.Globalization.CultureInfo.CurrentCulture);
+    }
+
+    // Toma el texto del teclado, remueve separadores visuales y guarda el decimal puro en tu clase
+    private decimal LimpiarYConvertir(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return 0;
+
+        try
+        {
+            string separadorMiles = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
+
+            // Eliminamos el separador de miles para que no rompa la conversión decimal
+            string limpio = input.Replace(separadorMiles, "");
+
+            if (decimal.TryParse(limpio, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out decimal resultado))
+            {
+                return resultado;
+            }
+        }
+        catch
+        {
+            // Protege el formulario de errores si escriben caracteres extraños
+        }
+        return 0;
+    }
 }

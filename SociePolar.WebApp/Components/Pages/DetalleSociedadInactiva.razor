@@ -172,7 +172,7 @@
                                     <!-- Número Acciones -->
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Número Acciones</label>
-                                        <label class="form-label text-secondary small">@entidadActual.NumeroAcciones</label>
+                                        <label class="form-label text-secondary small">@FormatearMiles(entidadActual.NumeroAcciones)</label>
                                     </div>
 
                                     <!-- ¿Aplica Capital? -->
@@ -236,8 +236,28 @@
 
                                     <!-- Rif -->
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small d-block">Rif</label>
-                                        <label class="form-label text-secondary small">@entidadActual.Rif</label>
+                                        <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
+                                        <label class="form-label text-secondary small">@entidadActual.TipoDocumento1?.Nombre</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal</label>
+                                        <label class="form-label text-secondary small">@entidadActual.Documento1</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
+                                        <label class="form-label text-secondary small">@entidadActual.TipoDocumento2?.Nombre</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 2</label>
+                                        <label class="form-label text-secondary small">@entidadActual.Documento2</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
+                                        <label class="form-label text-secondary small">@entidadActual.TipoDocumento3?.Nombre</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 3</label>
+                                        <label class="form-label text-secondary small">@entidadActual.Documento3</label>
                                     </div>
 
                                     <!-- Nit -->
@@ -334,7 +354,7 @@
                                     <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
                                     <td class="text-start text-muted small" style="width: 15%; font-style: italic;">↳</td>
                                     <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Documento1</td>
                                     <td class="text-start text-secondary small" style="width: 5%;">@(p.Duracion != null ? $"{p.Duracion} años" : "")</td>
                                     <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                                     <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
@@ -691,4 +711,13 @@
 
     private void ManejarCierreModal() => mostrarModal = false;
 
+    private string FormatearMiles(string? valor)
+    {
+        if (valor == null || valor == "0") return string.Empty;
+
+        long? numero = long.TryParse(valor, out long resultado) ? resultado : (long?)null;
+
+        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
+        return numero.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture).ToString();
+    }
 }

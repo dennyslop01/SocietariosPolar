@@ -71,7 +71,7 @@
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Numero</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Acciones</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@FormatearMiles(p.Acciones)</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Preferente</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Ubicacion</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
@@ -153,12 +153,13 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold text-secondary small">Número de Acciones</label>
-                                <input type="text" class="form-control form-control-sm small"
-                                       @bind="entidadEditando.Acciones"
-                                       placeholder="Ingrese el número de acciones..."
-                                       maxlength="20"
-                                       inputmode="numeric"
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                <input type="text"
+                                       class="form-control form-control-sm small"
+                                       value="@FormatearMiles(entidadEditando.Acciones)"
+                                       @oninput="ProcesarEntradaAcciones"
+                                       placeholder="Ingrese número de acciones..."
+                                       maxlength="26"
+                                       inputmode="numeric" />
                                 <ValidationMessage For="@(() => entidadEditando.Acciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
                             <div class="col-md-6 mb-3">
@@ -538,5 +539,32 @@
         
         if (Estado == 2)
             navManager.NavigateTo("/accionistassociedadinactivas");
+    }
+
+    // Reemplaza 'int' por 'long' o 'decimal' según sea el tipo de tu propiedad
+    private void ProcesarEntradaAcciones(ChangeEventArgs e)
+    {
+        string input = e.Value?.ToString() ?? "";
+
+        // 1. Elimina todo lo que no sea un dígito numérico
+        string soloNumeros = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
+
+        // 2. Asigna el valor numérico limpio a tu propiedad de Blazor
+        if (int.TryParse(soloNumeros, out int resultado))
+        {
+            entidadEditando.Acciones = resultado;
+        }
+        else
+        {
+            entidadEditando.Acciones = 0; // O el valor por defecto que manejes
+        }
+    }
+
+    private string FormatearMiles(int? valor)
+    {
+        if (valor == null || valor == 0) return string.Empty;
+
+        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
+        return valor.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture);
     }
 }

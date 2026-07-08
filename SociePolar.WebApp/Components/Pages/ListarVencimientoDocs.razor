@@ -134,8 +134,8 @@
                 {
                     Id = item.Id,
                     Modulo = "Sociedades",
-                    Documento = "Rif",
-                    NroDocumento = item.Rif,
+                    Documento = item.TipoDocumento1.Nombre,
+                    NroDocumento = item.Documento1,
                     FechaVencimiento = item.FechaVencimiento,
                     Nombre = item.Empresa.Nombre
                 });

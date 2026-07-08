@@ -98,9 +98,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.NumeroActa"
                                    placeholder="Ingrese el número de acta..."
-                                   maxlength="3"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   maxlength="15" />
                             <ValidationMessage For="@(() => entidadEditando.NumeroActa)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-12 mb-0">
@@ -134,9 +132,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.NumeroRegistro"
                                    placeholder="Ingrese el número de registro..."
-                                   maxlength="3"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   maxlength="15" />
                             <ValidationMessage For="@(() => entidadEditando.NumeroRegistro)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -144,7 +140,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.Tomo"
                                    placeholder="Ingrese el número de tomo..."
-                                   maxlength="6" />
+                                   maxlength="15" />
                             <ValidationMessage For="@(() => entidadEditando.Tomo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-12 mb-0">
@@ -174,9 +170,7 @@
                             <input type="text" class="form-control form-control-sm small"
                                    @bind="entidadEditando.NumeroPublicacion"
                                    placeholder="Ingrese el número de publicación..."
-                                   maxlength="5"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   maxlength="15" />
                             <ValidationMessage For="@(() => entidadEditando.NumeroPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -239,7 +233,16 @@
                                 <ValidationMessage For="@(() => entidadEditando.TipoReformaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
                         }
-
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Observaciones</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Observacion"
+                                      @bind:event="oninput"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Ingrese las observaciones (máximo 2,000 caracteres)...">
+                                        </textarea>
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
                         </div>
@@ -367,7 +370,8 @@
                     CreateUserId = item.CreateUserId,
                     UpdateDate = item.UpdateDate,
                     UpdateUserId = item.UpdateUserId,
-                    IndicadorAsamblea = item.IndicadorAsamblea
+                    IndicadorAsamblea = item.IndicadorAsamblea,
+                    Observacion = item.Observacion
                 };
 
                 entidadEditando = dto;

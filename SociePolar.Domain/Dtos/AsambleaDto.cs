@@ -17,7 +17,7 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaCelebracion { get; set; }
 
         [Required(ErrorMessage = "El Número de Acta es requerido.")] 
-        public int? NumeroActa { get; set; }
+        public string? NumeroActa { get; set; }
 
         [Required(ErrorMessage = "La Fecha de Registro es requerida.")] 
         public DateTime? FechaRegistro { get; set; }
@@ -26,7 +26,7 @@ namespace SociePolar.Domain.Dtos
         public int? RegistroId { get; set; }
 
         [Required(ErrorMessage = "El Número de registro es requerido.")] 
-        public int? NumeroRegistro { get; set; }
+        public string? NumeroRegistro { get; set; }
         
         [Required(ErrorMessage = "El Tomo es requerido.")] 
         public string? Tomo { get; set; }
@@ -38,7 +38,7 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaPublicacion { get; set; }
         
         [Required(ErrorMessage = "El Número de Publicación es requerido.")] 
-        public int? NumeroPublicacion { get; set; }
+        public string? NumeroPublicacion { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Nombre de Diario válido.")] 
         public int? NombreDiarioId { get; set; }
@@ -52,5 +52,8 @@ namespace SociePolar.Domain.Dtos
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }
         public int UpdateUserId { get; set; }
+
+        public string? Observacion { get; set; }
+
     }
 }

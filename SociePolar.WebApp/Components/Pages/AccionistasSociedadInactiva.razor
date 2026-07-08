@@ -86,7 +86,7 @@
                             <td class="text-muted small ps-3" style="width: 15%;">-</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.TipoAccionistaNombre</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.AccionistaNombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroAcciones</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@FormatearMiles(p.NroAcciones)</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
@@ -458,5 +458,13 @@
             return "bi-arrow-down-up text-muted opacity-50"; // Ícono neutral
         }
         return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
+    }
+
+    private string FormatearMiles(int? valor)
+    {
+        if (valor == null || valor == 0) return string.Empty;
+
+        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
+        return valor.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture);
     }
 }

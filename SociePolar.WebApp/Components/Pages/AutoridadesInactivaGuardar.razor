@@ -87,10 +87,10 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Duración</label>
-                            <InputNumber class="form-control form-control-sm small"
+                            <InputText class="form-control form-control-sm small"
                                          @bind-Value="entidadEditando.Duracion"
                                          placeholder="Ingrese la duración..."
-                                         maxlength="2" />
+                                         maxlength="15" />
                             <ValidationMessage For="@(() => entidadEditando.Duracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -101,36 +101,49 @@
                                        maxlength="150" />
                             <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
-
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="tipoDocumentoGroup" id="inlineRadio1"
-                                       value="V"
-                                       checked="@(entidadEditando.TipoDocumento == "V")"
-                                       @onchange="@(() => entidadEditando.TipoDocumento = "V")">
-                                <label class="form-check-label small text-secondary" for="inlineRadio1">V</label>
-                            </div>
-
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="tipoDocumentoGroup" id="inlineRadio2"
-                                       value="E"
-                                       checked="@(entidadEditando.TipoDocumento == "E")"
-                                       @onchange="@(() => entidadEditando.TipoDocumento = "E")">
-                                <label class="form-check-label small text-secondary" for="inlineRadio2">E</label>
-                            </div>
-                            <ValidationMessage For="@(() => entidadEditando.TipoDocumento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Número Documento</label>
+                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento1Id">
+                                <option value="0">Seleccione ...</option>
+                                @if (listTipoDoc != null)
+                                {
+                                    @foreach (var tipo in listTipoDoc)
+                                    {
+                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadEditando.TipoDocumento1Id)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
                             <InputText type="text" class="form-control form-control-sm small"
-                                       @bind-Value="entidadEditando.Documento"
+                                       @bind-Value="entidadEditando.Documento1"
                                        placeholder="Ingrese número de documento..."
-                                       maxlength="9"
-                                       inputmode="numeric"
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
-                            <ValidationMessage For="@(() => entidadEditando.Documento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                       maxlength="20"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9-]/g, '');" />
+                            <ValidationMessage For="@(() => entidadEditando.Documento1)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento2Id">
+                                <option value="0">Seleccione ...</option>
+                                @if (listTipoDoc != null)
+                                {
+                                    @foreach (var tipo in listTipoDoc)
+                                    {
+                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 2</label>
+                            <InputText type="text" class="form-control form-control-sm small"
+                                       @bind-Value="entidadEditando.Documento2"
+                                       placeholder="Ingrese número de documento..."
+                                       maxlength="20"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9-]/g, '');" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
@@ -188,7 +201,7 @@
     private List<Autoridad> listAutoridad = new();
 
     private List<IBaseEntity> listCargos = new();
-    private List<IBaseEntity> listCargosFiltrado = new();
+    private List<IBaseEntity> listTipoDoc = new();
 
     private EditContext? editContext;
     private ValidationMessageStore? mensajeStore;
@@ -236,8 +249,10 @@
                     SociedadId = item.Sociedad.Id,
                     CargoId = item.Cargo.Id,
                     Nombre = item.Nombre,
-                    TipoDocumento = item.TipoDocumento,
-                    Documento = item.Documento,
+                    TipoDocumento1Id = item.TipoDocumento1.Id,
+                    TipoDocumento2Id = item.TipoDocumento2.Id,
+                    Documento1 = item.Documento1,
+                    Documento2 = item.Documento2,
                     Duracion = item.Duracion,
                     CreateDate = item.CreateDate,
                     CreateUserId = item.CreateUserId,
@@ -279,6 +294,7 @@
         try
         {
             listCargos = await GetEntityListAsync("cargos");
+            listTipoDoc = await GetEntityListAsync("tipodocumento");
 
             var listSociedades = await reposociedad.GetAllAsync();
             listSociedad = listSociedades.Where(x => x.EstatusSociedad.Id == 2).ToList();

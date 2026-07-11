@@ -291,7 +291,7 @@
                                    placeholder="Ingrese número de expediente..."
                                    maxlength="7"
                                    inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                         </div>
                         <div class="col-md-10 mb-3">
                             <label class="form-label fw-bold text-secondary small">Observaciones</label>
@@ -386,7 +386,7 @@
                                    placeholder="Ingrese el año..."
                                    maxlength="4"
                                    inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Fecha</label>
@@ -400,7 +400,7 @@
                                    placeholder="Ingrese el número..."
                                    maxlength="12"
                                    inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Nombre Diario</label>
@@ -592,7 +592,7 @@
             }
             catch (Exception ex)
             {
-                await MostrarNotificacion("No se pudieron cargar los datos", true);
+                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
             }
         }
         cargando = false;
@@ -636,7 +636,7 @@
         }
         catch (Exception ex)
         {
-            await MostrarNotificacion("No se pudieron cargar los datos", true);
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
     }
 

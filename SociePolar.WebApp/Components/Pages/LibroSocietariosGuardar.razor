@@ -107,7 +107,7 @@
                                    placeholder="Ingrese el tomo de uso..."
                                    maxlength="3"
                                    inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                             <ValidationMessage For="@(() => entidadEditando.TomoUso)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -117,7 +117,7 @@
                                    placeholder="Ingrese el folio..."
                                    maxlength="3"
                                    inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                             <ValidationMessage For="@(() => entidadEditando.Folios)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -334,7 +334,7 @@
             }
             catch (Exception ex)
             {
-                await MostrarNotificacion("No se pudieron cargar los datos", true);
+                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
             }
         }
         cargando = false;
@@ -370,7 +370,7 @@
         }
         catch (Exception ex)
         {
-            await MostrarNotificacion("No se pudieron cargar los datos", true);
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
     }
 

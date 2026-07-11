@@ -204,7 +204,7 @@
             }
             catch (Exception ex)
             {
-                await MostrarNotificacion("No se pudieron cargar los datos", true);
+                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
             }
         }
         cargando = false;
@@ -241,7 +241,7 @@
         }
         catch (Exception ex)
         {
-            await MostrarNotificacion("No se pudieron cargar los datos", true);
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
     }
 

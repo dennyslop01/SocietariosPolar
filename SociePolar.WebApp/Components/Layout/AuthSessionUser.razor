@@ -38,7 +38,7 @@
 }
 
 @code {
-    private string? userEmail = "cesaralejandro.garcia@empresaspolar.com";
+    private string userEmail = "cesaralejandro.garcia@empresaspolar.com";
     string nombre = string.Empty;
     string apellido = string.Empty;
     bool cargando =  false;
@@ -81,7 +81,7 @@
             }
             else
             {
-                MostrarNotificacion($"Bienvenido {nombre} {apellido}!", esError: false);
+                await MostrarNotificacion($"Bienvenido {nombre} {apellido}!", esError: false);
             }
         }
         catch (Exception ex)
@@ -97,7 +97,7 @@
     {
         try
         {
-            var usuario = await repousuario.GetByEmailAsync(userEmail);
+            Usuario? usuario = await repousuario.GetByEmailAsync(userEmail);
             if (usuario == null)
             {
                 await MostrarNotificacion(mensajeAlerta = $"Usuario con email {userEmail} no encontrado.", esError: true);

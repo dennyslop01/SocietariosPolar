@@ -155,7 +155,7 @@
                                    placeholder="Ingrese el año de publicación..."
                                    maxlength="4"
                                    inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                             <ValidationMessage For="@(() => entidadEditando.AnoPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
@@ -379,7 +379,7 @@
             }
             catch (Exception ex)
             {
-                await MostrarNotificacion("No se pudieron cargar los datos", true);
+                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
             }
         }
         cargando = false;
@@ -419,7 +419,7 @@
         }
         catch (Exception ex)
         {
-            await MostrarNotificacion("No se pudieron cargar los datos", true);
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
     }
 

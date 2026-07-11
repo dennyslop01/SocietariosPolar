@@ -14,9 +14,6 @@ namespace SociePolar.Domain.Dtos
 
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Estatus válida.")] 
         public int? EstatusAccionistaId { get; set; }
-
-
-
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

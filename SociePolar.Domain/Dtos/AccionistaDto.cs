@@ -54,13 +54,8 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaNacimiento { get; set; }
         public DateTime? FechaIngreso { get; set; }
 
-        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? Email1 { get; set; }
-
-        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? Email2 { get; set; }
-
-        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? Email3 { get; set; }
         public string? TelefonoMovil { get; set; }
         public string? Telefono1 { get; set; }
@@ -96,8 +91,6 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaVencimientoApoderado3 { get; set; }
         public string? NombreContacto { get; set; }
         public string? TelefonoContacto { get; set; }
-
-        [RegularExpression(@"^$|^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "El correo debe contener un dominio válido (ej. .com).")]
         public string? EmailContacto { get; set; }
         public int? CondicionEspecialId { get; set; }
         public string? Observaciones { get; set; }

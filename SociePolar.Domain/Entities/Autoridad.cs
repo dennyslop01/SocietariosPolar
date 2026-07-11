@@ -3,8 +3,8 @@
     public class Autoridad
     {
         public int Id { get; set; }
-        public Sociedad Sociedad { get; set; }
-        public Cargo Cargo { get; set; }
+        public Sociedad? Sociedad { get; set; }
+        public Cargo? Cargo { get; set; }
         public string? Nombre { get; set; }
         public TipoDocumento? TipoDocumento1 { get; set; }
         public TipoDocumento? TipoDocumento2 { get; set; }

@@ -223,6 +223,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
         finally
@@ -291,6 +293,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
@@ -338,6 +342,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
         }

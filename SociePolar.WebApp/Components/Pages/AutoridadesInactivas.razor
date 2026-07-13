@@ -216,6 +216,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
         finally
@@ -294,6 +296,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
         }

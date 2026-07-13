@@ -1,4 +1,5 @@
 ﻿@page "/authsessionuser"
+@using SociePolar.WebApp.Components.Pages
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -17,24 +18,7 @@
 
 @if (cargando)
 {
-    <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
-    <div class="modal fade show d-block" tabindex="-1"
-         style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;">
-
-        <div class="modal-dialog modal-dialog-centered justify-content-center h-100 m-0" style="max-width: 100%;">
-            <div class="modal-content border-0 bg-transparent shadow-none">
-                <div class="modal-body text-center">
-                    @* Spinner más fino y con el color principal de tu app *@
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
-                        Procesando
-                    </h6>
-                </div>
-            </div>
-        </div>
-    </div>
+    <ModalCargando />
 }
 
 @code {
@@ -86,6 +70,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             await MostrarNotificacion($"Error al cargar datos del usuario {usuario}. Por favor, inténtalo de nuevo. {ex.Message.ToString()}", esError: true);
             // Manejo de errores (opcional)
             Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");
@@ -100,6 +86,8 @@
             Usuario? usuario = await repousuario.GetByEmailAsync(userEmail);
             if (usuario == null)
             {
+                cargando = false;
+                StateHasChanged();
                 await MostrarNotificacion(mensajeAlerta = $"Usuario con email {userEmail} no encontrado.", esError: true);
                 Console.WriteLine($"Usuario con email {userEmail} no encontrado.");
             }
@@ -112,6 +100,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             await MostrarNotificacion($"Error al cargar datos del usuario {usuario}. Por favor, inténtalo de nuevo. {ex.Message.ToString()}", esError: true);
             // Manejo de errores (opcional)
             Console.WriteLine($"Error al cargar datos del usuario: {ex.Message}");

@@ -986,6 +986,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
             await MostrarNotificacion("Error al preparar el formulario", true);
         }
@@ -1125,6 +1127,8 @@
             }
             catch (Exception ex)
             {
+                cargando = false;
+                StateHasChanged();
                 await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
             }
         }
@@ -1169,6 +1173,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
     }
@@ -1269,6 +1275,8 @@
         }
         catch (Exception ex)
         {
+            cargando = false;
+            StateHasChanged();
             // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);

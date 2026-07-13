@@ -1,0 +1,260 @@
+﻿@rendermode InteractiveServer
+@inject GoogleDriveService DriveService
+
+<label for="fileInput"
+       class="btn btn-primary @(esInvalido ? "disabled" : "")"
+       style="cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+    Cargar archivo PDF
+</label>
+
+<InputFile id="fileInput"
+           OnChange="UploadFile"
+           accept=".pdf"
+           capture="camera"
+           style="display:none;"
+           disabled="@esInvalido" />
+<br />
+<br />
+@if (mostrarAlerta)
+{
+    <div id="divAlertaimagen" class="alert alert-success alert-dismissible fade show toast-container" role="alert" style="display:none;">
+        @mensajeAlerta
+    </div>
+}
+else
+{
+    <div id="divAlertaimagen" class="alert alert-success alert-dismissible fade show toast-container" role="alert" style="display:none;">
+    </div>
+}
+
+@if (cargando)
+{
+    <div class="modal fade show d-block modal-loading-center" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <!-- 'modal-dialog-centered' centra el modal verticalmente -->
+        <div class="modal-dialog modal-dialog-centered">
+            <!-- Ajustamos el ancho con 'mx-auto' y eliminamos bordes/fondo si solo quieres ver el spinner -->
+            <div class="modal-content" style="background: transparent; border: none;">
+                <div class="modal-body text-center">
+                    <div class="modal-cargando">
+                        <!-- Spinner de Bootstrap -->
+                        <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-light mt-2">Cargando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    [Parameter] public string folderName { get; set; }
+    [Parameter] public int beneficiarioId { get; set; }
+    [Parameter] public string rutaNota { get; set; }
+    [Parameter] public string nombreNota { get; set; }
+
+    bool esInvalido = false;
+
+    private string Message = "";
+    // private List<string> fileNames = new List<string>();
+    private string? mensajeAlerta;
+    private bool mostrarAlerta = false;
+    private bool cargando = false;
+
+    // [Inject] private IBeneficiario repobenefi { get; set; } = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (firstRender)
+        // {
+        //     await jsRuntime.InvokeVoidAsync("TimeoutHelper.showAndHide", "divAlertaimagen", 10);
+        //     fileNames.Clear();
+        //     if (nombreNota != null)
+        //     {
+        //         fileNames.Add(nombreNota);
+        //     }
+        // }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // fileNames.Clear();
+        // if (nombreNota != null)
+        // {
+        //     fileNames.Add(nombreNota);
+        // }
+        // esInvalido = !string.IsNullOrEmpty(nombreNota);
+        // StateHasChanged();
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e) // Cambiado a UploadFile
+    {
+        cargando = true;
+        var file = e.File;
+        if (file == null) return;
+
+        try
+        {
+            Stream streamToUpload;
+            string fileName;
+            string contentType = file.ContentType;
+
+            // --- LÓGICA DE PROCESAMIENTO SEGÚN EL TIPO ---
+            // if (contentType.Contains("image"))
+            // {
+            //     // Si es imagen, mantenemos tu lógica de redimensionado
+            //     var resizedImage = await file.RequestImageFileAsync("image/jpeg", 800, 800);
+            //     streamToUpload = resizedImage.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            //     fileName = $"{DateTime.Now:yyyyMMdd}_FotoBoletin.jpg";
+            //     contentType = "image/jpeg";
+            // }
+            // else
+
+            if (contentType == "application/pdf")
+            {
+                // Si es PDF, abrimos el stream directamente sin redimensionar
+                streamToUpload = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // Aumentamos a 10MB para PDFs
+                fileName = $"{DateTime.Now:yyyyMMdd}_Documento.pdf";
+            }
+            else
+            {
+                mensajeAlerta = "Formato no soportado. Solo pdf.";/* imágenes y  */
+                mostrarAlerta = true;
+                cargando = false;
+                // 3. Forzamos el renderizado y esperamos un "ciclo" para que el DOM se actualice
+                StateHasChanged();
+                await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+
+                await jsRuntime.InvokeVoidAsync("TimeoutHelper.showAndHide", "divAlertaimagen", 8000);
+                return;
+            }
+
+            // --- LÓGICA DE CARGA A GOOGLE DRIVE / GCS ---
+            using (streamToUpload)
+            {
+                if (!string.IsNullOrEmpty(folderName))
+                {
+                    string folderId = await DriveService.CreateFolderAsync(folderName);
+                    string fileIdResult = string.Empty;
+
+                    //Beneficiario? benefi = await repobenefi.GetByIdlAsync(beneficiarioId);
+
+                    // Borrar archivo anterior si existe
+                    //if (benefi?.RutaNotas != null)
+                    //{
+                    //string oldFileId = benefi.RutaNotas.Split('/').Last();
+                    await DriveService.TrashPdfFilesInFolderAsync(folderId);
+                    //}
+
+                    // Subida con el ContentType dinámico
+                    fileIdResult = await DriveService.UploadFileAsync(streamToUpload, fileName, contentType, folderId);
+
+                    // fileNames.Add(file.Name); //fileNames.Add(contentType.Contains("pdf") ? "Documento PDF" : "Foto Boletin");
+                    // esInvalido = !string.IsNullOrEmpty(file.Name);
+                    // await repobenefi.UpdateRutaNotaAsync(beneficiarioId, $"{folderId}/{fileIdResult}", file.Name, 1);
+                }
+            }
+
+            mensajeAlerta = "Archivo subido correctamente.";
+            mostrarAlerta = true;
+            cargando = false;
+            // 3. Forzamos el renderizado y esperamos un "ciclo" para que el DOM se actualice
+            StateHasChanged();
+            await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+
+            await jsRuntime.InvokeVoidAsync("TimeoutHelper.showAndHide", "divAlertaimagen", 8000);
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al procesar el archivo: {ex.Message}";
+            mostrarAlerta = true;
+            cargando = false;
+            // 3. Forzamos el renderizado y esperamos un "ciclo" para que el DOM se actualice
+            StateHasChanged();
+            await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+
+            await jsRuntime.InvokeVoidAsync("TimeoutHelper.showAndHide", "divAlertaimagen", 8000);
+        }
+    }
+
+    private async Task Eliminar()
+    {
+        try
+        {
+            // await repobenefi.UpdateRutaNotaAsync(beneficiarioId, null, null, 1);
+            // fileNames.Clear();
+            // nombreNota = null;
+            // esInvalido = !string.IsNullOrEmpty(nombreNota);
+            // StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al procesar el archivo: {ex.Message}";
+            mostrarAlerta = true;
+            cargando = false;
+            // 3. Forzamos el renderizado y esperamos un "ciclo" para que el DOM se actualice
+            StateHasChanged();
+            await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+
+            await jsRuntime.InvokeVoidAsync("TimeoutHelper.showAndHide", "divAlertaimagen", 8000);
+        }
+    }
+}
+
+<style>
+    .btn {
+        display: inline-block;
+        /* padding: 10px 20px; */
+        font-size: 11px;
+        font-variant-caps: small-caps;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        outline: none;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        /* border-radius: 15px; */
+        /* box-shadow: 0 4px #999; */
+    }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:active {
+            background-color: #0056b3;
+            box-shadow: 0 2px #666;
+            transform: translateY(2px);
+        }
+
+    .btn2 {
+        display: inline-block;
+        /* padding: 10px 20px; */
+        font-size: 11px;
+        font-variant-caps: small-caps;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        outline: none;
+        color: #fff;
+        background-color: #BCBCBC;
+        border: none;
+        /* border-radius: 15px; */
+        /* box-shadow: 0 4px #999; */
+    }
+
+        .btn2:hover {
+            background-color: #BCBCBC;
+        }
+
+        .btn2:active {
+            background-color: #BCBCBC;
+            box-shadow: 0 2px #666;
+            transform: translateY(2px);
+        }
+
+</style>
+

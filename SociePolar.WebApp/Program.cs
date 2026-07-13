@@ -4,6 +4,7 @@ using MudBlazor.Services;
 using SociePolar.Application.Interfaces;
 using SociePolar.Infrastructure.DataContext;
 using SociePolar.Infrastructure.Repositories;
+using SociePolar.Infrastructure.Services;
 using SociePolar.WebApp.Components;
 using System;
 
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.Configure<IGoogleDrive>(builder.Configuration.GetSection("GoogleDrive"));
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();
@@ -51,6 +54,8 @@ builder.Services.AddScoped<ILibroSocietario, LibroSocietarioRepository>();
 builder.Services.AddScoped<IAccionista, AccionistaRepository>();
 builder.Services.AddScoped<IAccionistaSociedad, AccionistaSociedadRepository>();
 builder.Services.AddScoped<ITitulo, TituloRepository>();
+builder.Services.AddScoped<ITipoDocumentoSoporte, TipoDocumentoSoporteRepository>();
+builder.Services.AddScoped<GoogleDriveService>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpClient();

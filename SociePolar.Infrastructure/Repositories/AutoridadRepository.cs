@@ -15,8 +15,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Autoridad>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.TipoDocumento1)
                 .Include(b => b.TipoDocumento2)
                 .Include(b => b.Cargo)
@@ -28,8 +28,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Autoridad>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.TipoDocumento1)
                 .Include(b => b.TipoDocumento2)
                 .Include(b => b.Cargo)
@@ -42,12 +42,12 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Autoridad>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.Cargo)
                 .Include(b => b.TipoDocumento1)
                 .Include(b => b.TipoDocumento2)
-                .Where(x => x.Sociedad.Id == sociedadId)
+                .Where(x => x.Sociedad!.Id == sociedadId)
                 .ToListAsync();
         }
 
@@ -61,7 +61,7 @@ namespace SociePolar.Infrastructure.Repositories
             var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId);
             if (sociedad == null) throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
 
-            TipoDocumento tipodoc1 = null;
+            TipoDocumento? tipodoc1 = null;
             if (entity.TipoDocumento1Id != null)
             {
                 if (entity.TipoDocumento1Id != 0)
@@ -71,7 +71,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc2 = null;
+            TipoDocumento? tipodoc2 = null;
             if (entity.TipoDocumento2Id != null)
             {
                 if (entity.TipoDocumento2Id != 0)
@@ -100,14 +100,14 @@ namespace SociePolar.Infrastructure.Repositories
             await context.Set<Autoridad>().AddAsync(newAutoridad);
             context.Entry(newAutoridad.Cargo).State = EntityState.Unchanged;
             context.Entry(newAutoridad.Sociedad).State = EntityState.Unchanged;
-            if (tipodoc1 != null) context.Entry(newAutoridad.TipoDocumento1).State = EntityState.Unchanged;
-            if (tipodoc2 != null) context.Entry(newAutoridad.TipoDocumento2).State = EntityState.Unchanged;
+            if (tipodoc1 != null) context.Entry(newAutoridad.TipoDocumento1!).State = EntityState.Unchanged;
+            if (tipodoc2 != null) context.Entry(newAutoridad.TipoDocumento2!).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
             context.Entry(newAutoridad.Cargo).State = EntityState.Detached;
             context.Entry(newAutoridad.Sociedad).State = EntityState.Detached;
-            if (tipodoc1 != null) context.Entry(newAutoridad.TipoDocumento1).State = EntityState.Detached;
-            if (tipodoc2 != null) context.Entry(newAutoridad.TipoDocumento2).State = EntityState.Detached;
+            if (tipodoc1 != null) context.Entry(newAutoridad.TipoDocumento1!).State = EntityState.Detached;
+            if (tipodoc2 != null) context.Entry(newAutoridad.TipoDocumento2!).State = EntityState.Detached;
         }
 
         public async void Update(AutoridadDto entity)
@@ -120,10 +120,10 @@ namespace SociePolar.Infrastructure.Repositories
             var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId);
             if (sociedad == null) throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
 
-            Autoridad editautoridad = await context.Autoridades.FindAsync(entity.Id);
+            Autoridad? editautoridad = await context.Autoridades.FindAsync(entity.Id);
             if (editautoridad == null) throw new Exception($"Autoridad con ID {entity.Id} no existe.");
 
-            TipoDocumento tipodoc1 = null;
+            TipoDocumento? tipodoc1 = null;
             if (entity.TipoDocumento1Id != null)
             {
                 if (entity.TipoDocumento1Id != 0)
@@ -133,7 +133,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc2 = null;
+            TipoDocumento? tipodoc2 = null;
             if (entity.TipoDocumento2Id != null)
             {
                 if (entity.TipoDocumento2Id != 0)

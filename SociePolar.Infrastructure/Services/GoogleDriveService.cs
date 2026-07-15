@@ -25,7 +25,7 @@ namespace SociePolar.Infrastructure.Services
             using (var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read))
             {
                 // _scopes debe incluir "www.googleapis.com"
-                credential = GoogleCredential.FromStream(stream).CreateScoped(_scopes);
+                credential = GoogleCredential.FromStream(stream!).CreateScoped(_scopes);
             }
 
             // Solicita el token de acceso de forma asíncrona
@@ -43,8 +43,8 @@ namespace SociePolar.Infrastructure.Services
         private DriveService GetService()
         {
             var jsonPath = _config["GoogleDrive:CredentialsPath"];
-            GoogleCredential credential;
-            using (var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read))
+            GoogleCredential? credential;
+            using (var stream = new FileStream(jsonPath!, FileMode.Open, FileAccess.Read))
             {
                 credential = GoogleCredential.FromStream(stream).CreateScoped(_scopes);
             }
@@ -58,7 +58,7 @@ namespace SociePolar.Infrastructure.Services
 
         public async Task<string> CreateFolderAsync(string folderName, string? parentFolderId = null)
         {
-            string folderId = await GetFolderIdByNameAsync(folderName, parentFolderId);
+            string? folderId = await GetFolderIdByNameAsync(folderName, parentFolderId);
             if (!string.IsNullOrEmpty(folderId))
             {
                 return folderId;
@@ -71,7 +71,7 @@ namespace SociePolar.Infrastructure.Services
             {
                 Name = folderName,
                 MimeType = "application/vnd.google-apps.folder", // MimeType especial de carpetas
-                Parents = new List<string> { parentId }
+                Parents = new List<string> { parentId! }
             };
 
             var request = service.Files.Create(fileMetadata);
@@ -115,7 +115,7 @@ namespace SociePolar.Infrastructure.Services
             try
             {
                 var service = GetService();
-                string pageToken = null;
+                string? pageToken = null;
 
                 do
                 {
@@ -171,7 +171,7 @@ namespace SociePolar.Infrastructure.Services
             var fileMetadata = new Google.Apis.Drive.v3.Data.File()
             {
                 Name = fileName,
-                Parents = new List<string> { parentId }
+                Parents = new List<string> { parentId! }
             };
 
             var request = service.Files.Create(fileMetadata, fileStream, contentType);

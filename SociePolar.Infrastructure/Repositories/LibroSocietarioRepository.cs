@@ -15,8 +15,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<LibroSocietario>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.ClaseLibro)
                 .Include(b => b.TipoLibro)
                 .ToListAsync();
@@ -27,8 +27,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<LibroSocietario>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.ClaseLibro)
                 .Include(b => b.TipoLibro)
                 .Where(x => x.Id == id)
@@ -40,11 +40,11 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<LibroSocietario>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.ClaseLibro)
                 .Include(b => b.TipoLibro)
-                .Where(x => x.Sociedad.Id == sociedadId)
+                .Where(x => x.Sociedad!.Id == sociedadId)
                 .ToListAsync();
         }
 
@@ -61,7 +61,7 @@ namespace SociePolar.Infrastructure.Repositories
             var tipoLibro = await context.Set<TipoLibro>().FindAsync(entity.TipoLibroId);
             if (tipoLibro == null) throw new Exception($"TipoLibro con ID {entity.TipoLibroId} no existe.");
 
-            LibroSocietario newLibroSocietario = new()
+            LibroSocietario? newLibroSocietario = new()
             {
                 Sociedad = sociedad,
                 ClaseLibro = claseLibro,
@@ -108,7 +108,7 @@ namespace SociePolar.Infrastructure.Repositories
             var tipoLibro = await context.Set<TipoLibro>().FindAsync(entity.TipoLibroId);
             if (tipoLibro == null) throw new Exception($"TipoLibro con ID {entity.TipoLibroId} no existe.");
 
-            LibroSocietario editLibroSocietario = await context.LibrosSocietarios.FindAsync(entity.Id);
+            LibroSocietario? editLibroSocietario = await context.LibrosSocietarios.FindAsync(entity.Id);
             if (editLibroSocietario == null) throw new Exception($"LibroSocietario con ID {entity.Id} no existe.");
 
             editLibroSocietario.Sociedad = sociedad;

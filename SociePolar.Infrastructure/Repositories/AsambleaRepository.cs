@@ -15,8 +15,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Asamblea>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.TipoAsamblea)
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
@@ -29,8 +29,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Asamblea>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.TipoAsamblea)
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
@@ -44,13 +44,13 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Asamblea>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.TipoAsamblea)
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoReforma)
-                .Where(x => x.Sociedad.Id == sociedadId)
+                .Where(x => x.Sociedad!.Id == sociedadId)
                 .ToListAsync();
         }
 
@@ -77,7 +77,7 @@ namespace SociePolar.Infrastructure.Repositories
                 if (tipoReforma == null) throw new Exception($"TipoReforma con ID {entity.TipoReformaId} no existe.");
             }
 
-            Asamblea newAsamblea = new()
+            Asamblea? newAsamblea = new()
             {
                 Sociedad = sociedad,
                 TipoAsamblea = tipoAsamblea,
@@ -139,14 +139,14 @@ namespace SociePolar.Infrastructure.Repositories
             var nombreDiario = await context.Set<NombreDiario>().FindAsync(entity.NombreDiarioId);
             if (nombreDiario == null) throw new Exception($"NombreDiario con ID {entity.NombreDiarioId} no existe.");
 
-            TipoReforma tipoReforma = null;
+            TipoReforma? tipoReforma = null;
             if (entity.AplicaReforma == 1)
             {
                 tipoReforma = await context.Set<TipoReforma>().FindAsync(entity.TipoReformaId);
                 if (tipoReforma == null) throw new Exception($"TipoReforma con ID {entity.TipoReformaId} no existe.");
             }
 
-            Asamblea editAsamblea = await context.Asambleas.FindAsync(entity.Id);
+            Asamblea? editAsamblea = await context.Asambleas.FindAsync(entity.Id);
             if (editAsamblea == null) throw new Exception($"Asamblea con ID {entity.Id} no existe.");
 
             editAsamblea.Sociedad = sociedad;

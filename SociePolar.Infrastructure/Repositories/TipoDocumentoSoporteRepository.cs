@@ -46,7 +46,7 @@ namespace SociePolar.Infrastructure.Repositories
         public async void Update(TipoDocumentoSoporte entity)
         {
             using var context = _contextFactory.CreateDbContext();
-            TipoDocumentoSoporte editTipoDoc = await context.TiposDocumentosSoporte.FindAsync(entity.Id);
+            TipoDocumentoSoporte? editTipoDoc = await context.TiposDocumentosSoporte.FindAsync(entity.Id);
             if (editTipoDoc == null) throw new Exception($"TipoDocumentoSoporte con ID {entity.Id} no existe.");
 
             editTipoDoc.ModuloId = entity.ModuloId;

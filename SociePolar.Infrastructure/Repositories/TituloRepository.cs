@@ -15,9 +15,9 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Titulo>()
                 .Include(b => b.AccionistaSociedad)
-                .Include(b => b.AccionistaSociedad.Sociedad)
-                .Include(b => b.AccionistaSociedad.Sociedad.Empresa)
-                .Include(b => b.AccionistaSociedad.Accionista)
+                .Include(b => b.AccionistaSociedad!.Sociedad)
+                .Include(b => b.AccionistaSociedad!.Sociedad!.Empresa)
+                .Include(b => b.AccionistaSociedad!.Accionista)
                 .ToListAsync();
         }
 
@@ -26,9 +26,9 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Titulo>()
                 .Include(b => b.AccionistaSociedad)
-                .Include(b => b.AccionistaSociedad.Sociedad)
-                .Include(b => b.AccionistaSociedad.Sociedad.Empresa)
-                .Include(b => b.AccionistaSociedad.Accionista)
+                .Include(b => b.AccionistaSociedad!.Sociedad)
+                .Include(b => b.AccionistaSociedad!.Sociedad!.Empresa)
+                .Include(b => b.AccionistaSociedad!.Accionista)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
         }
@@ -38,10 +38,10 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Titulo>()
                 .Include(b => b.AccionistaSociedad)
-                .Include(b => b.AccionistaSociedad.Sociedad)
-                .Include(b => b.AccionistaSociedad.Sociedad.Empresa)
-                .Include(b => b.AccionistaSociedad.Accionista)
-                .Where(x => x.AccionistaSociedad.Id == sociedadId)
+                .Include(b => b.AccionistaSociedad!.Sociedad)
+                .Include(b => b.AccionistaSociedad!.Sociedad!.Empresa)
+                .Include(b => b.AccionistaSociedad!.Accionista)
+                .Where(x => x.AccionistaSociedad!.Id == sociedadId)
                 .ToListAsync();
         }
 
@@ -83,7 +83,7 @@ namespace SociePolar.Infrastructure.Repositories
             var accionista = await context.Set<AccionistaSociedad>().FindAsync(entity.AccionistaSociedadId);
             if (accionista == null) throw new Exception($"Accionista - Sociedad con ID {entity.AccionistaSociedadId} no existe.");
 
-            Titulo editTitulo = await context.Titulos.FindAsync(entity.Id);
+            var editTitulo = await context.Set<Titulo>().FindAsync(entity.Id);
             if (editTitulo == null) throw new Exception($"Titulo con ID {entity.Id} no existe.");
 
             editTitulo.AccionistaSociedad = accionista;

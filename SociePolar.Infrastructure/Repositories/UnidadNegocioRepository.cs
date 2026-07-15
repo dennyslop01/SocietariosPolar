@@ -29,10 +29,10 @@ namespace SociePolar.Infrastructure.Repositories
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             await context.Set<UnidadNegocio>().AddAsync(entity);
-            context.Entry(entity.Region).State = EntityState.Unchanged;
+            context.Entry(entity.Region!).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
-            context.Entry(entity.Region).State = EntityState.Detached;
+            context.Entry(entity.Region!).State = EntityState.Detached;
         }
 
         public void Update(UnidadNegocio entity)
@@ -58,7 +58,7 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<UnidadNegocio>()
                 .Include(b => b.Region)
-                .Where(x => x.Region.Id == idregion)
+                .Where(x => x.Region!.Id == idregion)
                 .ToListAsync();
 
         }

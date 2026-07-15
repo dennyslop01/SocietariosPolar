@@ -55,7 +55,7 @@ namespace SociePolar.Infrastructure.Repositories
         //        .Include(b => b.Banco)
         //        .Include(b => b.TipoCuenta)
         //        .Include(b => b.CondicionEspecial)
-        //        .Where(x => x.Sociedad.Id == sociedadId)
+        //        .Where(x => x.Sociedad!.Id == sociedadId)
         //        .ToListAsync();
         //}
 
@@ -66,7 +66,7 @@ namespace SociePolar.Infrastructure.Repositories
             var tipoAccionista = await context.Set<TipoAccionista>().FindAsync(entity.TipoAccionistaId);
             if (tipoAccionista == null) throw new Exception($"Tipo de accionista con ID {entity.TipoAccionistaId} no existe.");
 
-            DirigidoA dirigidoa = null;
+            DirigidoA? dirigidoa = null;
             if (entity.DirigidoAId != null)
             {
                 if (entity.DirigidoAId != 0)
@@ -76,7 +76,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            EstadoCivil estadocivil = null;
+            EstadoCivil? estadocivil = null;
             if (entity.EstadoCivilId != null)
             {
                 if (entity.EstadoCivilId != 0)
@@ -86,7 +86,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            Banco banco = null;
+            Banco? banco = null;
             if (entity.BancoId != null)
             {
                 if (entity.BancoId != 0)
@@ -96,7 +96,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoCuenta tipocuenta = null;
+            TipoCuenta? tipocuenta = null;
             if (entity.TipoCuentaId != null)
             {
                 if (entity.TipoCuentaId != 0)
@@ -106,7 +106,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            CondicionEspecial condicionespecial = null;
+            CondicionEspecial? condicionespecial = null;
             if (entity.CondicionEspecialId != null)
             {
                 if (entity.CondicionEspecialId != 0)
@@ -116,7 +116,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc1 = null;
+            TipoDocumento? tipodoc1 = null;
             if (entity.TipoDocumento1Id != null)
             {
                 if (entity.TipoDocumento1Id != 0)
@@ -126,7 +126,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc2 = null;
+            TipoDocumento? tipodoc2 = null;
             if (entity.TipoDocumento2Id != null)
             {
                 if (entity.TipoDocumento2Id != 0)
@@ -136,7 +136,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc3 = null;
+            TipoDocumento? tipodoc3 = null;
             if (entity.TipoDocumento3Id != null)
             {
                 if (entity.TipoDocumento3Id != 0)
@@ -146,7 +146,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc4 = null;
+            TipoDocumento? tipodoc4 = null;
             if (entity.TipoDocumento4Id != null)
             {
                 if (entity.TipoDocumento4Id != 0)
@@ -156,7 +156,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            Accionista newAccionista = new()
+            Accionista? newAccionista = new()
             {
                 TipoAccionista = tipoAccionista,
                 Nombre = entity.Nombre,
@@ -251,27 +251,27 @@ namespace SociePolar.Infrastructure.Repositories
 
             await context.Set<Accionista>().AddAsync(newAccionista);
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Unchanged;
-            if (dirigidoa != null) context.Entry(newAccionista.DirigidoA).State = EntityState.Unchanged;
-            if(estadocivil != null) context.Entry(newAccionista.EstadoCivil).State = EntityState.Unchanged;
-            if(banco != null) context.Entry(newAccionista.Banco).State = EntityState.Unchanged;
-            if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta).State = EntityState.Unchanged;
-            if(condicionespecial != null) context.Entry(newAccionista.CondicionEspecial).State = EntityState.Unchanged;
-            if(tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1).State = EntityState.Unchanged;
-            if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2).State = EntityState.Unchanged;
-            if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3).State = EntityState.Unchanged;
-            if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4).State = EntityState.Unchanged;
+            if (dirigidoa != null) context.Entry(newAccionista.DirigidoA!).State = EntityState.Unchanged;
+            if(estadocivil != null) context.Entry(newAccionista.EstadoCivil!).State = EntityState.Unchanged;
+            if(banco != null) context.Entry(newAccionista.Banco!).State = EntityState.Unchanged;
+            if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta!).State = EntityState.Unchanged;
+            if(condicionespecial != null) context.Entry(newAccionista.CondicionEspecial!).State = EntityState.Unchanged;
+            if(tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Unchanged;
+            if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Unchanged;
+            if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Unchanged;
+            if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Detached;
-            if (dirigidoa != null) context.Entry(newAccionista.DirigidoA).State = EntityState.Detached;
-            if(estadocivil != null) context.Entry(newAccionista.EstadoCivil).State = EntityState.Detached;
-            if(banco != null) context.Entry(newAccionista.Banco).State = EntityState.Detached;
-            if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta).State = EntityState.Detached;
-            if(condicionespecial != null) context.Entry(newAccionista.CondicionEspecial).State = EntityState.Detached;
-            if(tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1).State = EntityState.Detached;
-            if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2).State = EntityState.Detached;
-            if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3).State = EntityState.Detached;
-            if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4).State = EntityState.Detached;
+            if (dirigidoa != null) context.Entry(newAccionista.DirigidoA!).State = EntityState.Detached;
+            if(estadocivil != null) context.Entry(newAccionista.EstadoCivil!).State = EntityState.Detached;
+            if(banco != null) context.Entry(newAccionista.Banco!).State = EntityState.Detached;
+            if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta!).State = EntityState.Detached;
+            if(condicionespecial != null) context.Entry(newAccionista.CondicionEspecial!).State = EntityState.Detached;
+            if(tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Detached;
+            if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Detached;
+            if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Detached;
+            if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Detached;
         }
 
         public async void Update(AccionistaDto entity)
@@ -281,10 +281,10 @@ namespace SociePolar.Infrastructure.Repositories
             var tipoAccionista = await context.Set<TipoAccionista>().FindAsync(entity.TipoAccionistaId);
             if (tipoAccionista == null) throw new Exception($"Tipo de accionista con ID {entity.TipoAccionistaId} no existe.");
 
-            Accionista editaccionista = await context.Accionistas.FindAsync(entity.Id);
+            var editaccionista = await context.Accionistas.FindAsync(entity.Id);
             if (editaccionista == null) throw new Exception($"Accionista con ID {entity.Id} no existe.");
 
-            DirigidoA dirigidoa = null;
+            DirigidoA? dirigidoa = null;
             if (entity.DirigidoAId != null)
             {
                 if (entity.DirigidoAId != 0)
@@ -294,7 +294,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            EstadoCivil estadocivil = null;
+            EstadoCivil? estadocivil = null;
             if (entity.EstadoCivilId != null)
             {
                 if (entity.EstadoCivilId != 0)
@@ -304,7 +304,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            Banco banco = null;
+            Banco? banco = null;
             if (entity.BancoId != null)
             {
                 if (entity.BancoId != 0)
@@ -314,7 +314,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoCuenta tipocuenta = null;
+            TipoCuenta? tipocuenta = null;
             if (entity.TipoCuentaId != null)
             {
                 if (entity.TipoCuentaId != 0)
@@ -324,7 +324,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            CondicionEspecial condicionespecial = null;
+            CondicionEspecial? condicionespecial = null;
             if (entity.CondicionEspecialId != null)
             {
                 if (entity.CondicionEspecialId != 0)
@@ -334,7 +334,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc1 = null;
+            TipoDocumento? tipodoc1 = null;
             if (entity.TipoDocumento1Id != null)
             {
                 if (entity.TipoDocumento1Id != 0)
@@ -344,7 +344,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc2 = null;
+            TipoDocumento? tipodoc2 = null;
             if (entity.TipoDocumento2Id != null)
             {
                 if (entity.TipoDocumento2Id != 0)
@@ -354,7 +354,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc3 = null;
+            TipoDocumento? tipodoc3 = null;
             if (entity.TipoDocumento3Id != null)
             {
                 if (entity.TipoDocumento3Id != 0)
@@ -364,7 +364,7 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
-            TipoDocumento tipodoc4 = null;
+            TipoDocumento? tipodoc4 = null;
             if (entity.TipoDocumento4Id != null)
             {
                 if (entity.TipoDocumento4Id != 0)

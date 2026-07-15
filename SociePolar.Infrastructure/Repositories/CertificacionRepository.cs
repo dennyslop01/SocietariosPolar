@@ -15,8 +15,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Certificacion>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.Cargo)
                 .ToListAsync();
         }
@@ -26,8 +26,8 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Certificacion>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.Cargo)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
@@ -38,10 +38,10 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Certificacion>()
                 .Include(b => b.Sociedad)
-                .Include(b => b.Sociedad.Empresa)
-                .Include(b => b.Sociedad.EstatusSociedad)
+                .Include(b => b.Sociedad!.Empresa)
+                .Include(b => b.Sociedad!.EstatusSociedad)
                 .Include(b => b.Cargo)
-                .Where(x => x.Sociedad.Id == sociedadId)
+                .Where(x => x.Sociedad!.Id == sociedadId)
                 .ToListAsync();
         }
 
@@ -85,7 +85,7 @@ namespace SociePolar.Infrastructure.Repositories
             var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId);
             if (sociedad == null) throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
 
-            Certificacion editCertificacion = await context.Certificaciones.FindAsync(entity.Id);
+            Certificacion? editCertificacion = await context.Certificaciones.FindAsync(entity.Id);
             if (editCertificacion == null) throw new Exception($"Certificacion con ID {entity.Id} no existe.");
 
             editCertificacion.Cargo = cargo;

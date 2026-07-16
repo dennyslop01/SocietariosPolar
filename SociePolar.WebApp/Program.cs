@@ -55,6 +55,7 @@ builder.Services.AddScoped<IAccionista, AccionistaRepository>();
 builder.Services.AddScoped<IAccionistaSociedad, AccionistaSociedadRepository>();
 builder.Services.AddScoped<ITitulo, TituloRepository>();
 builder.Services.AddScoped<ITipoDocumentoSoporte, TipoDocumentoSoporteRepository>();
+builder.Services.AddScoped<IDocumentoModulo, DocumentoModuloRepository>();
 builder.Services.AddScoped<GoogleDriveService>();
 
 builder.Services.AddCascadingAuthenticationState();

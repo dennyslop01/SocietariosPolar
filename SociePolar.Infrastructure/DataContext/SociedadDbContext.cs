@@ -38,5 +38,6 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<AccionistaSociedad> AccionistasSociedades { get; set; }
         public DbSet<Titulo> Titulos { get; set; }
         public DbSet<TipoDocumentoSoporte> TiposDocumentosSoporte { get; set; }
+        public DbSet<DocumentoModulo> DocumentosModulos { get; set; }
     }
 }

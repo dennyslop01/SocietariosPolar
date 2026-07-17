@@ -29,23 +29,7 @@ else
 
 @if (cargando)
 {
-    <div class="modal fade show d-block modal-loading-center" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <!-- 'modal-dialog-centered' centra el modal verticalmente -->
-        <div class="modal-dialog modal-dialog-centered">
-            <!-- Ajustamos el ancho con 'mx-auto' y eliminamos bordes/fondo si solo quieres ver el spinner -->
-            <div class="modal-content" style="background: transparent; border: none;">
-                <div class="modal-body text-center">
-                    <div class="modal-cargando">
-                        <!-- Spinner de Bootstrap -->
-                        <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-light mt-2">Cargando...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <ModalCargando />
 }
 
 @code {

@@ -128,24 +128,7 @@
 
 @if (cargando)
 {
-    <!-- SOLUCIÓN: position: fixed, pantalla completa y z-index alto -->
-    <div class="modal fade show d-block" tabindex="-1"
-         style="background: rgba(255,255,255,0.7); backdrop-filter: blur(2px); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999;">
-
-        <div class="modal-dialog modal-dialog-centered justify-content-center h-100 m-0" style="max-width: 100%;">
-            <div class="modal-content border-0 bg-transparent shadow-none">
-                <div class="modal-body text-center">
-                    @* Spinner más fino y con el color principal de tu app *@
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <h6 class="mt-3 fw-bold text-primary animate__animated animate__pulse animate__infinite">
-                        Procesando
-                    </h6>
-                </div>
-            </div>
-        </div>
-    </div>
+    <ModalCargando />
 }
 
 
@@ -157,23 +140,7 @@
 
 @if (mostrarModalEliminar)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
-                    <h5 class="fw-bold">¿Estás seguro?</h5>
-                    <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.AccionistaNombre</strong>. Esta acción no se puede deshacer.
-                    </p>
-                </div>
-                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <ModalCargando />
 }
 
 @if (mostrarModalActivar)
@@ -229,7 +196,7 @@
             List<AccionistaSociedadVerDto> listNewAccionista = new();
 
             var listAaccionista = await repository.GetAllAsync();
-            listAaccionista = listAaccionista.Where(x => x.EstatusAccionista.Id == 2).ToList();
+            listAaccionista = listAaccionista.Where(x => x.EstatusAccionista!.Id == 2).ToList();
             foreach (var item in listAaccionista)
             {
                 int nroacciones = 0;
@@ -252,9 +219,9 @@
                 AccionistaSociedadVerDto accionista = new()
                 {
                     Id = item.Id,
-                    SociedadNombre = item.Sociedad.Empresa.Nombre,
-                    TipoAccionistaNombre = item.Accionista.TipoAccionista.Nombre,
-                    AccionistaNombre = (item.Accionista.TipoAccionista.Id != 3) ? item.Accionista.Nombre : (item.Accionista.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista.NombreSusesion,
+                    SociedadNombre = item.Sociedad?.Empresa?.Nombre,
+                    TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
+                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista.NombreSusesion,
                     NroAcciones = nroacciones,
                     Participacion = porcparticipa,
                     CreateDate = item.CreateDate,

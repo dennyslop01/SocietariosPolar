@@ -27,12 +27,12 @@ namespace SociePolar.Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<DocumentoModulo>> GetByModuloIdAsync(int moduloid)
+        public async Task<List<DocumentoModulo>> GetByModuloIdAsync(int moduloid, int referenciaid)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<DocumentoModulo>()
                 .Include(b => b.TipoDocumentoSoporte)
-                .Where(x => x.TipoDocumentoSoporte!.ModuloId == moduloid)
+                .Where(x => x.TipoDocumentoSoporte!.ModuloId == moduloid && x.ReferenciaId == referenciaid)
                 .ToListAsync();
         }
 
@@ -53,8 +53,6 @@ namespace SociePolar.Infrastructure.Repositories
             };
 
             await context.Set<DocumentoModulo>().AddAsync(newDocumentoModulo);
-
-            // Cambiar estados a Unchanged para evitar duplicados en tablas maestras
             context.Entry(newDocumentoModulo.TipoDocumentoSoporte).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();

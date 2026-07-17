@@ -7,7 +7,7 @@ namespace SociePolar.Application.Interfaces
     {
         Task<List<DocumentoModulo>> GetAllAsync();
         Task<DocumentoModulo?> GetByIdAsync(int id);
-        Task<List<DocumentoModulo>> GetByModuloIdAsync(int moduloid);
+        Task<List<DocumentoModulo>> GetByModuloIdAsync(int moduloid, int referenciaid);
         Task AddAsync(DocumentoModuloDto entity);
         void Delete(int id);
     }

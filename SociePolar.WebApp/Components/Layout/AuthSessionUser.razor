@@ -91,10 +91,10 @@
                 await MostrarNotificacion(mensajeAlerta = $"Usuario con email {userEmail} no encontrado.", esError: true);
                 Console.WriteLine($"Usuario con email {userEmail} no encontrado.");
             }
-            await SessionStorage.SetAsync("UserEmail", usuario.Email.ToString());
-            await SessionStorage.SetAsync("UserId", usuario.Id.ToString());
-            await SessionStorage.SetAsync("UserRol", usuario.IdRol.ToString());
-            await SessionStorage.SetAsync("UserCedula", usuario.Cedula);
+            await SessionStorage.SetAsync("UserEmail", usuario!.Email!.ToString());
+            await SessionStorage.SetAsync("UserId", usuario!.Id.ToString());
+            await SessionStorage.SetAsync("UserRol", usuario!.IdRol.ToString());
+            await SessionStorage.SetAsync("UserCedula", usuario!.Cedula!);
             await SessionStorage.SetAsync("UserNombreCorto", $"{nombre}, {apellido}".ToLower());
             navManager.NavigateTo($"/", forceLoad: true);
         }

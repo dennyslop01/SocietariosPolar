@@ -1,0 +1,332 @@
+﻿@rendermode InteractiveServer
+@inject GoogleDriveService DriveService
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        @(entidadEditando.Id == 0 ? "Agregar Documento Soporte" : "Modificar Documento Soporte")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumentoSoporteId">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listTipoDocs != null)
+                                {
+                                    @foreach (var tipo in listTipoDocs)
+                                    {
+                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadEditando.TipoDocumentoSoporteId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label for="fileInput"
+                                   class="form-label fw-bold small btn btn-primary @(esInvalido ? "disabled" : "" )"
+                                   style="cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                Seleccionar archivo PDF
+                            </label>
+
+                            <InputFile id="fileInput"
+                                class="small"
+                                       OnChange="UploadFile"
+                                       accept=".pdf"
+                                       capture="camera"
+                                       style="display:none;"
+                                       disabled="@esInvalido" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Comentarios</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Comentarios"
+                                      @bind:event="oninput"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
+                                        </textarea>
+                        </div>                        
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@code {
+    [Parameter] public string id { get; set; } = "";
+    [Parameter] public string ModuloId { get; set; } = "";
+    [Parameter] public string ReferenciaId { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+    bool esInvalido = false;
+
+    private DocumentoModuloDto entidadEditando = new();
+
+    private List<TipoDocumentoSoporte> listTipoDocs = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+    Stream streamToUpload;
+
+    [Inject] private ITipoDocumentoSoporte repositoryTipoDocs { get; set; } = null!;
+    [Inject] private IDocumentoModulo repository { get; set; } = null!;
+
+    public class Modulos
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public List<Modulos> ListModulos = new List<Modulos>
+    {
+        new Modulos { Id = 1, Nombre = "Sociedades" },
+        new Modulos { Id = 2, Nombre = "Autoridades" },
+        new Modulos { Id = 3, Nombre = "Asambleas" },
+        new Modulos { Id = 4, Nombre = "Reformas" },
+        new Modulos { Id = 5, Nombre = "Certificaciones" },
+        new Modulos { Id = 6, Nombre = "Libros" },
+        new Modulos { Id = 7, Nombre = "Accionistas" },
+        new Modulos { Id = 8, Nombre = "Títulos" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
+        await LoadGenericDataAsync();
+
+        if (id == "0")
+        {
+            entidadEditando = new();
+            entidadEditando.ReferenciaId = int.Parse(ReferenciaId);
+            entidadEditando.TipoDocumentoSoporteId = 0;
+            entidadEditando.CreateDate = DateTime.Now;
+            editContext = new EditContext(entidadEditando);
+        }
+        cargando = false;
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            listTipoDocs = await repositoryTipoDocs.GetAllAsync();
+            listTipoDocs = listTipoDocs.Where(x => x.ModuloId == int.Parse(ModuloId)).OrderBy(x => x.Nombre).ToList();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+    }
+
+    private string ObtenerModulo(int idmodulo)
+    {
+        return ListModulos.Where(m => m.Id == idmodulo).Select(m => m.Nombre).FirstOrDefault() ?? "Desconocido";
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e) // Cambiado a UploadFile
+    {
+        mensajeAlerta = string.Empty;
+        mostrarAlerta = false;
+        cargando = true;
+        var file = e.File;
+        if (file == null) return;
+
+        try
+        {
+            string contentType = file.ContentType;
+
+            if (contentType == "application/pdf")
+            {
+                streamToUpload = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // Aumentamos a 10MB para PDFs
+            }
+            else
+            {
+                mensajeAlerta = "Formato no soportado. Solo pdf.";/* imágenes y  */
+                mostrarAlerta = true;
+                cargando = false;
+                StateHasChanged();
+                await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+                return;
+            }
+            cargando = false;
+            StateHasChanged();
+            await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al procesar el archivo: {ex.Message}";
+            mostrarAlerta = true;
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            string folderName = $"{ObtenerModulo(int.Parse(ModuloId))}_ID_{ReferenciaId}";
+            string nombDocumento = listTipoDocs.FirstOrDefault(x => x.Id == entidadEditando.TipoDocumentoSoporteId)?.Nombre ?? "Documento";
+            nombDocumento = nombDocumento.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+
+            string fileName = $"{nombDocumento}_{DateTime.Now:yyyyMMdd}.pdf";
+            using (streamToUpload)
+            {
+                if (!string.IsNullOrEmpty(folderName))
+                {
+                    string folderId = await DriveService.CreateFolderAsync(folderName);
+                    string fileIdResult = string.Empty;
+
+                    // Subida con el ContentType dinámico
+                    fileIdResult = await DriveService.UploadFileAsync(streamToUpload, fileName, "application/pdf", folderId);
+                    entidadEditando.RutaGoogle = $"{folderId}/{fileIdResult}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error al procesar el archivo: " + ex.Message, true);
+            return;
+        }
+
+
+
+        if (entidadEditando.RutaGoogle == null || string.IsNullOrEmpty(entidadEditando.RutaGoogle))
+        {
+            await MostrarNotificacion("Debe seleccionar un archivo PDF antes de guardar.", true);
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+                if (entidadEditando.Id == 0)
+                {
+                    cargando = true;
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+
+                    await repository.AddAsync(entidadEditando);
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Documento Soporte guardado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            // Si hay error en base de datos (ej. nombre duplicado)
+            Console.WriteLine($"Error: {ex.Message}");
+            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+        }
+        cargando = false;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+}
+

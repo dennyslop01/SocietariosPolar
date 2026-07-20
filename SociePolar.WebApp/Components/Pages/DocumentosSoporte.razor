@@ -1,5 +1,6 @@
 ﻿@page "/documentossoporte/{idModulo}/{id}"
 
+@inject GoogleDriveService DriveService
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -16,19 +17,24 @@
                     </h5>
                 </div>
 
-                <!-- Botón Agregar -->
-                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="AbrirModalNuevo"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-plus-lg me-2"></i> Agregar
-                </button>
+                <!-- Contenedor flex para alinear los botones en línea -->
+                <div class="d-flex gap-2 align-items-center">
 
-                <!-- Botón Regresar -->
-                <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="Regresar"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-arrow-return-left me-2"></i> Regresar
-                </button>
+                    <!-- Botón Agregar -->
+                    <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="AbrirModalNuevo"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-plus-lg me-2"></i> Agregar
+                    </button>
+
+                    <!-- Botón Regresar -->
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="Regresar"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
+                    </button>
+
+                </div>
             </div>
         </div>
 
@@ -63,7 +69,14 @@
                         <tr class="align-middle border-bottom">
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Id</td>
                             <td class="text-start text-secondary small" style="width: 20%;">@p.TipoDocumentoSoporte!.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.RutaGoogle</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">
+                                <button type="button"
+                                        class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent"
+                                        @onclick="() => VisualizarDocumentoAsync(p.RutaGoogle, p.TipoDocumentoSoporte.Nombre)"
+                                        @onclick:preventDefault>
+                                    @p.RutaGoogle
+                                </button>
+                            </td>
                             <td class="text-start text-secondary small" style="width: 20%;">@p.Comentarios</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 5%;">
@@ -238,8 +251,12 @@
         if (entidadParaEliminar == null) return;
 
         cargando = true;
+        StateHasChanged();
         try
         {
+            string oldFileId = entidadParaEliminar.RutaGoogle!.Split('/').Last();
+            await DriveService.TrashPdfFileByIdAsync(oldFileId);
+
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
@@ -285,4 +302,31 @@
         await jsRuntime.InvokeVoidAsync("history.back");
     }
 
+    // Método para obtener el enlace de Google Drive
+    private async Task VisualizarDocumentoAsync(string rutaCompleta, string nombreDocumento)
+    {
+        cargando = true;
+        StateHasChanged();
+        try
+        {
+            // 1. Extraer el fileId real desde tu string (ej. "carpetaId/archivoId")
+            string fileId = rutaCompleta.Split('/').Last();
+
+            // 2. Consumir tu rutina existente para obtener el Base64
+            string base64Data = await DriveService.GetFileAsync(fileId);
+
+            // 3. Invocar al JavaScript para procesar el Blob y abrir la pestaña
+            await jsRuntime.InvokeVoidAsync("abrirPdfBase64", base64Data, nombreDocumento);
+        }
+        catch (Exception ex)
+        {
+            // Manejo local de errores si la descarga falla o el ID no existe
+            Console.WriteLine($"Error al abrir el PDF: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
 }

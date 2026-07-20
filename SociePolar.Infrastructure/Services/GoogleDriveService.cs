@@ -162,6 +162,36 @@ namespace SociePolar.Infrastructure.Services
             }
         }
 
+        public async Task TrashPdfFileByIdAsync(string fileId)
+        {
+            try
+            {
+                var service = GetService();
+
+                // 1. Preparar la actualización para marcar el archivo como "Trashed"
+                var fileMetadata = new Google.Apis.Drive.v3.Data.File()
+                {
+                    Trashed = true
+                };
+
+                // 2. Configurar la solicitud de actualización para el archivo específico
+                var updateRequest = service.Files.Update(fileMetadata, fileId);
+
+                // Habilitar soporte para Shared Drives (Unidades Compartidas)
+                updateRequest.SupportsAllDrives = true;
+
+                // 3. Ejecutar la actualización
+                var updatedFile = await updateRequest.ExecuteAsync();
+
+                Console.WriteLine($"Archivo enviado a la papelera correctamente. ID: {fileId}");
+            }
+            catch (Exception ex)
+            {
+                // Documentación oficial sobre errores: https://developers.google.com
+                Console.WriteLine($"Error al enviar el archivo a la papelera: {ex.Message}");
+            }
+        }
+
         public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string? folderId = null)
         {
             var service = GetService();
@@ -182,6 +212,21 @@ namespace SociePolar.Infrastructure.Services
             if (progress.Status != UploadStatus.Completed) throw new Exception("Error subiendo archivo");
 
             return request.ResponseBody.Id;
+        }
+
+        public async Task<string> GetFileAsync(string fileId)
+        {
+            var service = GetService();
+
+            var request = service.Files.Get(fileId);
+            var stream = new MemoryStream();
+            await request.DownloadAsync(stream);
+            stream.Position = 0;
+
+            // Convertir a Base64 para mostrarlo en el componente
+            var base64 = Convert.ToBase64String(stream.ToArray());
+
+            return base64;
         }
     }
 }

@@ -46,6 +46,7 @@
                                        capture="camera"
                                        style="display:none;"
                                        disabled="@esInvalido" />
+                            <label class="form-label fw-bold text-secondary small">@fileName</label>
                         </div>
                         <div class="col-md-10 mb-3">
                             <label class="form-label fw-bold text-secondary small">Comentarios</label>
@@ -111,9 +112,9 @@
     private string iconoAlerta = "bi-check-circle-fill";
     private bool cargando = false;
     bool esInvalido = false;
+    private string? fileName = null;
 
     private DocumentoModuloDto entidadEditando = new();
-
     private List<TipoDocumentoSoporte> listTipoDocs = new();
 
     private EditContext? editContext;
@@ -197,19 +198,24 @@
 
     private async Task UploadFile(InputFileChangeEventArgs e) // Cambiado a UploadFile
     {
+        fileName = string.Empty;
+        entidadEditando.RutaGoogle = null; // Limpiamos la ruta anterior si se selecciona un nuevo archivo
         mensajeAlerta = string.Empty;
         mostrarAlerta = false;
         cargando = true;
+        StateHasChanged();
+
         var file = e.File;
         if (file == null) return;
 
         try
         {
             string contentType = file.ContentType;
-
             if (contentType == "application/pdf")
             {
                 streamToUpload = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // Aumentamos a 10MB para PDFs
+                fileName = e.File.Name;
+                entidadEditando.RutaGoogle = e.File.Name;
             }
             else
             {
@@ -222,7 +228,6 @@
             }
             cargando = false;
             StateHasChanged();
-            await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
         }
         catch (Exception ex)
         {
@@ -236,13 +241,14 @@
     private async Task GuardarCambios()
     {
         mensajeAlerta = string.Empty;
+        cargando = true;
+        StateHasChanged();
 
         bool formularioValido = editContext.Validate();
-
         if (!formularioValido)
         {
-            StateHasChanged();
             cargando = false;
+            StateHasChanged();
             return;
         }
 
@@ -274,12 +280,11 @@
             return;
         }
 
-
-
         if (entidadEditando.RutaGoogle == null || string.IsNullOrEmpty(entidadEditando.RutaGoogle))
         {
             await MostrarNotificacion("Debe seleccionar un archivo PDF antes de guardar.", true);
             cargando = false;
+            StateHasChanged();
             return;
         }
 
@@ -291,7 +296,6 @@
                 int userid = int.Parse(useridaux.Value);
                 if (entidadEditando.Id == 0)
                 {
-                    cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
 
@@ -312,6 +316,7 @@
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
         cargando = false;
+        StateHasChanged();
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

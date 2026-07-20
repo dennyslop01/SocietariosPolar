@@ -46,6 +46,7 @@ namespace SociePolar.Infrastructure.Repositories
             DocumentoModulo? newDocumentoModulo = new()
             {
                 TipoDocumentoSoporte = documento,
+                ReferenciaId = entity.ReferenciaId,
                 RutaGoogle = entity.RutaGoogle,
                 Comentarios = entity.Comentarios,
                 CreateDate = DateTime.UtcNow,

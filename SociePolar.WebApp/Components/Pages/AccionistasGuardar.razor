@@ -1010,7 +1010,7 @@
                 AccionistaDto dto = new()
                 {
                     Id = entity.Id,
-                    TipoAccionistaId = entity.TipoAccionista.Id,
+                    TipoAccionistaId = entity.TipoAccionista?.Id,
                     Nombre = entity.Nombre,
                     Documento1 = entity.Documento1,
                     Documento2 = entity.Documento2,

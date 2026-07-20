@@ -74,10 +74,10 @@
                                         class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent"
                                         @onclick="() => VisualizarDocumentoAsync(p.RutaGoogle, p.TipoDocumentoSoporte.Nombre)"
                                         @onclick:preventDefault>
-                                    @p.RutaGoogle
+                                    @(p.RutaGoogle?.Length > 25 ? $"{p.RutaGoogle.Substring(0, 15)}..." : p.RutaGoogle)
                                 </button>
                             </td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@p.Comentarios</td>
+                            <td class="text-start text-secondary small" style="width: 20%;">@(p.Comentarios?.Length > 25 ? $"{p.Comentarios.Substring(0, 25)}..." : p.Comentarios)</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 5%;">
                                 @* <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">

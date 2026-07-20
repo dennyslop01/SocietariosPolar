@@ -83,8 +83,12 @@
                                 <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
                                     <i class="bi bi-pencil-square fs-6"></i>
                                 </button>
-                                <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                     <i class="bi bi-trash3 fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-secondary p-0  me-2"
+                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                    <i class="bi bi-file-earmark-pdf"></i>
                                 </button>
                             </td>
                         </tr>
@@ -273,5 +277,11 @@
 
         cargando = false; // Oculta el spinner después de todo
     }
+
+    private void AdminDocumentos(Certificacion item)
+    {
+        navManager.NavigateTo($"/documentossoporte/5/{item.Id}");
+    }
+
 }
 

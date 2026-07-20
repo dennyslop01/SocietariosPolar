@@ -75,6 +75,10 @@
                                 <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                     <i class="bi bi-trash3 fs-6"></i>
                                 </button>
+                                <button class="btn btn-link btn-sm text-secondary p-0  me-2"
+                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </button>
                             </td>
                         </tr>
                     </ChildContentRow>
@@ -165,10 +169,10 @@
                 accionistas.Add(new AccionistaMostrarDto
                 {
                     Id = item.Id,
-                    TipoAccionistaV = item.TipoAccionista.Nombre,
-                    Nombre = (item.TipoAccionista.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
-                    TipoDocumentoV = (item.TipoAccionista.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
-                    Documento = (item.TipoAccionista.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
+                    TipoAccionistaV = item.TipoAccionista?.Nombre,
+                    Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
+                    TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
+                    Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
                     Telefono = item.Telefono1,
                     CreateDate = item.CreateDate,
                     UpdateDate = item.UpdateDate
@@ -322,4 +326,10 @@
         }
         return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
     }
+
+    private void AdminDocumentos(AccionistaMostrarDto item)
+    {
+        navManager.NavigateTo($"/documentossoporte/7/{item.Id}");
+    }
+
 }

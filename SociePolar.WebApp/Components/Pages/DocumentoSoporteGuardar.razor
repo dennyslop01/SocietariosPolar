@@ -116,6 +116,7 @@
 
     private DocumentoModuloDto entidadEditando = new();
     private List<TipoDocumentoSoporte> listTipoDocs = new();
+    private List<DocumentoModulo> Listgral = new();
 
     private EditContext? editContext;
     private ValidationMessageStore? mensajeStore;
@@ -175,8 +176,12 @@
     {
         try
         {
+            Listgral = await repository.GetByModuloIdAsync(int.Parse(ModuloId), int.Parse(id));
+
             listTipoDocs = await repositoryTipoDocs.GetAllAsync();
             listTipoDocs = listTipoDocs.Where(x => x.ModuloId == int.Parse(ModuloId)).OrderBy(x => x.Nombre).ToList();
+            listTipoDocs = listTipoDocs.Where(x => !Listgral.Any(d => d.TipoDocumentoSoporte.Id == x.Id)).ToList();
+            listTipoDocs = listTipoDocs.OrderBy(x => x.Nombre).ToList();
         }
         catch (Exception ex)
         {

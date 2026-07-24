@@ -13,8 +13,8 @@ namespace SociePolar.Domain.Dtos
         public string? Numero { get; set; }
 
         [Required(ErrorMessage = "El Número de Acciones es requerido.")]
-        [Range(1, int.MaxValue, ErrorMessage = "El Número de Acciones es requerido.")]
-        public int? Acciones { get; set; }
+        [Range(1, long.MaxValue, ErrorMessage = "El Número de Acciones es requerido.")]
+        public Int64? Acciones { get; set; }
 
         public string? Preferente { get; set; }
 

@@ -26,7 +26,7 @@ namespace SociePolar.Domain.Dtos
         public string? SociedadNombre { get; set; }
         public string? AccionistaNombre { get; set; }
         public string? TipoAccionistaNombre { get; set; }
-        public int? NroAcciones { get; set; }
+        public Int64? NroAcciones { get; set; }
         public decimal? Participacion { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }

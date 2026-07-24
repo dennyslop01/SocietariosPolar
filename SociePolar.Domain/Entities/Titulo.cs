@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public AccionistaSociedad? AccionistaSociedad { get; set; }
         public string? Numero { get; set; }
-        public int? Acciones { get; set; }
+        public Int64? Acciones { get; set; }
         public string? Preferente { get; set; }
         public string? Ubicacion { get; set; }
         public int? Anulado { get; set; }

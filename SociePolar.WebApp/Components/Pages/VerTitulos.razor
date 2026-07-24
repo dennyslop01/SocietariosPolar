@@ -62,8 +62,8 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acciones</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Preferente</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Ubicación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha de creación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última modificación</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha de creación</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
@@ -74,8 +74,8 @@
                             <td class="text-start text-secondary small" style="width: 15%;">@FormatearMiles(p.Acciones)</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Preferente</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Ubicacion</td>
-                            <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
-                            <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
+                            <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
+                            <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
                                 <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
                                     <i class="bi bi-pencil-square fs-6"></i>
@@ -145,16 +145,34 @@
                                        value="@FormatearMiles(entidadEditando.Acciones)"
                                        @oninput="ProcesarEntradaAcciones"
                                        placeholder="Ingrese número de acciones..."
-                                       maxlength="26"
+                                       maxlength="15"
                                        inputmode="numeric" />
                                 <ValidationMessage For="@(() => entidadEditando.Acciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Preferente</label>
-                                <input type="text" class="form-control form-control-sm small"
-                                       @bind="entidadEditando.Preferente"
-                                       placeholder="Ingrese el preferente..."
-                                       maxlength="50" />
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small d-block">¿Preferente?</label>
+
+                                <div class="form-check form-check-inline">
+                                    <input type="radio"
+                                           name="preferenteGroup"
+                                           id="preferenteSi"
+                                           class="form-check-input"
+                                           value="1"
+                                           checked="@(entidadEditando.Preferente == "1")"
+                                           @onchange="() => OnAplicaOptionChanged(true, 1)" />
+                                    <label class="form-check-label small text-secondary" for="preferenteSi">Sí</label>
+                                </div>
+
+                                <div class="form-check form-check-inline">
+                                    <input type="radio"
+                                           name="preferenteGroup"
+                                           id="preferenteNo"
+                                           class="form-check-input"
+                                           value="0"
+                                           checked="@(entidadEditando.Preferente == "0")"
+                                           @onchange="() => OnAplicaOptionChanged(false, 1)" />
+                                    <label class="form-check-label small text-secondary" for="preferenteNo">No</label>
+                                </div>
                                 <ValidationMessage For="@(() => entidadEditando.Preferente)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
                             <div class="col-md-6 mb-3">
@@ -177,7 +195,8 @@
                                            id="anuladoSi"
                                            class="form-check-input"
                                            value="1"
-                                           checked="@(entidadEditando.Anulado == 1)" />
+                                           checked="@(entidadEditando.Anulado == 1)"
+                                           @onchange="() => OnAplicaOptionChanged(true, 2)" />
                                     <label class="form-check-label small text-secondary" for="anuladoSi">Sí</label>
                                 </div>
 
@@ -187,21 +206,22 @@
                                            id="anuladoNo"
                                            class="form-check-input"
                                            value="0"
-                                           checked="@(entidadEditando.Anulado == 0)" />
+                                           checked="@(entidadEditando.Anulado == 0)"
+                                           @onchange="() => OnAplicaOptionChanged(false, 2)" />
                                     <label class="form-check-label small text-secondary" for="anuladoNo">No</label>
                                 </div>
                                 <ValidationMessage For="@(() => entidadEditando.Anulado)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
                             <div class="col-6 mb-3">
                                 <label class="form-label fw-bold text-secondary small d-block">¿Endosado?</label>
-
                                 <div class="form-check form-check-inline">
                                     <input type="radio"
                                            name="endosadoGroup"
                                            id="endosadoSi"
                                            class="form-check-input"
                                            value="1"
-                                           checked="@(entidadEditando.Endosado == 1)" />
+                                           checked="@(entidadEditando.Endosado == 1)"
+                                           @onchange="() => OnAplicaOptionChanged(true, 3)" />
                                     <label class="form-check-label small text-secondary" for="endosadoSi">Sí</label>
                                 </div>
 
@@ -211,7 +231,8 @@
                                            id="endosadoNo"
                                            class="form-check-input"
                                            value="0"
-                                           checked="@(entidadEditando.Endosado == 0)" />
+                                           checked="@(entidadEditando.Endosado == 0)"
+                                           @onchange="() => OnAplicaOptionChanged(false, 3)" />
                                     <label class="form-check-label small text-secondary" for="endosadoNo">No</label>
                                 </div>
                                 <ValidationMessage For="@(() => entidadEditando.Endosado)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
@@ -304,7 +325,7 @@
     private async Task LoadGenericDataAsync()
     {
         cargando = true;
-
+        StateHasChanged();
         try
         {
             var accionistaEntity = await repoaccionista.GetByIdAsync(int.Parse(id));
@@ -333,12 +354,12 @@
         catch (Exception ex)
         {
             cargando = false;
-            StateHasChanged();
             await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
         finally
         {
             cargando = false;
+            StateHasChanged();
         }
     }
 
@@ -404,6 +425,7 @@
 
     private async Task GuardarCambios()
     {
+        cargando = true;
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
@@ -416,10 +438,11 @@
         if (string.IsNullOrWhiteSpace(entidadEditando.Numero))
         {
             await MostrarNotificacion("El número es obligatorio", true);
+            StateHasChanged();
+            cargando = false;
             return;
         }
 
-        cargando = true;
         try
         {
             var useridaux = await SessionStorage.GetAsync<string>("UserId");
@@ -436,18 +459,12 @@
                     entidadEditando.CreateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
-
                     mostrarModal = false;
-                    await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Título guardada correctamente");
                 }
                 else
                 {
                     repository.Update(entidadEditando);
-
                     mostrarModal = false;
-                    await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Título actualizado correctamente");
                 }
             }
         }
@@ -461,8 +478,14 @@
         }
         finally
         {
+            cargando = false;
+            await Task.Delay(2000);
+            cargando = true;
+            await LoadGenericDataAsync();
             StateHasChanged();
             cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion($"Título guardada correctamente");
         }
     }
 
@@ -547,7 +570,7 @@
         string soloNumeros = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
 
         // 2. Asigna el valor numérico limpio a tu propiedad de Blazor
-        if (int.TryParse(soloNumeros, out int resultado))
+        if (Int64.TryParse(soloNumeros, out Int64 resultado))
         {
             entidadEditando.Acciones = resultado;
         }
@@ -557,7 +580,7 @@
         }
     }
 
-    private string FormatearMiles(int? valor)
+    private string FormatearMiles(Int64? valor)
     {
         if (valor == null || valor == 0) return string.Empty;
 
@@ -570,4 +593,23 @@
         navManager.NavigateTo($"/documentossoporte/8/{item.Id}");
     }
 
+    private void OnAplicaOptionChanged(bool aplica, int opcion)
+    {
+        switch (opcion)
+        {
+            case 1: // Preferente
+                entidadEditando.Preferente = aplica ? "1" : "0";
+                break;
+            case 2: // Anulado
+                entidadEditando.Anulado = aplica ? 1 : 0;
+                break;
+            case 3: // Endosado
+                entidadEditando.Endosado = aplica ? 1 : 0;
+                break;
+            default:
+                break;
+        }
+        // Forzamos el refresco para mostrar u ocultar los campos al instante
+        StateHasChanged();
+    }
 }

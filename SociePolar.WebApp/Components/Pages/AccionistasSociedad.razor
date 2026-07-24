@@ -215,13 +215,13 @@
             listAaccionista = listAaccionista.Where(x => x.EstatusAccionista.Id == 1).ToList();
             foreach (var item in listAaccionista)
             {
-                int nroacciones = 0;
+                Int64 nroacciones = 0;
                 decimal porcparticipa = 0;
 
                 var titulos = await repotitulo.GetByAccionistaSociedadIdAsync(item.Id);
                 if (titulos != null && titulos.Count() > 0)
                 {
-                    nroacciones = (int) titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
+                    nroacciones = (Int64) titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
                 }
 
                 if (item.Sociedad != null)
@@ -449,7 +449,7 @@
         return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
     }
 
-    private string FormatearMiles(int? valor)
+    private string FormatearMiles(Int64? valor)
     {
         if (valor == null || valor == 0) return string.Empty;
 

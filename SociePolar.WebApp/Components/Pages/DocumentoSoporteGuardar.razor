@@ -47,6 +47,15 @@
                                        style="display:none;"
                                        disabled="@esInvalido" />
                             <label class="form-label fw-bold text-secondary small">@fileName</label>
+                            <ValidationMessage For="@(() => entidadEditando.RutaGoogle)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Nombre Documento</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.NombreDocumento"
+                                   placeholder="Ingrese nombre del documento..."
+                                   maxlength="100" />
+                            <ValidationMessage For="@(() => entidadEditando.NombreDocumento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-10 mb-3">
                             <label class="form-label fw-bold text-secondary small">Comentarios</label>
@@ -260,10 +269,9 @@
         try
         {
             string folderName = $"{ObtenerModulo(int.Parse(ModuloId))}_ID_{ReferenciaId}";
-            string nombDocumento = listTipoDocs.FirstOrDefault(x => x.Id == entidadEditando.TipoDocumentoSoporteId)?.Nombre ?? "Documento";
-            nombDocumento = nombDocumento.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+            entidadEditando.NombreDocumento = entidadEditando.NombreDocumento.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+            entidadEditando.NombreDocumento = entidadEditando.NombreDocumento + $"_{DateTime.Now:yyyyMMdd}.pdf";
 
-            string fileName = $"{nombDocumento}_{DateTime.Now:yyyyMMdd}.pdf";
             using (streamToUpload)
             {
                 if (!string.IsNullOrEmpty(folderName))
@@ -272,7 +280,7 @@
                     string fileIdResult = string.Empty;
 
                     // Subida con el ContentType dinámico
-                    fileIdResult = await DriveService.UploadFileAsync(streamToUpload, fileName, "application/pdf", folderId);
+                    fileIdResult = await DriveService.UploadFileAsync(streamToUpload, entidadEditando.NombreDocumento, "application/pdf", folderId);
                     entidadEditando.RutaGoogle = $"{folderId}/{fileIdResult}";
                 }
             }

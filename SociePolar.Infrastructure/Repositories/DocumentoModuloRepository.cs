@@ -48,6 +48,7 @@ namespace SociePolar.Infrastructure.Repositories
                 TipoDocumentoSoporte = documento,
                 ReferenciaId = entity.ReferenciaId,
                 RutaGoogle = entity.RutaGoogle,
+                NombreDocumento = entity.NombreDocumento,
                 Comentarios = entity.Comentarios,
                 CreateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,

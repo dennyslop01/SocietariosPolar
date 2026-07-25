@@ -1,4 +1,6 @@
-﻿namespace SociePolar.Domain.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace SociePolar.Domain.Entities
 {
     public class Sociedad
     {
@@ -39,7 +41,10 @@
         public int CreateUserId { get; set; }
         public int UpdateUserId { get; set; }
 
+        [Column(TypeName = "decimal(18, 9)")] 
         public decimal? ValorAccion { get; set; }
+
+        [Column(TypeName = "decimal(18, 9)")] 
         public decimal? ValorPatrimonial { get; set; }
         public int? AnoPublicacion { get; set; }
         public string? NumeroPublicacion { get; set; }

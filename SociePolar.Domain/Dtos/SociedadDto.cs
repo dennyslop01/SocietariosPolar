@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SociePolar.Domain.Dtos
 {
@@ -60,7 +61,9 @@ namespace SociePolar.Domain.Dtos
         public int? CreateUserId { get; set; }
         public int? UpdateUserId { get; set; }
 
+        [Column(TypeName = "decimal(18, 9)")] 
         public decimal? ValorAccion { get; set; }
+        [Column(TypeName = "decimal(18, 9)")] 
         public decimal? ValorPatrimonial { get; set; }
         public int? AnoPublicacion { get; set; }
         public string? NumeroPublicacion { get; set; }

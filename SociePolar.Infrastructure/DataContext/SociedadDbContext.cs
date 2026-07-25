@@ -39,5 +39,17 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Titulo> Titulos { get; set; }
         public DbSet<TipoDocumentoSoporte> TiposDocumentosSoporte { get; set; }
         public DbSet<DocumentoModulo> DocumentosModulos { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Sociedad>()
+                .Property(e => e.ValorAccion)
+                .HasPrecision(18, 9); // 9 decimales
+
+            modelBuilder.Entity<Sociedad>()
+                .Property(e => e.ValorPatrimonial)
+                .HasPrecision(18, 9); // 9 decimales
+        }
     }
 }

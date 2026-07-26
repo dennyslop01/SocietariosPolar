@@ -81,16 +81,19 @@
                             <td class="text-start text-secondary small" style="width: 20%;">@p.FechaDesde?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@(p.LibrosSellados == "1" ? "Sí" : "No")</td>
                             <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                    <i class="bi bi-trash3 fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-secondary p-0  me-2"
-                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                </button>
+                                @if (idRol == 1 || idRol == 2)
+                                {
+                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
+                                        <i class="bi bi-pencil-square fs-6"></i>
+                                    </button>
+                                    <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                        <i class="bi bi-trash3 fs-6"></i>
+                                    </button>
+                                    <button class="btn btn-link btn-sm text-secondary p-0  me-2"
+                                    @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </button>
+                                }
                             </td>
                         </tr>
                     </ChildContentRow>
@@ -159,11 +162,24 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     int idLibroSocietario = 0;
+    private int idRol = 0;
 
     [Inject] private ILibroSocietario repository { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
+        try
+        {
+            var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+            if (!string.IsNullOrEmpty(userrolaux.Value))
+            {
+                idRol = int.Parse(userrolaux.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+        }
         await LoadGenericDataAsync();
     }
 

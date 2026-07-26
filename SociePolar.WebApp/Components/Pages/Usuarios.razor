@@ -54,13 +54,16 @@
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-danger p-0"
-                                        @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                    <i class="bi bi-trash3 fs-6"></i>
-                                </button>
+                                @if (idRol == 1 || idRol == 2)
+                                {
+                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
+                                        <i class="bi bi-pencil-square fs-6"></i>
+                                    </button>
+                                    <button class="btn btn-link btn-sm text-danger p-0"
+                                    @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                        <i class="bi bi-trash3 fs-6"></i>
+                                    </button>
+                                }
                             </td>
                         </tr>
                     </ChildContentRow>
@@ -184,6 +187,7 @@
     private bool mostrarModalEliminar = false;
     private Usuario entidadEditando = default!;
     private Usuario? entidadParaEliminar;
+    private int idRol = 0;
 
     private List<ElementoLista> ListaRoles { get; set; } = new();
     private List<ElementoLista> ListaEstatus { get; set; } = new();
@@ -199,6 +203,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        try
+        {
+            var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+            if (!string.IsNullOrEmpty(userrolaux.Value))
+            {
+                idRol = int.Parse(userrolaux.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+        }
         CargarListasLocales();
         await LoadGenericDataAsync();
     }

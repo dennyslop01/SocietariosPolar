@@ -3,7 +3,7 @@
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
             <DataAnnotationsValidator />
 
             <div class="modal-content border-0 shadow">
@@ -20,8 +20,8 @@
                     <div class="row">
                         <div class="col-md-10 mb-3">
                             <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumentoSoporteId">
-                                <option value="0" selected>Seleccione ...</option>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="@entidadEditando.TipoDocumentoSoporteId">
+                                <option value="0">Seleccione ...</option>
                                 @if (listTipoDocs != null)
                                 {
                                     @foreach (var tipo in listTipoDocs)
@@ -40,12 +40,13 @@
                             </label>
 
                             <InputFile id="fileInput"
-                                class="small"
+                                       class="small"
                                        OnChange="UploadFile"
                                        accept=".pdf"
                                        capture="camera"
                                        style="display:none;"
                                        disabled="@esInvalido" />
+
                             <label class="form-label fw-bold text-secondary small">@fileName</label>
                             <ValidationMessage For="@(() => entidadEditando.RutaGoogle)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
@@ -61,12 +62,11 @@
                             <label class="form-label fw-bold text-secondary small">Comentarios</label>
                             <textarea class="form-control form-control-sm small"
                                       @bind="entidadEditando.Comentarios"
-                                      @bind:event="oninput"
                                       rows="4"
                                       maxlength="2000"
                                       placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
-                                        </textarea>
-                        </div>                        
+                            </textarea>
+                        </div>
                         <div class="col-md-6 mb-3">
                         </div>
                         <div class="col-md-6 mb-3">
@@ -227,9 +227,13 @@
             string contentType = file.ContentType;
             if (contentType == "application/pdf")
             {
-                streamToUpload = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // Aumentamos a 10MB para PDFs
+                var memoryStream = new MemoryStream();
+                await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+                streamToUpload = memoryStream;
                 fileName = e.File.Name;
                 entidadEditando.RutaGoogle = e.File.Name;
+                //esInvalido = !string.IsNullOrEmpty(file.Name);
             }
             else
             {
@@ -266,36 +270,49 @@
             return;
         }
 
+        // Validación previa para evitar que el stream falle
+        if (streamToUpload == null)
+        {
+            await MostrarNotificacion("Debe seleccionar un archivo PDF válido antes de guardar.", true);
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
         try
         {
             string folderName = $"{ObtenerModulo(int.Parse(ModuloId))}_ID_{ReferenciaId}";
-            entidadEditando.NombreDocumento = entidadEditando.NombreDocumento.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
-            entidadEditando.NombreDocumento = entidadEditando.NombreDocumento + $"_{DateTime.Now:yyyyMMdd}.pdf";
 
-            using (streamToUpload)
+            // Formateamos el nombre de manera segura sin alterar destructivamente la propiedad original permanentemente si falla
+            string nombreLimpio = entidadEditando.NombreDocumento.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+
+            // Evitamos concatenar ".pdf" múltiples veces si ya lo tiene
+            if (!nombreLimpio.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             {
-                if (!string.IsNullOrEmpty(folderName))
-                {
-                    string folderId = await DriveService.CreateFolderAsync(folderName);
-                    string fileIdResult = string.Empty;
+                nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.pdf";
+            }
 
-                    // Subida con el ContentType dinámico
-                    fileIdResult = await DriveService.UploadFileAsync(streamToUpload, entidadEditando.NombreDocumento, "application/pdf", folderId);
-                    entidadEditando.RutaGoogle = $"{folderId}/{fileIdResult}";
-                }
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                string folderId = await DriveService.CreateFolderAsync(folderName);
+
+                // IMPORTANTE: NO uses 'using(streamToUpload)'. Deja que Blazor maneje el ciclo de vida
+                // o ciérralo manualmente AL FINAL de todo el proceso exitoso.
+                string fileIdResult = await DriveService.UploadFileAsync(streamToUpload, nombreLimpio, "application/pdf", folderId);
+                entidadEditando.RutaGoogle = $"{folderId}/{fileIdResult}";
             }
         }
         catch (Exception ex)
         {
             cargando = false;
             StateHasChanged();
-            await MostrarNotificacion("Error al procesar el archivo: " + ex.Message, true);
+            await MostrarNotificacion("Error al subir a Google Drive: " + ex.Message, true);
             return;
         }
 
-        if (entidadEditando.RutaGoogle == null || string.IsNullOrEmpty(entidadEditando.RutaGoogle))
+        if (string.IsNullOrEmpty(entidadEditando.RutaGoogle))
         {
-            await MostrarNotificacion("Debe seleccionar un archivo PDF antes de guardar.", true);
+            await MostrarNotificacion("No se pudo obtener la ruta de Google Drive.", true);
             cargando = false;
             StateHasChanged();
             return;
@@ -304,7 +321,7 @@
         try
         {
             var useridaux = await SessionStorage.GetAsync<string>("UserId");
-            if (!string.IsNullOrEmpty(useridaux.Value))
+            if (useridaux.Success && !string.IsNullOrEmpty(useridaux.Value))
             {
                 int userid = int.Parse(useridaux.Value);
                 if (entidadEditando.Id == 0)
@@ -314,20 +331,31 @@
 
                     await repository.AddAsync(entidadEditando);
 
+                    // Liberar el stream de forma segura ahora que el proceso completo terminó bien
+                    await streamToUpload.DisposeAsync();
+
                     await LoadGenericDataAsync();
                     await MostrarNotificacion($"Documento Soporte guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
+            }
+            else
+            {
+                // Corrección: Si no encuentra el usuario, debe apagar el cargando para no congelar la pantalla
+                await MostrarNotificacion("Error: No se pudo identificar la sesión del usuario.", true);
+                cargando = false;
+                StateHasChanged();
+                return;
             }
         }
         catch (Exception ex)
         {
             cargando = false;
             StateHasChanged();
-            // Si hay error en base de datos (ej. nombre duplicado)
-            Console.WriteLine($"Error: {ex.Message}");
-            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+            Console.WriteLine($"Error en Base de Datos: {ex.Message}");
+            await MostrarNotificacion("Error al guardar en la base de datos: " + ex.Message, true);
         }
+
         cargando = false;
         StateHasChanged();
     }

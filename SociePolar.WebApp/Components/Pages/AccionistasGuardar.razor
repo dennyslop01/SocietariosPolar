@@ -227,12 +227,10 @@
                                     {
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Años de duración de la compañía</label>
-                                            <InputNumber class="form-control form-control-sm small"
+                                            <InputText class="form-control form-control-sm small"
                                                          @bind-Value="entidadEditando.AnoDuracion"
                                                          placeholder="Ingrese años de duración..."
-                                                         maxlength="3"
-                                                         inputmode="numeric"
-                                                         oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3);" />
+                                                         maxlength="15" />
                                         </div>
                                         <div class="col-md-10 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Junta Directiva</label>

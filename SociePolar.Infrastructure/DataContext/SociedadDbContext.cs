@@ -45,11 +45,11 @@ namespace SociePolar.Infrastructure.DataContext
         {
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorAccion)
-                .HasPrecision(18, 9); // 9 decimales
+                .HasPrecision(20, 10); // 10 decimales
 
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorPatrimonial)
-                .HasPrecision(18, 9); // 9 decimales
+                .HasPrecision(20, 10); // 10 decimales
         }
     }
 }

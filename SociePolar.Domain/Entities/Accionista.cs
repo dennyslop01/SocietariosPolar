@@ -82,7 +82,7 @@
         public string? DocumentosRelacionados { get; set; }
 
 
-        public int? AnoDuracion { get; set; }
+        public string? AnoDuracion { get; set; }
         public string? JuntaDirectiva { get; set; }
         public int? VigenciaJunta { get; set; }
         public DateTime? FechaVencimientoJunta { get; set; }

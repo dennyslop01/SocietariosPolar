@@ -1,0 +1,272 @@
+@using System.Text
+@using SociePolar.Domain.Models
+@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarEntidad">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-filetype-csv me-2"></i> Descargar Datos                        
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Separador</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadActual.TipoSeparador">
+                                <option value="-1">-- Seleccione uno --</option>
+                                <option value="1">Coma</option>
+                                <option value="2">Punto y Coma</option>
+                                @* <option value="3">Tabulador</option> *@
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadActual.TipoSeparador)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-12 mb-0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@code
+{
+    [Parameter] public string idModulo { get; set; } = "";
+    [Parameter] public string idEstado { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private MatrizCSV entidadActual = new();
+    private bool cargando = false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+
+    public class Modulos
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public List<Modulos> ListModulos = new List<Modulos>
+    {
+        new Modulos { Id = 1, Nombre = "Sociedades" },
+        new Modulos { Id = 2, Nombre = "Autoridades" },
+        new Modulos { Id = 3, Nombre = "Asambleas" },
+        new Modulos { Id = 4, Nombre = "Reformas" },
+        new Modulos { Id = 5, Nombre = "Certificaciones" },
+        new Modulos { Id = 6, Nombre = "Libros" },
+        new Modulos { Id = 7, Nombre = "Accionistas" },
+        new Modulos { Id = 8, Nombre = "Títulos" },
+    };
+
+    [Inject] private ISociedad repository { get; set; } = null!;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            entidadActual.TipoSeparador = -1;
+            editContext = new EditContext(entidadActual);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+        cargando = false;
+        StateHasChanged();
+    }
+
+    private async Task GuardarEntidad()
+    {
+        bool formularioValido = editContext.Validate();
+        cargando = true;
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            string separador = string.Empty;
+
+            switch (entidadActual.TipoSeparador)
+            {
+                case 1:
+                    separador = ",";
+                    break;
+                case 2:
+                    separador = ";";
+                    break;
+                case 3:
+                    separador = @"\t";
+                    break;
+            }
+
+            await ExportarCsv(separador);
+            cargando = false;
+            StateHasChanged();
+            await OnFinalizado.InvokeAsync(true);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+    }
+
+    private async Task ExportarCsv(string separador)
+    {
+        try
+        {
+            string modulo = ListModulos.Where(m => m.Id == int.Parse(idModulo)).Select(m => m.Nombre).FirstOrDefault() ?? "Desconocido";
+            string csvString = string.Empty;
+
+            switch (idModulo)
+            {
+                case "1": // Sociedades
+                    csvString = await GenerarSociedadCsv(separador);
+                    break;
+                case "2": // Autoridades
+                    break;
+                case "3": // Asambleas
+                    break;
+                case "4": // Reformas
+                    break;
+                case "5": // Certificaciones
+                    break;
+                case "6": // Libros
+                    break;
+                case "7": // Accionistas
+                    break;
+                case "8": // Títulos
+                    break;
+            }
+            await jsRuntime.InvokeVoidAsync("downloadFileFromStream", $"Data-{modulo}-{(idEstado == "1" ? "Activo" : "Inactivo")}.csv", csvString);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private async Task<string> GenerarSociedadCsv(string separador)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listSociedades = await repository.GetAllAsync();
+            List<Sociedad> Listgral = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
+
+            encabezado += $"Id{separador}Region{separador}UnidadNegocio{separador}Empresa{separador}NumeroSap{separador}EstatusSociedad{separador}TipoSociedadActiva{separador}Objeto{separador}Domicilio{separador}DireccionFiscal{separador}DatosConstitucion{separador}FechaConstitucion{separador}FechaVencimiento{separador}Duracion{separador}";
+            encabezado += $"NumeroAcciones{separador}AplicaCapital{separador}Moneda{separador}CapitalSuscrito{separador}CapitalPagado{separador}ClaseAcciones{separador}FormaAdministracion{separador}EjercicioEconomico{separador}NumeroExpediente{separador}Observaciones{separador}Documento1{separador}Nit{separador}CreateDate{separador}";
+            encabezado += $"UpdateDate{separador}ValorAccion{separador}AnoPublicacion{separador}NumeroPublicacion{separador}FechaPublicacion{separador}NombreDiario{separador}ValorPatrimonial{separador}Documento2{separador}Documento3{separador}TipoDocumento1{separador}TipoDocumento2{separador}TipoDocumento3";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.Region.Nombre}{separador}{item.UnidadNegocio.Nombre}{separador}{item.Empresa.Nombre}{separador}{item.NumeroSap}{separador}{item.EstatusSociedad.Nombre}{separador}{item.TipoSociedadActiva.Nombre}{separador}{item.Objeto}{separador}{item.Domicilio}{separador}{item.DireccionFiscal}{separador}{item.DatosConstitucion}{separador}{item.FechaConstitucion}{separador}{item.FechaVencimiento}{separador}{item.Duracion}{separador}";
+                linea += $"{item.NumeroAcciones}{separador}{item.AplicaCapital}{separador}{item.Moneda.Nombre}{separador}{item.CapitalSuscrito}{separador}{item.CapitalPagado}{separador}{item.ClaseAcciones}{separador}{item.FormaAdministracion}{separador}{item.EjercicioEconomico}{separador}{item.NumeroExpediente}{separador}{item.Observaciones}{separador}{item.Documento1}{separador}{item.Nit}{separador}{item.CreateDate}{separador}";
+                linea += $"{item.UpdateDate}{separador}{item.ValorAccion}{separador}{item.AnoPublicacion}{separador}{item.NumeroPublicacion}{separador}{item.FechaPublicacion}{separador}{item.NombreDiario}{separador}{item.ValorPatrimonial}{separador}{item.Documento2}{separador}{item.Documento3}{separador}{item.TipoDocumento1}{separador}{item.TipoDocumento2}{separador}{item.TipoDocumento3}";
+                
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+
+    private async Task Cancelar()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+}
+
+<script>
+    function downloadFileFromStream(fileName, content) {
+        // Añadimos el BOM ( \ufeff ) al inicio del contenido
+        const blob = new Blob(["\ufeff", content], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+</script>

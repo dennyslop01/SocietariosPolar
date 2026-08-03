@@ -377,7 +377,8 @@
                                                id="faltaSi"
                                                class="form-check-input"
                                                value="1"
-                                               checked="@(entidadEditando.FaltaActualizar == 1)" />
+                                               checked="@(entidadEditando.FaltaActualizar == 1)"
+                                               @onchange="() => ActualizarFaltaActualizar(1)" />
                                         <label class="form-check-label small text-secondary" for="faltaSi">Sí</label>
                                     </div>
 
@@ -387,7 +388,8 @@
                                                id="faltaNo"
                                                class="form-check-input"
                                                value="0"
-                                               checked="@(entidadEditando.FaltaActualizar == 0)" />
+                                               checked="@(entidadEditando.FaltaActualizar == 0)"
+                                               @onchange="() => ActualizarFaltaActualizar(0)" />
                                         <label class="form-check-label small text-secondary" for="faltaNo">No</label>
                                     </div>
                                 </div>
@@ -623,7 +625,8 @@
                                                    id="bienesSi"
                                                    class="form-check-input"
                                                    value="1"
-                                                   checked="@(entidadEditando.SeparacionBienes == 1)" />
+                                                   checked="@(entidadEditando.SeparacionBienes == 1)"
+                                                   @onchange="() => ActualizarSeparacion(1)" />
                                             <label class="form-check-label small text-secondary" for="bienesSi">Sí</label>
                                         </div>
 
@@ -633,7 +636,8 @@
                                                    id="bienesNo"
                                                    class="form-check-input"
                                                    value="0"
-                                                   checked="@(entidadEditando.SeparacionBienes == 0)" />
+                                                   checked="@(entidadEditando.SeparacionBienes == 0)"
+                                                   @onchange="() => ActualizarSeparacion(0)" />
                                             <label class="form-check-label small text-secondary" for="bienesNo">No</label>
                                         </div>
                                     </div>
@@ -1390,5 +1394,15 @@
             entidadEditando.RegistradaEn = null;
         }
         StateHasChanged();
+    }
+
+    private void ActualizarSeparacion(int v)
+    {
+        entidadEditando.SeparacionBienes = v;
+    }
+
+    private void ActualizarFaltaActualizar(int v)
+    {
+       entidadEditando.FaltaActualizar = v;
     }
 }

@@ -83,7 +83,8 @@
                                        class="form-check-input"
                                        value="1"
                                        disabled
-                                       checked="@(entidadEditando.AplicaReforma == 1)" />
+                                       checked="@(entidadEditando.AplicaReforma == 1)"
+                                       @onchange="() => ActualizarAplica(1)" />
                                 <label class="form-check-label small text-secondary" for="reformaSi">Sí</label>
                             </div>
 
@@ -94,7 +95,8 @@
                                        class="form-check-input"
                                        value="0"
                                        disabled
-                                       checked="@(entidadEditando.AplicaReforma == 0)" />
+                                       checked="@(entidadEditando.AplicaReforma == 0)" 
+                                       @onchange="() => ActualizarAplica(0)" />
                                 <label class="form-check-label small text-secondary" for="reformaNo">No</label>
                             </div>
                         </div>
@@ -206,6 +208,11 @@
         await Task.Delay(4000); // 4 segundos para errores es mejor
         mostrarAlerta = false;
         StateHasChanged();
+    }
+
+    private void ActualizarAplica(int v)
+    {
+        entidadEditando.AplicaReforma = v;
     }
 }
 

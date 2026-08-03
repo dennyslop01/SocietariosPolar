@@ -187,8 +187,10 @@
                     Id = item.Id,
                     TipoAccionistaV = item.TipoAccionista?.Nombre,
                     Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
-                    TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
-                    Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
+                    //TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
+                    //Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
+                    TipoDocumentoV = item.TipoDocumento1?.Nombre,
+                    Documento = item.Documento1,
                     Telefono = item.Telefono1,
                     CreateDate = item.CreateDate,
                     UpdateDate = item.UpdateDate

@@ -55,36 +55,41 @@
                                         }
                                     </InputSelect>
                                 </div>
+
                                 @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1 || entidadEditando.TipoAccionistaId == 2)
                                 {
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small">Nombre o Razón Social</label>
                                         <InputText type="text" class="form-control form-control-sm small"
-                                                   @bind-Value="entidadEditando.Nombre"
-                                                   placeholder="Ingrese nombre..."
-                                                   maxlength="200" />
+                                        @bind-Value="entidadEditando.Nombre"
+                                        placeholder="Ingrese nombre..."
+                                        maxlength="200" />
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
-                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento1Id">
-                                            <option value="0">Seleccione ...</option>
-                                            @if (listTipoDoc != null)
+                                }
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                                    <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento1Id">
+                                        <option value="0">Seleccione ...</option>
+                                        @if (listTipoDoc != null)
+                                        {
+                                            @foreach (var tipo in listTipoDoc)
                                             {
-                                                @foreach (var tipo in listTipoDoc)
-                                                {
-                                                    <option value="@tipo.Id">@tipo.Nombre</option>
-                                                }
+                                                <option value="@tipo.Id">@tipo.Nombre</option>
                                             }
-                                        </InputSelect>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
-                                        <InputText type="text" class="form-control form-control-sm small"
-                                                   @bind-Value="entidadEditando.Documento1"
-                                                   placeholder="Ingrese número de documento..."
-                                                   maxlength="20"
-                                                   oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                                    </div>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
+                                    <InputText type="text" class="form-control form-control-sm small"
+                                               @bind-Value="entidadEditando.Documento1"
+                                               placeholder="Ingrese número de documento..."
+                                               maxlength="20"
+                                               oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                </div>
+                                @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1 || entidadEditando.TipoAccionistaId == 2)
+                                {
+                                    
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
                                         <input type="date" class="form-control form-control-sm small"
@@ -1172,15 +1177,17 @@
             {
                 mensajeAlerta += "El Nombre o Razón Social es obligatorio \n";
             }
-            if (entidadEditando.TipoDocumento1Id == 0)
-            {
-                mensajeAlerta += "El tipo de documento es obligatorio \n";
-            }
-            if (string.IsNullOrEmpty(entidadEditando.Documento1))
-            {
-                mensajeAlerta += "La Documento de Identidad Fiscal es obligatoria \n";
-            }
         }
+
+        if (entidadEditando.TipoDocumento1Id == 0)
+        {
+            mensajeAlerta += "El tipo de documento es obligatorio \n";
+        }
+        if (string.IsNullOrEmpty(entidadEditando.Documento1))
+        {
+            mensajeAlerta += "La Documento de Identidad Fiscal es obligatoria \n";
+        }
+
         if (entidadEditando.TipoAccionistaId == 3)
         {
             if (string.IsNullOrEmpty(entidadEditando.NombreSusesion))
@@ -1341,11 +1348,11 @@
 
         if (entidadEditando.TipoAccionistaId == 3) // Sucesion
         {
-            entidadEditando.Documento1 = string.Empty;
+            //entidadEditando.Documento1 = string.Empty;
             entidadEditando.Documento2 = string.Empty;
             entidadEditando.Documento3 = string.Empty;
             entidadEditando.Documento4 = string.Empty;
-            entidadEditando.TipoDocumento1Id = null;
+            //entidadEditando.TipoDocumento1Id = null;
             entidadEditando.TipoDocumento2Id = null;
             entidadEditando.TipoDocumento3Id = null;
             entidadEditando.TipoDocumento4Id = null;

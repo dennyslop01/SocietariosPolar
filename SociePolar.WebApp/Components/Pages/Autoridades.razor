@@ -15,12 +15,23 @@
                     </h5>
                 </div>
 
-                <!-- Parte Derecha: Botón Agregar -->
-                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="AbrirModalNuevo"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-plus-lg me-2"></i> Agregar
-                </button>
+                <!-- Contenedor flex para alinear los botones en línea -->
+                <div class="d-flex gap-2 align-items-center">
+
+                    <!-- Botón Agregar -->
+                    <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="AbrirModalNuevo"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-plus-lg me-2"></i> Agregar
+                    </button>
+
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="MostrarDescarga"
+                            style="height: 32px; font-weight: 500;" title="Generar csv">
+                        <i class="bi bi-filetype-csv me-2"></i> Descargar
+                    </button>
+
+                </div>
             </div>
         </div>
 
@@ -175,6 +186,11 @@
 }
 
 
+@if (descarga)
+{
+    <ModalDescarga idModulo="2" idEstado="1" OnFinalizado="ManejarCierreDescarga" />
+}
+
 @code {
     private List<Autoridad> Listgral = new();
     private List<Autoridad> ListgralBuscar = new();
@@ -188,6 +204,7 @@
     private string iconoAlerta = "bi-check-circle-fill";
     int idAutoridad = 0;
     private int idRol = 0;
+    private bool descarga = false;
 
     [Inject] private IAutoridad repository { get; set; } = null!;
 
@@ -332,4 +349,22 @@
         navManager.NavigateTo($"/documentossoporte/2/{item.Id}");
     }
 
+    private void MostrarDescarga()
+    {
+        descarga = true;
+    }
+
+    private async Task ManejarCierreDescarga(bool guardadoExitoso)
+    {
+        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
+        // 1. Cierra el modal en cualquier caso (true o false)
+        descarga = false;
+        cargando = false; // Oculta el spinner después de todo
+
+        // 2. Si se guardó con éxito, refresca los datos
+        if (guardadoExitoso)
+        {
+            await MostrarNotificacion($"Archivo generado exitosamente");
+        }
+    }
 }

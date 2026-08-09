@@ -218,7 +218,7 @@
             string encabezado = string.Empty;
 
             var listSociedades = await repository.GetAllAsync();
-            List<Sociedad> Listgral = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
+            List<Sociedad> Listgral = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == int.Parse(idEstado)).ToList();
 
             encabezado += $"Id{separador}Region{separador}UnidadNegocio{separador}Empresa{separador}NumeroSap{separador}EstatusSociedad{separador}TipoSociedadActiva{separador}Objeto{separador}Domicilio{separador}DireccionFiscal{separador}DatosConstitucion{separador}FechaConstitucion{separador}FechaVencimiento{separador}Duracion{separador}";
             encabezado += $"NumeroAcciones{separador}AplicaCapital{separador}Moneda{separador}CapitalSuscrito{separador}CapitalPagado{separador}ClaseAcciones{separador}FormaAdministracion{separador}EjercicioEconomico{separador}NumeroExpediente{separador}Observaciones{separador}Documento1{separador}Nit{separador}CreateDate{separador}";

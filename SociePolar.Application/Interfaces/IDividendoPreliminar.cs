@@ -9,7 +9,7 @@ namespace SociePolar.Application.Interfaces
         Task<DividendoPreliminar?> GetByIdAsync(Int32 id);
         Task<Int32> AddAsync(DividendoPreliminarDto entity);
         void Delete(Int32 id);
-        Task AddDetalleAsync(List<DividendoDetalleModel> entity);
-
+        Task AddDetalleAsync(List<DividendoPreliminarDetalle> entity);
+        Task<List<DividendoPreliminarDetalle>?> GetDetalleByIdAsync(Int32 id);
     }
 }

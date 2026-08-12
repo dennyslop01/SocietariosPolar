@@ -69,6 +69,12 @@ namespace SociePolar.Infrastructure.Repositories
         public void Delete(Int32 id)
         {
             using var context = _contextFactory.CreateDbContext();
+            var entitydetall = context.Set<DividendoPreliminarDetalle>().Find(id);
+            if (entitydetall != null)
+            {
+                context.Set<DividendoPreliminarDetalle>().Remove(entitydetall);
+                context.SaveChanges();
+            }
             var entity = context.Set<DividendoPreliminar>().Find(id);
             if (entity != null)
             {
@@ -77,7 +83,7 @@ namespace SociePolar.Infrastructure.Repositories
             }
         }
 
-        public async Task AddDetalleAsync(List<DividendoDetalleModel> entity)
+        public async Task AddDetalleAsync(List<DividendoPreliminarDetalle> entity)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
 
@@ -85,12 +91,20 @@ namespace SociePolar.Infrastructure.Repositories
             if (idencabezado == null)
                 throw new Exception($"Dividendo Preliminar con ID {entity[0].DividendoPreliminarId} no existe.");
 
-            await context.Set<DividendoDetalleModel>().AddRangeAsync(entity);
+            await context.Set<DividendoPreliminarDetalle>().AddRangeAsync(entity);
            // context.Entry(newDividendoPreliminar.Sociedad).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
 
             //context.Entry(newDividendoPreliminar.Sociedad).State = EntityState.Detached;
+        }
+
+        public async Task<List<DividendoPreliminarDetalle>?> GetDetalleByIdAsync(Int32 id)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<DividendoPreliminarDetalle>()
+                .Where(b => b.DividendoPreliminarId == id)
+                .ToListAsync();
         }
     }
 }

@@ -197,6 +197,7 @@
     private Stream streamToUploadDividendo;
     private Stream streamToUploadActa;
     private Stream streamToUploadDoc;
+    private Stream streamExcelread;
     private string contentTypeDividendo = string.Empty;
     private string contentTypeActa = string.Empty;
     private string contentTypeDocumento = string.Empty;
@@ -210,6 +211,7 @@
     private bool isDropdownOpen = false;
     private string textoBusqueda = "";
     private ElementReference searchInputRef;
+    private List<DividendoPreliminarDetalle> listaDividendos = new ();
 
     protected override async Task OnInitializedAsync()
     {
@@ -299,9 +301,16 @@
                         await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
                         memoryStream.Position = 0;
                         streamToUploadDividendo = memoryStream;
+
+                        var memoryStreamRead = new MemoryStream();
+                        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStreamRead);
+                        memoryStreamRead.Position = 0;
+                        streamExcelread = memoryStreamRead;
+
                         fileNameDividendo = e.File.Name;
                         entidadEditando.RutaDividendos = e.File.Name;
                         entidadEditando.NombreDividendos = e.File.Name;
+                        await CargarExcelDividendos();
                     }
                     else
                     {
@@ -376,6 +385,14 @@
             return;
         }
 
+        if (Listgral.Where(x => x.Sociedad?.Id == entidadEditando.SociedadId).Any())
+        {
+            await MostrarNotificacion("Ya existe un registro para esta sociedad, debe cerrarlo o eliminarlo.", true);
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
         // Validación previa para evitar que el stream falle
         if (streamToUploadDividendo == null)
         {
@@ -393,6 +410,13 @@
             return;
         }
 
+        if (listaDividendos.Count == 0)
+        {
+            await MostrarNotificacion("El archivo Excel no contiene datos válidos de dividendos o ocurrió un error en la carga.", true);
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
         if (!await SubirDocumentosDrive(streamToUploadDividendo, contentTypeDividendo, 1))
         {
             cargando = false;
@@ -428,10 +452,13 @@
                     entidadEditando.CreateUserId = userid;
 
                     Int32 idNew = await repository.AddAsync(entidadEditando);
-                    await GuardarExcelDividendos(idNew);
+                    listaDividendos.ForEach(x => x.DividendoPreliminarId = idNew);
+
+                    await repository.AddDetalleAsync(listaDividendos);
 
                     // Liberar el stream de forma segura ahora que el proceso completo terminó bien
                     await streamToUploadDividendo.DisposeAsync();
+                    await streamExcelread.DisposeAsync();
                     await streamToUploadActa.DisposeAsync();
                     if (streamToUploadDoc != null)
                         await streamToUploadDoc.DisposeAsync();
@@ -462,57 +489,106 @@
         StateHasChanged();
     }
 
-    private async Task GuardarExcelDividendos(int idNew)
+    private async Task CargarExcelDividendos()
     {
-        // 1. Crear la lista donde guardarás los registros mapeados
-        var listaDividendos = new List<DividendoDetalleModel>(); // Cambia 'DividendoModel' por tu clase real
-
-        // 2. Asegurar que el stream esté al inicio de la lectura
-        if (streamToUploadDividendo.CanSeek)
+        listaDividendos.Clear();
+        if (streamExcelread.CanSeek)
         {
-            streamToUploadDividendo.Position = 0;
+            streamExcelread.Position = 0;
         }
 
-        // 3. Registrar el proveedor de codificación (Requerido por ExcelDataReader en .NET Core/Blazor)
         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-        // 4. Crear el lector de Excel a partir del Stream en memoria
-        using (var reader = ExcelReaderFactory.CreateReader(streamToUploadDividendo))
+        using (var reader = ExcelReaderFactory.CreateReader(streamExcelread))
         {
             bool esPrimeraFila = true;
-
-            // 5. Recorrer el archivo fila por fila (Ideal para 10,000 líneas sin saturar la RAM)
-            while (reader.Read())
+            int fila = 1;
+            int vacios = 0;
+            try
             {
-                // Saltarse la primera fila si contiene los encabezados (ej. "Nombre", "Monto")
-                if (esPrimeraFila)
+                while (reader.Read())
                 {
-                    esPrimeraFila = false;
-                    continue;
-                }
-
-                // Opcional: Validar si la fila está completamente vacía para terminar o saltar
-                if (reader.GetValue(0) == null)
-                    continue;
-
-                // 6. Mapear cada columna por su índice numérico (0 = Columna A, 1 = Columna B, etc.)
-                var nuevoDividendo = new DividendoDetalleModel()
+                    if(fila < 4)
                     {
-                    // Convert.ToXXX realiza la conversión de datos de forma segura
-                        DividendoPreliminarId = Convert.ToInt32(reader.GetValue(0)),       // Columna A
-                    //CodigoAccionista = Convert.ToString(reader.GetValue(1))
-                    //Monto = Convert.ToDecimal(reader.GetValue(3))
-                    //FechaPago = Convert.ToDateTime(reader.GetValue(4))
+                        fila++;
+                        continue;
+                    }
 
-                        CreateDate = entidadEditando.CreateDate,
-                        CreateUserId = entidadEditando.CreateUserId,
-                    };
+                    if (esPrimeraFila)
+                    {
+                        esPrimeraFila = false;
+                        continue;
+                    }
 
-                // 7. Agregar el objeto procesado a la lista
-                listaDividendos.Add(nuevoDividendo);
+                    if (vacios > 5) return;
+
+                    if (reader.GetValue(1) == null)
+                    {
+                        vacios++;
+                        continue;
+                    }
+
+                    var nuevoDividendo = new DividendoPreliminarDetalle()
+                        {
+                            DividendoPreliminarId = 0,
+                            NombreAccionista = GetString(reader.GetValue(1)),
+                            CantidadAcciones = GetLong(reader.GetValue(2)),
+                            Rif = GetString(reader.GetValue(3)),
+                            Correos = GetString(reader.GetValue(4)),
+                            Telefonos = GetString(reader.GetValue(5)),
+                            Banco = GetString(reader.GetValue(6)),
+                            TipoCuenta = GetString(reader.GetValue(7)),
+                            NroCuenta = GetString(reader.GetValue(8)),
+                            TitularCuenta = GetString(reader.GetValue(9)),
+                            TipoPago = GetString(reader.GetValue(10)),
+                            MonedaPago = GetString(reader.GetValue(11)),
+                            Notificado = GetBool(reader.GetValue(12)),
+                            FechaNotificacion = GetDateTime(reader.GetValue(13)),
+                            MontoDecretado = GetDecimal(reader.GetValue(14)),
+                            FechaDecreto = GetDateTime(reader.GetValue(15)),
+                            MontoRetenido = GetDecimal(reader.GetValue(16)),
+                            EjercicioFiscal = GetString(reader.GetValue(17)),
+
+                            Porcion1Monto = GetDecimal(reader.GetValue(18)),
+                            Porcion1Porcentaje = GetDecimal(reader.GetValue(19)),
+                            Porcion1FechaPago = GetDateTime(reader.GetValue(20)),
+
+                            Porcion2Monto = GetDecimal(reader.GetValue(21)),
+                            Porcion2Porcentaje = GetDecimal(reader.GetValue(22)),
+                            Porcion2FechaPago = GetDateTime(reader.GetValue(23)),
+
+                            Porcion3Monto = GetDecimal(reader.GetValue(24)),
+                            Porcion3Porcentaje = GetDecimal(reader.GetValue(25)),
+                            Porcion3FechaPago = GetDateTime(reader.GetValue(26)),
+
+                            Porcion4Monto = GetDecimal(reader.GetValue(27)),
+                            Porcion4Porcentaje = GetDecimal(reader.GetValue(28)),
+                            Porcion4FechaPago = GetDateTime(reader.GetValue(29)),
+
+                            Observaciones = GetString(reader.GetValue(30)),
+
+                            SoporteEnviadoP1 = GetBool(reader.GetValue(31)),
+                            SoporteFechaP1 = GetDateTime(reader.GetValue(32)),
+                            SoporteEnviadoP2 = GetBool(reader.GetValue(33)),
+                            SoporteFechaP2 = GetDateTime(reader.GetValue(34)),
+                            SoporteEnviadoP3 = GetBool(reader.GetValue(35)),
+                            SoporteFechaP3 = GetDateTime(reader.GetValue(36)),
+                            SoporteEnviadoP4 = GetBool(reader.GetValue(37)),
+                            SoporteFechaP4 = GetDateTime(reader.GetValue(38)),
+                            CreateDate = entidadEditando.CreateDate,
+                            CreateUserId = entidadEditando.CreateUserId,
+                        };
+
+                    listaDividendos.Add(nuevoDividendo);
+                    fila++;
+                }
             }
-
-
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al cargar el archivo Excel: {ex.Message}");
+                await MostrarNotificacion($"Error al cargar el archivo Excel en la Fila {fila}: {ex.Message}", true);
+                listaDividendos.Clear(); // Limpiar la lista si hay error
+            }
         }
     }
 
@@ -656,4 +732,43 @@
         isDropdownOpen = false;
         textoBusqueda = ""; // Reinicia el filtro
     }
+
+    static string GetString(object val)
+    {
+        var texto = val?.ToString()?.Trim();
+        return (texto == "-" || string.IsNullOrEmpty(texto)) ? string.Empty : texto;
+    }
+
+    static long GetLong(object val)
+    {
+        var texto = val?.ToString()?.Trim();
+        if (texto == "-" || string.IsNullOrEmpty(texto)) return 0;
+
+        return long.TryParse(texto, out long res) ? res : 0;
+    }
+
+    static decimal GetDecimal(object val)
+    {
+        var texto = val?.ToString()?.Trim();
+        if (texto == "-" || string.IsNullOrEmpty(texto)) return 0.0m;
+
+        return decimal.TryParse(texto, out decimal res) ? res : 0.0m;
+    }
+
+    static bool GetBool(object val)
+    {
+        var texto = val?.ToString()?.Trim().ToLower();
+        if (texto == "-" || string.IsNullOrEmpty(texto)) return false;
+
+        return texto == "sí" || texto == "si";
+    }
+
+    static DateTime? GetDateTime(object val)
+    {
+        var texto = val?.ToString()?.Trim();
+        if (texto == "-" || string.IsNullOrEmpty(texto)) return null; // Devuelve nulo de forma segura sin romperse
+
+        return DateTime.TryParse(texto, out DateTime res) ? res : (DateTime?)null;
+    }
+
 }

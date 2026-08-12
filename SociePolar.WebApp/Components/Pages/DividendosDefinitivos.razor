@@ -1,4 +1,4 @@
-﻿@page "/dividendospreliminares"
+﻿@page "/dividendosdefinitivos"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -11,20 +11,8 @@
                         <i class="bi bi-calculator text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Dividendos Preliminares
+                        Dividendos Definitivos
                     </h5>
-                </div>
-
-                <!-- Contenedor flex para alinear los botones en línea -->
-                <div class="d-flex gap-2 align-items-center">
-
-                    <!-- Botón Agregar -->
-                    <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                            @onclick="AbrirModalNuevo"
-                            style="height: 32px; font-weight: 500;">
-                        <i class="bi bi-plus-lg me-2"></i> Agregar
-                    </button>
-
                 </div>
             </div>
         </div>
@@ -45,7 +33,7 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="DividendoPreliminar" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="DividendoDefinitivo" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
@@ -121,11 +109,6 @@
 }
 
 
-@if (mostrarModal)
-{
-    <DividendosPreliminarGuardar id="0" OnFinalizado="ManejarCierreModal" />
-}
-
 
 @if (mostrarModalEliminar)
 {
@@ -148,28 +131,27 @@
     </div>
 }
 
-@if(mostrarDetalle)
+@if (mostrarDetalle)
 {
-    <DividendosPreliminarDetalle id="@idDividendo" OnFinalizado="() => mostrarDetalle = false" />
+    <DividendosDefinitivosDetalle id="@idDividendo" OnFinalizado="() => mostrarDetalle = false" />
 }
 
 @code {
 
-    private List<DividendoPreliminar> Listgral = new();
-    private List<DividendoPreliminar> ListgralBuscar = new();
+    private List<DividendoDefinitivo> Listgral = new();
+    private List<DividendoDefinitivo> ListgralBuscar = new();
     private string searchTerm = ""; private bool cargando = false;
-    private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
-    private DividendoPreliminar? entidadParaEliminar;
+    private DividendoDefinitivo? entidadParaEliminar;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private int idRol = 0;
     private bool mostrarDetalle = false;
     private Int32 idDividendo = 0;
 
-    [Inject] private IDividendoPreliminar repository { get; set; } = null!;
+    [Inject] private IDividendoDefinitivo repository { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -209,11 +191,6 @@
         }
     }
 
-    private void AbrirModalNuevo()
-    {
-        mostrarModal = true;
-    }
-
     private void FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
@@ -243,7 +220,7 @@
         StateHasChanged();
     }
 
-    private void VerificarEliminar(DividendoPreliminar item)
+    private void VerificarEliminar(DividendoDefinitivo item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -270,7 +247,7 @@
                 oldFileId = entidadParaEliminar.RutaDividendos!.Split('/').Last();
                 await DriveService.TrashPdfFileByIdAsync(oldFileId);
             }
-            if(!string.IsNullOrEmpty(entidadParaEliminar.NombreActa))
+            if (!string.IsNullOrEmpty(entidadParaEliminar.NombreActa))
             {
                 oldFileId = entidadParaEliminar.RutaActa!.Split('/').Last();
                 await DriveService.TrashPdfFileByIdAsync(oldFileId);
@@ -298,22 +275,6 @@
             cargando = false;
             entidadParaEliminar = null;
         }
-    }
-
-    private async Task ManejarCierreModal(bool guardadoExitoso)
-    {
-        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
-        // 1. Cierra el modal en cualquier caso (true o false)
-        mostrarModal = false;
-
-        // 2. Si se guardó con éxito, refresca los datos
-        if (guardadoExitoso)
-        {
-            await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Dividendo Preliminar guardado correctamente");
-        }
-
-        cargando = false; // Oculta el spinner después de todo
     }
 
     // Método para obtener el enlace de Google Drive
@@ -344,7 +305,7 @@
         }
     }
 
-    private async Task Detalle(DividendoPreliminar item)
+    private async Task Detalle(DividendoDefinitivo item)
     {
         idDividendo = item.Id;
         mostrarDetalle = true;

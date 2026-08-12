@@ -57,6 +57,7 @@ builder.Services.AddScoped<ITitulo, TituloRepository>();
 builder.Services.AddScoped<ITipoDocumentoSoporte, TipoDocumentoSoporteRepository>();
 builder.Services.AddScoped<IDocumentoModulo, DocumentoModuloRepository>();
 builder.Services.AddScoped<IDividendoPreliminar, DividendoPreliminarRepository>();
+builder.Services.AddScoped<IDividendoDefinitivo, DividendoDefinitivoRepository>();
 builder.Services.AddScoped<GoogleDriveService>();
 
 builder.Services.AddCascadingAuthenticationState();

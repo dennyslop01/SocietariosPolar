@@ -40,6 +40,9 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<TipoDocumentoSoporte> TiposDocumentosSoporte { get; set; }
         public DbSet<DocumentoModulo> DocumentosModulos { get; set; }
         public DbSet<DividendoPreliminar> DividendosPreliminares { get; set; }
+        public DbSet<DividendoPreliminarDetalle> DividendosPreliminaresDetalles { get; set; }
+        public DbSet<DividendoDefinitivo> DividendosDefinitivos { get; set; }
+        public DbSet<DividendoDefinitivoDetalle> DividendosDefinitivosDetalles { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

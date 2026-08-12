@@ -1,0 +1,659 @@
+﻿@using ExcelDataReader
+@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        @(entidadEditando.Id == 0 ? "Agregar Dividendo Preliminar" : "Modificar Dividendo Preliminar")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                            <div class="dropdown">
+                                <!-- Removido -sm para igualar el tamaño estándar del label -->
+                                <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                        type="button"
+                                        style="font-size: 0.8rem;"
+                                        @onclick="ToggleDropdown">
+                                    <span>@(ObtenerNombreSeleccionado())</span>
+                                </button>
+
+                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                    <li class="mb-2">
+                                        <!-- Cambiado a form-control normal para que la fuente de "Buscar..." coincida en tamaño -->
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="Buscar..."
+                                               style="font-size: 0.8rem;"
+                                               @bind="textoBusqueda"
+                                               @bind:event="oninput"
+                                               @ref="searchInputRef" />
+                                    </li>
+
+                                    <li>
+                                        <button type="button"
+                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                style="font-size: 0.8rem;"
+                                                @onclick="() => SeleccionarOpcion(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+
+                                    <!-- Opciones filtradas dinámicamente -->
+                                    @if (listSociedad != null)
+                                    {
+                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <li>
+                                                <!-- Se reemplazó 'small' por 'style="font-size: 0.8rem;"' para forzar la letra más pequeña -->
+                                                <button type="button"
+                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                    @sociedad.Empresa.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+
+                                </ul>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Explicación</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Explicacion"
+                                   placeholder="Ingrese explicación..."
+                                   maxlength="200" />
+                            <ValidationMessage For="@(() => entidadEditando.Explicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label for="fileInputExcel"
+                                   class="form-label fw-bold btn btn-primary btn-sm"
+                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                Seleccionar archivo Dividendos
+                            </label>
+
+                            <InputFile id="fileInputExcel"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 1))"
+                                       accept=".xlsx,.xls"
+                                       capture="camera"
+                                       style="display:none;" />
+
+                            <label class="form-label fw-bold text-secondary small">@fileNameDividendo</label>
+                            <ValidationMessage For="@(() => entidadEditando.RutaDividendos)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label for="fileInputActa"
+                                   class="form-label fw-bold btn btn-primary btn-sm"
+                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                Seleccionar archivo Acta
+                            </label>
+
+                            <InputFile id="fileInputActa"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 2))"
+                                       accept=".pdf"
+                                       capture="camera"
+                                       style="display:none;" />
+
+                            <label class="form-label fw-bold text-secondary small">@fileNameActa</label>
+                            <ValidationMessage For="@(() => entidadEditando.RutaActa)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label for="fileInputDoc"
+                                   class="form-label fw-bold btn btn-primary btn-sm"
+                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                Seleccionar archivo Documento secundario
+                            </label>
+
+                            <InputFile id="fileInputDoc"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 3))"
+                                       accept=".pdf"
+                                       capture="camera"
+                                       style="display:none;" />
+
+                            <label class="form-label fw-bold text-secondary small">@fileNameDoc</label>
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Comentarios</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Observaciones"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
+                            </textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Total pagado según Tesorería</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.MontoPagadoTesoreria" placeholder="0.0000" step="0.0001" />
+                            <ValidationMessage For="@(() => entidadEditando.MontoPagadoTesoreria)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Total pagado según accionistas</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.MontoPagadoAccionistas" placeholder="0.0000" step="0.0001" />
+                            <ValidationMessage For="@(() => entidadEditando.MontoPagadoAccionistas)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+    bool esInvalido = false;
+    private string? fileNameDividendo = null;
+    private string? fileNameActa = null;
+    private string? fileNameDoc = null;
+
+    private DividendoPreliminarDto entidadEditando = new();
+    private List<Sociedad> listSociedad = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+    private Stream streamToUploadDividendo;
+    private Stream streamToUploadActa;
+    private Stream streamToUploadDoc;
+    private string contentTypeDividendo = string.Empty;
+    private string contentTypeActa = string.Empty;
+    private string contentTypeDocumento = string.Empty;
+
+    private List<DividendoPreliminar> Listgral = new();
+
+
+    [Inject] private ISociedad repoSociedades { get; set; } = null!;
+    [Inject] private IDividendoPreliminar repository { get; set; } = null!;
+
+    private bool isDropdownOpen = false;
+    private string textoBusqueda = "";
+    private ElementReference searchInputRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
+        await LoadGenericDataAsync();
+
+        if (id == "0")
+        {
+            entidadEditando = new();
+            entidadEditando.SociedadId = 0;
+            entidadEditando.RutaDividendos = string.Empty;
+            entidadEditando.CreateDate = DateTime.Now;
+            editContext = new EditContext(entidadEditando);
+        }
+        cargando = false;
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            listSociedad = await repoSociedades.GetAllAsync();
+            Listgral = await repository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e, int tipo) // Cambiado a UploadFile
+    {
+        mensajeAlerta = string.Empty;
+        mostrarAlerta = false;
+        cargando = true;
+        StateHasChanged();
+
+        switch(tipo)
+        {
+            case 1:
+                fileNameDividendo = string.Empty;
+                entidadEditando.RutaDividendos = null;
+                break;
+            case 2:
+                fileNameActa = string.Empty;
+                entidadEditando.RutaActa = null;
+                break;
+            case 3:
+                fileNameDoc = string.Empty;
+                entidadEditando.RutaDocumento = null;
+                break;
+        }
+
+        var file = e.File;
+        if (file == null) return;
+
+        try
+        {
+            switch (tipo)
+            {
+                case 1:
+                    contentTypeDividendo = file.ContentType;
+                    if (contentTypeDividendo == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
+                        contentTypeDividendo == "application/vnd.ms-excel")
+                    {
+                        var memoryStream = new MemoryStream();
+                        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+                        memoryStream.Position = 0;
+                        streamToUploadDividendo = memoryStream;
+                        fileNameDividendo = e.File.Name;
+                        entidadEditando.RutaDividendos = e.File.Name;
+                        entidadEditando.NombreDividendos = e.File.Name;
+                    }
+                    else
+                    {
+                        mensajeAlerta = "Formato no soportado. Solo Excel.";/* imágenes y  */
+                        mostrarAlerta = true;
+                        cargando = false;
+                        StateHasChanged();
+                        await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+                        return;
+                    }
+                    break;
+                case 2:
+                case 3:
+                    string contentTypeAaux = file.ContentType;
+                    if (contentTypeAaux == "application/pdf")
+                    {
+                        var memoryStream = new MemoryStream();
+                        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+                        memoryStream.Position = 0;
+                        switch (tipo)
+                        {
+                            case 2:
+                                contentTypeActa = file.ContentType;
+                                streamToUploadActa = memoryStream;
+                                fileNameActa = e.File.Name;
+                                entidadEditando.RutaActa = e.File.Name;
+                                entidadEditando.NombreActa = e.File.Name;
+                                break;
+                            case 3:
+                                contentTypeDocumento = file.ContentType;
+                                streamToUploadDoc = memoryStream;
+                                fileNameDoc = e.File.Name;
+                                entidadEditando.RutaDocumento = e.File.Name;
+                                entidadEditando.NombreDocumento = e.File.Name;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        mensajeAlerta = "Formato no soportado. Solo pdf.";
+                        mostrarAlerta = true;
+                        cargando = false;
+                        StateHasChanged();
+                        await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+                        return;
+                    }
+                    break;
+            }
+            cargando = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al procesar el archivo: {ex.Message}";
+            mostrarAlerta = true;
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+        cargando = true;
+        StateHasChanged();
+
+        bool formularioValido = editContext.Validate();
+        if (!formularioValido)
+        {
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        // Validación previa para evitar que el stream falle
+        if (streamToUploadDividendo == null)
+        {
+            await MostrarNotificacion("Debe seleccionar un archivo Excel válido antes de guardar.", true);
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        if (streamToUploadActa == null)
+        {
+            await MostrarNotificacion("Debe seleccionar un archivo PDF válido antes de guardar.", true);
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        if (!await SubirDocumentosDrive(streamToUploadDividendo, contentTypeDividendo, 1))
+        {
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+        if (!await SubirDocumentosDrive(streamToUploadActa, contentTypeActa, 2))
+        {
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        if (streamToUploadDoc != null)
+        {
+            if (!await SubirDocumentosDrive(streamToUploadDoc, contentTypeDocumento, 3))
+            {
+                cargando = false;
+                StateHasChanged();
+                return;
+            }
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (useridaux.Success && !string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+                if (entidadEditando.Id == 0)
+                {
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+
+                    Int32 idNew = await repository.AddAsync(entidadEditando);
+                    await GuardarExcelDividendos(idNew);
+
+                    // Liberar el stream de forma segura ahora que el proceso completo terminó bien
+                    await streamToUploadDividendo.DisposeAsync();
+                    await streamToUploadActa.DisposeAsync();
+                    if (streamToUploadDoc != null)
+                        await streamToUploadDoc.DisposeAsync();
+
+                    await LoadGenericDataAsync();
+                    await MostrarNotificacion($"Documento Soporte guardado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+            else
+            {
+                // Corrección: Si no encuentra el usuario, debe apagar el cargando para no congelar la pantalla
+                await MostrarNotificacion("Error: No se pudo identificar la sesión del usuario.", true);
+                cargando = false;
+                StateHasChanged();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error en Base de Datos: {ex.Message}");
+            await MostrarNotificacion("Error al guardar en la base de datos: " + ex.Message, true);
+        }
+
+        cargando = false;
+        StateHasChanged();
+    }
+
+    private async Task GuardarExcelDividendos(int idNew)
+    {
+        // 1. Crear la lista donde guardarás los registros mapeados
+        var listaDividendos = new List<DividendoDetalleModel>(); // Cambia 'DividendoModel' por tu clase real
+
+        // 2. Asegurar que el stream esté al inicio de la lectura
+        if (streamToUploadDividendo.CanSeek)
+        {
+            streamToUploadDividendo.Position = 0;
+        }
+
+        // 3. Registrar el proveedor de codificación (Requerido por ExcelDataReader en .NET Core/Blazor)
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+        // 4. Crear el lector de Excel a partir del Stream en memoria
+        using (var reader = ExcelReaderFactory.CreateReader(streamToUploadDividendo))
+        {
+            bool esPrimeraFila = true;
+
+            // 5. Recorrer el archivo fila por fila (Ideal para 10,000 líneas sin saturar la RAM)
+            while (reader.Read())
+            {
+                // Saltarse la primera fila si contiene los encabezados (ej. "Nombre", "Monto")
+                if (esPrimeraFila)
+                {
+                    esPrimeraFila = false;
+                    continue;
+                }
+
+                // Opcional: Validar si la fila está completamente vacía para terminar o saltar
+                if (reader.GetValue(0) == null)
+                    continue;
+
+                // 6. Mapear cada columna por su índice numérico (0 = Columna A, 1 = Columna B, etc.)
+                var nuevoDividendo = new DividendoDetalleModel()
+                    {
+                    // Convert.ToXXX realiza la conversión de datos de forma segura
+                        DividendoPreliminarId = Convert.ToInt32(reader.GetValue(0)),       // Columna A
+                    //CodigoAccionista = Convert.ToString(reader.GetValue(1))
+                    //Monto = Convert.ToDecimal(reader.GetValue(3))
+                    //FechaPago = Convert.ToDateTime(reader.GetValue(4))
+
+                        CreateDate = entidadEditando.CreateDate,
+                        CreateUserId = entidadEditando.CreateUserId,
+                    };
+
+                // 7. Agregar el objeto procesado a la lista
+                listaDividendos.Add(nuevoDividendo);
+            }
+
+
+        }
+    }
+
+    private async Task<bool> SubirDocumentosDrive(Stream streamToUpload,string tipodoc, int opcion)
+    {
+        try
+        {
+            string folderName = $"Dividendos_Sociedad_ID_{entidadEditando.SociedadId}";
+            string nombreLimpio = string.Empty;
+            switch (opcion)
+            {
+                case 1:
+                    nombreLimpio = entidadEditando.NombreDividendos.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+                    if (!nombreLimpio.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                    {
+                        nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.xlsx";
+                    }
+                    entidadEditando.NombreDividendos = nombreLimpio;
+                    break;
+                case 2:
+                    nombreLimpio = entidadEditando.NombreActa.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+                    if (!nombreLimpio.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                    {
+                        nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.pdf";
+                    }
+                    entidadEditando.NombreActa = nombreLimpio;
+                    break;
+                case 3:
+                    nombreLimpio = entidadEditando.NombreDocumento.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+                    if (!nombreLimpio.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                    {
+                        nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.pdf";
+                    }
+                    entidadEditando.NombreDocumento = nombreLimpio;
+                    break;
+            }            
+
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                string folderId = await DriveService.CreateFolderAsync(folderName);
+
+                // IMPORTANTE: NO uses 'using(streamToUpload)'. Deja que Blazor maneje el ciclo de vida
+                // o ciérralo manualmente AL FINAL de todo el proceso exitoso.
+                string fileIdResult = await DriveService.UploadFileAsync(streamToUpload, nombreLimpio, tipodoc, folderId);
+                switch (opcion)
+                {
+                    case 1:
+                        entidadEditando.RutaDividendos = $"{folderId}/{fileIdResult}";
+                        break;
+                    case 2:
+                        entidadEditando.RutaActa = $"{folderId}/{fileIdResult}";
+                        break;
+                    case 3:
+                        entidadEditando.RutaDocumento = $"{folderId}/{fileIdResult}";
+                        break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error al subir a Google Drive: " + ex.Message, true);
+            return false;
+        }
+
+        switch(opcion)
+        {
+            case 1:
+                if (string.IsNullOrEmpty(entidadEditando.RutaDividendos))
+                {
+                    await MostrarNotificacion("No se pudo obtener la ruta de Google Drive para el archivo de Dividendos.", true);
+                    cargando = false;
+                    StateHasChanged();
+                    return false;
+                }
+                break;
+            case 2:
+                if (string.IsNullOrEmpty(entidadEditando.RutaActa))
+                {
+                    await MostrarNotificacion("No se pudo obtener la ruta de Google Drive para el archivo de Acta.", true);
+                    cargando = false;
+                    StateHasChanged();
+                    return false;
+                }
+                break;
+            case 3:
+                if (string.IsNullOrEmpty(entidadEditando.RutaDocumento))
+                {
+                    await MostrarNotificacion("No se pudo obtener la ruta de Google Drive para el archivo de Documento.", true);
+                    cargando = false;
+                    StateHasChanged();
+                    return false;
+                }
+                break;
+        }
+        
+        return true;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    // Alternar la apertura del menú desplegable
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+        if (!isDropdownOpen)
+        {
+            textoBusqueda = ""; // Limpia la búsqueda al cerrar
+        }
+    }
+
+    // Devuelve el texto del elemento seleccionado en el botón principal
+    private string ObtenerNombreSeleccionado()
+    {
+        if (entidadEditando?.SociedadId == 0 || listSociedad == null)
+        {
+            return "Seleccione ...";
+        }
+
+        var seleccionado = listSociedad.FirstOrDefault(s => s.Id == entidadEditando.SociedadId);
+        return seleccionado?.Empresa?.Nombre ?? "Seleccione ...";
+    }
+
+    // Asigna el ID real a tu modelo y cierra el menú
+    private void SeleccionarOpcion(int id)
+    {
+        entidadEditando.SociedadId = id;
+        isDropdownOpen = false;
+        textoBusqueda = ""; // Reinicia el filtro
+    }
+}

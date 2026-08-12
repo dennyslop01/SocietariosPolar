@@ -271,6 +271,29 @@
                 </MudMenuItem>
             </ChildContent>
         </MudMenu>
+
+        <MudMenu Label="Dividendos"
+                 Variant="Variant.Text"
+                 Dense="true"
+                 Padding="false"
+                 Style="color: white; text-transform: none;"
+                 StartIcon="@Icons.Material.Filled.DeviceHub"
+                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                 AnchorOrigin="Origin.BottomLeft"
+                 TransformOrigin="Origin.TopLeft">
+            <ChildContent>
+                <MudMenuItem href="/dividendospreliminares">
+                    <div style="font-size: 0.85rem;">
+                        Dividendos Preliminares
+                    </div>
+                </MudMenuItem>
+                <MudMenuItem href="/dividendosdefinitivos">
+                    <div style="font-size: 0.85rem;">
+                        Dividendos Definitivos
+                    </div>
+                </MudMenuItem>
+            </ChildContent>
+        </MudMenu>
     }
     <MudSpacer />
     @* Botón alineado a la derecha con el valor de la variable *@

@@ -39,6 +39,7 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Titulo> Titulos { get; set; }
         public DbSet<TipoDocumentoSoporte> TiposDocumentosSoporte { get; set; }
         public DbSet<DocumentoModulo> DocumentosModulos { get; set; }
+        public DbSet<DividendoPreliminar> DividendosPreliminares { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,6 +51,14 @@ namespace SociePolar.Infrastructure.DataContext
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorPatrimonial)
                 .HasPrecision(20, 10); // 10 decimales
+
+            modelBuilder.Entity<DividendoPreliminar>()
+                .Property(e => e.MontoPagadoTesoreria)
+                .HasPrecision(18, 4); // 10 decimales
+
+            modelBuilder.Entity<DividendoPreliminar>()
+                .Property(e => e.MontoPagadoAccionistas)
+                .HasPrecision(18, 4); // 10 decimales
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿@page "/documentossoporte/{idModulo}/{id}"
-
+﻿@page "/dividendospreliminares"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -9,10 +8,10 @@
                 <!-- Parte Izquierda: Icono y Título -->
                 <div class="d-flex align-items-center">
                     <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
-                        <i class="bi bi-file-earmark-pdf text-white fs-5"></i>
+                        <i class="bi bi-calculator text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Documentos Requeridos para Soporte (@ObtenerModulo(int.Parse(idModulo)))
+                        Dividendos Preliminares
                     </h5>
                 </div>
 
@@ -24,13 +23,6 @@
                             @onclick="AbrirModalNuevo"
                             style="height: 32px; font-weight: 500;">
                         <i class="bi bi-plus-lg me-2"></i> Agregar
-                    </button>
-
-                    <!-- Botón Regresar -->
-                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                            @onclick="Regresar"
-                            style="height: 32px; font-weight: 500;">
-                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
                     </button>
 
                 </div>
@@ -53,13 +45,14 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="DocumentoModulo" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="DividendoPreliminar" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Nombre Documento</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Ruta Documento</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 20%; font-size: 0.85rem;">Comentarios</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Explicación</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Ruta Dividendos</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Ruta Acta</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 20%; font-size: 0.85rem;">Observaciones</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 5%; font-size: 0.85rem;">Acciones</th>
                         </tr>
@@ -67,17 +60,26 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Id</td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@p.TipoDocumentoSoporte!.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 20%;">@p.Explicacion</td>
                             <td class="text-start text-secondary align-middle" style="width: 10%;">
                                 <button type="button"
                                         class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent text-start"
                                         style="font-size: 0.999em;"
-                                        @onclick="() => VisualizarDocumentoAsync(p.RutaGoogle, p.NombreDocumento)"
+                                        @onclick="() => VisualizarDocumentoAsync(p.RutaDividendos, p.NombreDividendos)"
                                         @onclick:preventDefault>
-                                    @(p.NombreDocumento?.Length > 25 ? $"{p.NombreDocumento.Substring(0, 25)}..." : p.NombreDocumento)
+                                    @(p.NombreDividendos?.Length > 25 ? $"{p.NombreDividendos.Substring(0, 25)}..." : p.NombreDividendos)
                                 </button>
                             </td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@(p.Comentarios?.Length > 25 ? $"{p.Comentarios.Substring(0, 25)}..." : p.Comentarios)</td>
+                            <td class="text-start text-secondary align-middle" style="width: 10%;">
+                                <button type="button"
+                                        class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent text-start"
+                                        style="font-size: 0.999em;"
+                                        @onclick="() => VisualizarDocumentoAsync(p.RutaActa, p.NombreActa)"
+                                        @onclick:preventDefault>
+                                    @(p.NombreActa?.Length > 25 ? $"{p.NombreActa.Substring(0, 25)}..." : p.NombreActa)
+                                </button>
+                            </td>
+                            <td class="text-start text-secondary small" style="width: 20%;">@(p.Observaciones?.Length > 25 ? $"{p.Observaciones.Substring(0, 25)}..." : p.Observaciones)</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 5%;">
                                 @if (idRol == 1 || idRol == 2)
@@ -119,7 +121,7 @@
 
 @if (mostrarModal)
 {
-    <DocumentoSoporteGuardar ModuloId="@idModulo" ReferenciaId="@id" id="0" OnFinalizado="ManejarCierreModal" />
+    <DividendosPreliminarGuardar id="0" OnFinalizado="ManejarCierreModal" />
 }
 
 
@@ -132,7 +134,7 @@
                     <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
                     <h5 class="fw-bold">¿Estás seguro?</h5>
                     <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.NombreDocumento</strong>. Esta acción no se puede deshacer.
+                        Vas a eliminar <strong>@entidadParaEliminar?.Explicacion</strong>. Esta acción no se puede deshacer.
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
@@ -145,42 +147,21 @@
 }
 
 
-
 @code {
-    [Parameter] public string idModulo { get; set; } = "";
-    [Parameter] public string id { get; set; } = "";
 
-    private List<DocumentoModulo> Listgral = new();
-    private List<DocumentoModulo> ListgralBuscar = new();
+    private List<DividendoPreliminar> Listgral = new();
+    private List<DividendoPreliminar> ListgralBuscar = new();
     private string searchTerm = ""; private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
-    private DocumentoModulo? entidadParaEliminar;
+    private DividendoPreliminar? entidadParaEliminar;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private int idRol = 0;
 
-    [Inject] private IDocumentoModulo repository { get; set; } = null!;
-
-    public class Modulos
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-    }
-
-    public List<Modulos> ListModulos = new List<Modulos>
-    {
-        new Modulos { Id = 1, Nombre = "Sociedades" },
-        new Modulos { Id = 2, Nombre = "Autoridades" },
-        new Modulos { Id = 3, Nombre = "Asambleas" },
-        new Modulos { Id = 4, Nombre = "Reformas" },
-        new Modulos { Id = 5, Nombre = "Certificaciones" },
-        new Modulos { Id = 6, Nombre = "Libros" },
-        new Modulos { Id = 7, Nombre = "Accionistas" },
-        new Modulos { Id = 8, Nombre = "Títulos" },
-    };
+    [Inject] private IDividendoPreliminar repository { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -204,8 +185,8 @@
         cargando = true;
         try
         {
-            Listgral = await repository.GetByModuloIdAsync(int.Parse(idModulo), int.Parse(id));
-            Listgral = Listgral.OrderBy(x => x.TipoDocumentoSoporte!.Nombre).ToList();
+            Listgral = await repository.GetAllAsync();
+            Listgral = Listgral.OrderBy(x => x.Sociedad?.Empresa?.Nombre).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -235,7 +216,7 @@
         else
         {
             Listgral = ListgralBuscar
-                .Where(b => b.TipoDocumentoSoporte!.Nombre != null && b.TipoDocumentoSoporte!.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.Explicacion != null && b.Explicacion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
     }
@@ -254,7 +235,7 @@
         StateHasChanged();
     }
 
-    private void VerificarEliminar(DocumentoModulo item)
+    private void VerificarEliminar(DividendoPreliminar item)
     {
         entidadParaEliminar = item;
         mostrarModalEliminar = true;
@@ -270,13 +251,32 @@
         StateHasChanged();
         try
         {
-            string oldFileId = entidadParaEliminar.RutaGoogle!.Split('/').Last();
+            string oldFileId = entidadParaEliminar.RutaDividendos!.Split('/').Last();
             await DriveService.TrashPdfFileByIdAsync(oldFileId);
+
+            oldFileId = entidadParaEliminar.RutaActa!.Split('/').Last();
+            await DriveService.TrashPdfFileByIdAsync(oldFileId);
+
+            if (!string.IsNullOrEmpty(entidadParaEliminar.NombreDividendos))
+            {
+                oldFileId = entidadParaEliminar.RutaDividendos!.Split('/').Last();
+                await DriveService.TrashPdfFileByIdAsync(oldFileId);
+            }
+            if(!string.IsNullOrEmpty(entidadParaEliminar.NombreActa))
+            {
+                oldFileId = entidadParaEliminar.RutaActa!.Split('/').Last();
+                await DriveService.TrashPdfFileByIdAsync(oldFileId);
+            }
+            if (!string.IsNullOrEmpty(entidadParaEliminar.NombreDocumento))
+            {
+                oldFileId = entidadParaEliminar.RutaDocumento!.Split('/').Last();
+                await DriveService.TrashPdfFileByIdAsync(oldFileId);
+            }
 
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Documento Soporte eliminado correctamente");
+            await MostrarNotificacion($"Dividendo Preliminar eliminado correctamente");
         }
         catch (Exception ex)
         {
@@ -302,20 +302,10 @@
         if (guardadoExitoso)
         {
             await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Documento Soporte guardado correctamente");
+            await MostrarNotificacion($"Dividendo Preliminar guardado correctamente");
         }
 
         cargando = false; // Oculta el spinner después de todo
-    }
-
-    private string ObtenerModulo(int idmodulo)
-    {
-        return ListModulos.Where(m => m.Id == idmodulo).Select(m => m.Nombre).FirstOrDefault() ?? "Desconocido";
-    }
-
-    private async Task Regresar()
-    {
-        await jsRuntime.InvokeVoidAsync("history.back");
     }
 
     // Método para obtener el enlace de Google Drive

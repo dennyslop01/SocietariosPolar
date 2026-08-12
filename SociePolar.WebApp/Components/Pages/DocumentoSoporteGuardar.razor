@@ -1,5 +1,4 @@
 ﻿@rendermode InteractiveServer
-@inject GoogleDriveService DriveService
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
@@ -34,8 +33,8 @@
                         </div>
                         <div class="col-md-10 mb-3">
                             <label for="fileInput"
-                                   class="form-label fw-bold small btn btn-primary @(esInvalido ? "disabled" : "" )"
-                                   style="cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                   class="form-label fw-bold btn btn-primary btn-sm"
+                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
                                 Seleccionar archivo PDF
                             </label>
 

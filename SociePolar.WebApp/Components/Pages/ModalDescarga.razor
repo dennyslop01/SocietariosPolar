@@ -92,6 +92,12 @@
     };
 
     [Inject] private ISociedad repository { get; set; } = null!;
+    [Inject] private IAutoridad repoautoridad { get; set; } = null!;
+    [Inject] private IAsamblea repoasamblea { get; set; } = null!;
+    [Inject] private ICertificacion repocertificacion { get; set; } = null!;
+    [Inject] private ILibroSocietario repolibros { get; set; } = null!;
+    [Inject] private IAccionista repoaccionista { get; set; } = null!;
+    [Inject] private ITitulo repotitulo { get; set; } = null!;
 
 
     protected override async Task OnInitializedAsync()
@@ -169,18 +175,25 @@
                     csvString = await GenerarSociedadCsv(separador);
                     break;
                 case "2": // Autoridades
+                    csvString = await GenerarAutoridadCsv(separador);
                     break;
                 case "3": // Asambleas
+                    csvString = await GenerarAsambleaCsv(separador, 0);
                     break;
                 case "4": // Reformas
+                    csvString = await GenerarAsambleaCsv(separador, 1);
                     break;
                 case "5": // Certificaciones
+                    csvString = await GenerarCertificacionCsv(separador);
                     break;
                 case "6": // Libros
+                    csvString = await GenerarLibrosCsv(separador);
                     break;
                 case "7": // Accionistas
+                    csvString = await GenerarAccionistaCsv(separador);
                     break;
                 case "8": // Títulos
+                    csvString = await GenerarTituloCsv(separador);
                     break;
             }
             await jsRuntime.InvokeVoidAsync("downloadFileFromStream", $"Data-{modulo}-{(idEstado == "1" ? "Activo" : "Inactivo")}.csv", csvString);
@@ -233,6 +246,243 @@
                 linea += $"{item.NumeroAcciones}{separador}{item.AplicaCapital}{separador}{item.Moneda.Nombre}{separador}{item.CapitalSuscrito}{separador}{item.CapitalPagado}{separador}{item.ClaseAcciones}{separador}{item.FormaAdministracion}{separador}{item.EjercicioEconomico}{separador}{item.NumeroExpediente}{separador}{item.Observaciones}{separador}{item.Documento1}{separador}{item.Nit}{separador}{item.CreateDate}{separador}";
                 linea += $"{item.UpdateDate}{separador}{item.ValorAccion}{separador}{item.AnoPublicacion}{separador}{item.NumeroPublicacion}{separador}{item.FechaPublicacion}{separador}{item.NombreDiario}{separador}{item.ValorPatrimonial}{separador}{item.Documento2}{separador}{item.Documento3}{separador}{item.TipoDocumento1}{separador}{item.TipoDocumento2}{separador}{item.TipoDocumento3}";
                 
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+    private async Task<string> GenerarAutoridadCsv(string separador)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listaGral = await repoautoridad.GetAllAsync();
+            List<Autoridad> Listgral = listaGral.OrderBy(x => x.Nombre).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
+
+            encabezado += $"Id{separador}Sociedad{separador}Cargo{separador}Nombre{separador}TipoDocumento1{separador}TipoDocumento2{separador}Documento1{separador}Documento2{separador}Duracion{separador}";
+            encabezado += $"CreateDate{separador}UpdateDate";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.Cargo?.Nombre}{separador}{item.Nombre}{separador}{item.TipoDocumento1?.Nombre}{separador}{item.TipoDocumento2?.Nombre}{separador}{item.Documento1}{separador}{item.Documento2}{separador}{item.Duracion}{separador}";
+                linea += $"{item.CreateDate}{separador}{item.UpdateDate}";
+
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+    private async Task<string> GenerarAsambleaCsv(string separador, int reforma)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listaGral = await repoasamblea.GetAllAsync();
+            List<Asamblea> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Id).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado) && (x.IndicadorAsamblea == 0 || 
+                            ((reforma == 1 && x.TipoReforma != null) || (reforma != 1 && x.TipoReforma == null)))).ToList();
+
+            encabezado += $"Id{separador}Sociedad{separador}TipoAsamblea{separador}FechaCelebracion{separador}NumeroActa{separador}FechaRegistro{separador}Registro{separador}NumeroRegistro{separador}Tomo{separador}";
+            encabezado += $"AnoPublicacion{separador}FechaPublicacion{separador}NumeroPublicacion{separador}NombreDiario{separador}IndicadorAsamblea{separador}AplicaReforma{separador}TipoReforma{separador}CreateDate{separador}";
+            encabezado += $"UpdateDate{separador}Observacion";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.TipoAsamblea?.Nombre}{separador}{item.FechaCelebracion}{separador}{item.NumeroActa}{separador}{item.FechaRegistro}{separador}{item.Registro?.Nombre}{separador}{item.NumeroRegistro}{separador}{item.Tomo}{separador}";
+                linea += $"{item.AnoPublicacion}{separador}{item.FechaPublicacion}{separador}{item.NumeroPublicacion}{separador}{item.NombreDiario?.Nombre}{separador}{item.IndicadorAsamblea}{separador}{item.AplicaReforma}{separador}{item.TipoReforma?.Nombre}{separador}{item.CreateDate}{separador}";
+                linea += $"{item.UpdateDate}{separador}{item.Observacion}";
+
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+    private async Task<string> GenerarCertificacionCsv(string separador)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listaGral = await repocertificacion.GetAllAsync();
+            List<Certificacion> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Nombre).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
+
+            encabezado += $"Id{separador}Sociedad{separador}Cargo{separador}Fecha{separador}CreateDate{separador}";
+            encabezado += $"UpdateDate";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.Cargo?.Nombre}{separador}{item.Fecha}{separador}{item.CreateDate}{separador}";
+                linea += $"{item.UpdateDate}";
+
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+    private async Task<string> GenerarLibrosCsv(string separador)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listaGral = await repolibros.GetAllAsync();
+            List<LibroSocietario> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Nombre).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
+
+            encabezado += $"Id{separador}Sociedad{separador}ClaseLibro{separador}ClaseLibro{separador}TipoLibro{separador}TomoUso{separador}Folios{separador}LibrosSellados{separador}Observaciones{separador}CreateDate{separador}";
+            encabezado += $"UpdateDate{separador}FechaDesde{separador}FechaHasta{separador}FechaSello{separador}Vacio{separador}Ubicacion";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.ClaseLibro?.Nombre}{separador}{item.TipoLibro?.Nombre}{separador}{item.TomoUso}{separador}{item.Folios}{separador}{item.LibrosSellados}{separador}{item.Observaciones}{separador}{item.CreateDate}{separador}";
+                linea += $"{item.UpdateDate}{separador}{item.FechaDesde}{separador}{item.FechaHasta}{separador}{item.FechaSello}{separador}{item.Vacio}{separador}{item.Ubicacion}";
+
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+    private async Task<string> GenerarAccionistaCsv(string separador)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listaGral = await repoaccionista.GetAllAsync();
+            List<Accionista> Listgral = listaGral.OrderBy(x => x.Nombre).ToList();
+
+            encabezado += $"Id{separador}TipoAccionista{separador}Nombre{separador}TipoDocumento1{separador}TipoDocumento2{separador}TipoDocumento3{separador}TipoDocumento4{separador}Documento1{separador}Documento2{separador}Documento3{separador}Documento4{separador}FechaEmision1{separador}FechaVencimiento1{separador}FechaEmision2{separador}FechaVencimiento2{separador}";
+            encabezado += $"FechaEmision3{separador}FechaVencimiento3{separador}FechaEmision4{separador}FechaVencimiento4{separador}DirigidoA{separador}EstadoCivil{separador}NombreConyuge{separador}TipoDocumentoConyugeId1{separador}TipoDocumentoConyugeId2{separador}TipoDocumentoConyugeId3{separador}DocumentoConyuge1{separador}FechaEmisionConyuge1{separador}FechaVencimientoConyuge1{separador}";
+            encabezado += $"DocumentoConyuge2{separador}FechaEmisionConyuge2{separador}FechaVencimientoConyuge2{separador}DocumentoConyuge3{separador}FechaEmisionConyuge3{separador}FechaVencimientoConyuge3{separador}SeparacionBienes{separador}FechaNacimiento{separador}FechaIngreso{separador}Email1{separador}Email2{separador}Email3{separador}TelefonoMovil{separador}Telefono1{separador}Telefono2{separador}";
+            encabezado += $"Telefono3{separador}Telefono4{separador}Direccion1{separador}Direccion2{separador}GrupoFamiliar{separador}Nacionalidad{separador}DomiciliadoEn{separador}Banco{separador}NumeroCuenta{separador}TipoCuenta{separador}NombreTitularCuenta{separador}UltimaActualizacion{separador}AnoActualizacion{separador}FaltaActualizar{separador}";
+            encabezado += $"TieneApoderado{separador}NombreApoderado{separador}DatosPoder{separador}TipoDocumentoApoderadoId1{separador}TipoDocumentoApoderadoId2{separador}TipoDocumentoApoderadoId3{separador}DocumentoApoderado1{separador}FechaEmisionApoderado1{separador}FechaVencimientoApoderado1{separador}DocumentoApoderado2{separador}FechaEmisionApoderado2{separador}";
+            encabezado += $"FechaVencimientoApoderado2{separador}DocumentoApoderado3{separador}FechaEmisionApoderado3{separador}FechaVencimientoApoderado3{separador}NombreContacto{separador}TelefonoContacto{separador}EmailContacto{separador}CondicionEspecial{separador}Observaciones{separador}DocumentosRelacionados{separador}AnoDuracion{separador}";
+            encabezado += $"JuntaDirectiva{separador}VigenciaJunta{separador}FechaVencimientoJunta{separador}RegistradaEn{separador}NombreSusesion{separador}CedulaSusesion{separador}FechaEmisionSucesion{separador}FechaVencimientoSucesion{separador}OtroDocumentoSucesion{separador}FechaEmisionOtroSucesion{separador}FechaVencimientoOtroSucesion{separador}";
+            encabezado += $"CreateDate{separador}UpdateDate";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.TipoAccionista?.Nombre}{separador}{item.Nombre}{separador}{item.TipoDocumento1?.Nombre}{separador}{item.TipoDocumento2?.Nombre}{separador}{item.TipoDocumento3?.Nombre}{separador}{item.TipoDocumento4?.Nombre}{separador}{item.Documento1}{separador}{item.Documento2}{separador}{item.Documento3}{separador}{item.Documento4}{separador}{item.FechaEmision1}{separador}{item.FechaVencimiento1}{separador}{item.FechaEmision2}{separador}{item.FechaVencimiento2}{separador}";
+                linea += $"{item.FechaEmision3}{separador}{item.FechaVencimiento3}{separador}{item.FechaEmision4}{separador}{item.FechaVencimiento4}{separador}{item.DirigidoA?.Nombre}{separador}{item.EstadoCivil?.Nombre}{separador}{item.NombreConyuge}{separador}{item.TipoDocumentoConyugeId1}{separador}{item.TipoDocumentoConyugeId2}{separador}{item.TipoDocumentoConyugeId3}{separador}{item.DocumentoConyuge1}{separador}{item.FechaEmisionConyuge1}{separador}{item.FechaVencimientoConyuge1}{separador}";
+                linea += $"{item.DocumentoConyuge2}{separador}{item.FechaEmisionConyuge2}{separador}{item.FechaVencimientoConyuge2}{separador}{item.DocumentoConyuge3}{separador}{item.FechaEmisionConyuge3}{separador}{item.FechaVencimientoConyuge3}{separador}{item.SeparacionBienes}{separador}{item.FechaNacimiento}{separador}{item.FechaIngreso}{separador}{item.Email1}{separador}{item.Email2}{separador}{item.Email3}{separador}{item.TelefonoMovil}{separador}{item.Telefono1}{separador}{item.Telefono2}{separador}";
+                linea += $"{item.Telefono3}{separador}{item.Telefono4}{separador}{item.Direccion1}{separador}{item.Direccion2}{separador}{item.GrupoFamiliar}{separador}{item.Nacionalidad}{separador}{item.DomiciliadoEn}{separador}{item.Banco?.Nombre}{separador}{item.NumeroCuenta}{separador}{item.TipoCuenta?.Nombre}{separador}{item.NombreTitularCuenta}{separador}{item.UltimaActualizacion}{separador}{item.AnoActualizacion}{separador}{item.FaltaActualizar}{separador}";
+                linea += $"{item.TieneApoderado}{separador}{item.NombreApoderado}{separador}{item.DatosPoder}{separador}{item.TipoDocumentoApoderadoId1}{separador}{item.TipoDocumentoApoderadoId2}{separador}{item.TipoDocumentoApoderadoId3}{separador}{item.DocumentoApoderado1}{separador}{item.FechaEmisionApoderado1}{separador}{item.FechaVencimientoApoderado1}{separador}{item.DocumentoApoderado2}{separador}{item.FechaEmisionApoderado2}{separador}";
+                linea += $"{item.FechaVencimientoApoderado2}{separador}{item.DocumentoApoderado3}{separador}{item.FechaEmisionApoderado3}{separador}{item.FechaVencimientoApoderado3}{separador}{item.NombreContacto}{separador}{item.TelefonoContacto}{separador}{item.EmailContacto}{separador}{item.CondicionEspecial?.Nombre}{separador}{item.Observaciones}{separador}{item.DocumentosRelacionados}{separador}{item.AnoDuracion}{separador}";
+                linea += $"{item.JuntaDirectiva}{separador}{item.VigenciaJunta}{separador}{item.FechaVencimientoJunta}{separador}{item.RegistradaEn}{separador}{item.NombreSusesion}{separador}{item.CedulaSusesion}{separador}{item.FechaEmisionSucesion}{separador}{item.FechaVencimientoSucesion}{separador}{item.OtroDocumentoSucesion}{separador}{item.FechaEmisionOtroSucesion}{separador}{item.FechaVencimientoOtroSucesion}{separador}";
+                linea += $"{item.CreateDate}{separador}{item.UpdateDate}";
+
+                sb.AppendLine(linea);
+            }
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+        }
+        return null;
+    }
+
+    private async Task<string> GenerarTituloCsv(string separador)
+    {
+        try
+        {
+            // Lógica para construir la cadena CSV
+            var sb = new StringBuilder();
+
+            int i = 0;
+            string encabezado = string.Empty;
+
+            var listaGral = await repotitulo.GetAllAsync();
+            List<Titulo> Listgral = listaGral.OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre).Where(x => x.AccionistaSociedad?.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
+
+            encabezado += $"Id{separador}AccionistaSociedad{separador}Numero{separador}Acciones{separador}Preferente{separador}Ubicacion{separador}Anulado{separador}Endosado{separador}Fecha{separador}Observaciones{separador}";
+            encabezado += $"CreateDate{separador}UpdateDate";
+
+            sb.AppendLine(encabezado); // Encabezados
+
+            string linea = string.Empty;
+            foreach (var item in Listgral)
+            {
+                linea = $"{item.Id}{separador}{item.AccionistaSociedad?.Sociedad?.Empresa?.Nombre}{separador}{item.Numero}{separador}{item.Acciones}{separador}{item.Preferente}{separador}{item.Ubicacion}{separador}{item.Anulado}{separador}{item.Endosado}{separador}{item.Fecha}{separador}{item.Observaciones}{separador}";
+                linea += $"{item.CreateDate}{separador}{item.UpdateDate}";
+
                 sb.AppendLine(linea);
             }
             return sb.ToString();

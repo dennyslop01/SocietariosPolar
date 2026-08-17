@@ -399,7 +399,6 @@
 
                     await repository.AddAsync(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Libro Societario guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
@@ -408,7 +407,6 @@
                     cargando = true;
                     repository.Update(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Libro Societario actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }

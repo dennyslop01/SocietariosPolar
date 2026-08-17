@@ -333,7 +333,6 @@
                     // Liberar el stream de forma segura ahora que el proceso completo terminó bien
                     await streamToUpload.DisposeAsync();
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Documento Soporte guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }

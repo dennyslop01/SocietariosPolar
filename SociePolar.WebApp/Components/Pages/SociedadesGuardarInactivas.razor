@@ -663,7 +663,6 @@
 
                     await repository.AddAsync(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Sociedad guardada correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
@@ -671,7 +670,6 @@
                 {
                     repository.Update(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Sociedad actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }

@@ -1,0 +1,341 @@
+﻿@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        Editar Detalle Dividendo Accionista
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Nombres y Apellidos Accionistas</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.NombreAccionista" disabled />
+
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">N° Documento de Identidad Fiscal</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Rif" disabled />
+
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Pago</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.TipoPago"
+                                   placeholder="Ingrese tipo de pago..."
+                                   maxlength="50" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Moneda Pago</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.MonedaPago">
+                                <option value="0" selected>Seleccione ...</option>
+                                @if (listMoneda != null)
+                                {
+                                    @foreach (var moneda in listMoneda)
+                                    {
+                                        <option value="@moneda.Simbolo">@moneda.Nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Se le envió la notificación / carta? (Sí / No)</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.Notificado">
+                                <option value="@false">No</option>
+                                <option value="@true">Si</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Cuándo se le envió la notificación / carta?</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaNotificacion" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Dividendo Decretado</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.MontoDecretado" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha de Decreto</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaDecreto" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Dividendo Retenido</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.MontoRetenido" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Ejercicio Fiscal</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.EjercicioFiscal"
+                                   placeholder="Ingrese el ejercicio fiscal..."
+                                   maxlength="50" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Monto Porción 1</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion1Monto" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Porcentaje Porción 1</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion1Porcentaje" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha Porción 1</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Porcion1FechaPago" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Monto Porción 2</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion2Monto" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Porcentaje Porción 2</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion2Porcentaje" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha Porción 2</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Porcion2FechaPago" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Monto Porción 3</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion3Monto" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Porcentaje Porción 3</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion3Porcentaje" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha Porción 3</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Porcion3FechaPago" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Monto Porción 4</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion4Monto" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Porcentaje Porción 4</label>
+                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.Porcion4Porcentaje" placeholder="0.0000" step="0.0001" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha Porción 4</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Porcion4FechaPago" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Observaciones</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Observaciones"
+                                      @bind:event="oninput"
+                                      rows="4"
+                                      maxlength="1000"
+                                      placeholder="Ingrese las observaciones (máximo 1,000 caracteres)...">
+                                        </textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Se le envió soporte de la transacción? (Sí / No) PORCIÓN 1</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.SoporteEnviadoP1">
+                                <option value="@false">No</option>
+                                <option value="@true">Si</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Cuándo se le envió el soporte de la transacción? (Fecha) PORCIÓN 1 </label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.SoporteFechaP1" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Se le envió soporte de la transacción? (Sí / No) PORCIÓN 2</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.SoporteEnviadoP2">
+                                <option value="@false">No</option>
+                                <option value="@true">Si</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Cuándo se le envió el soporte de la transacción? (Fecha) PORCIÓN 2 </label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.SoporteFechaP2" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Se le envió soporte de la transacción? (Sí / No) PORCIÓN 3</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.SoporteEnviadoP3">
+                                <option value="@false">No</option>
+                                <option value="@true">Si</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Cuándo se le envió el soporte de la transacción? (Fecha) PORCIÓN 3 </label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.SoporteFechaP3" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Se le envió soporte de la transacción? (Sí / No) PORCIÓN 4</label>
+                            <select class="form-select form-select-sm" @bind="entidadEditando.SoporteEnviadoP4">
+                                <option value="@false">No</option>
+                                <option value="@true">Si</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">¿Cuándo se le envió el soporte de la transacción? (Fecha) PORCIÓN 4 </label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.SoporteFechaP4" @bind:format="yyyy-MM-dd" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+@code {
+    [Parameter] public int idDetalle { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+    private List<Moneda> listMoneda = new();
+
+    private DividendoPreliminarDetalle entidadEditando = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+
+    [Inject] private IDividendoPreliminar repository { get; set; } = null!;
+    [Inject] private IMoneda repoMoneda { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+
+            listMoneda = await repoMoneda.GetAllAsync();
+
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+        try
+        {
+            var item = await repository.GetDetalleByIdItemAsync(idDetalle);
+            entidadEditando = item ?? new();
+            editContext = new EditContext(entidadEditando);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+        cargando = false;
+    }
+
+    public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        // Invocamos el método asíncrono
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        // Obtenemos el resultado de la Task dinámica
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.ToList();
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            cargando = false;
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+
+                cargando = true;
+                await repository.UpdateDetalleAsync(entidadEditando);
+                await MostrarNotificacion($"Certificación actualizado correctamente");
+                await OnFinalizado.InvokeAsync(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            // Si hay error en base de datos (ej. nombre duplicado)
+            Console.WriteLine($"Error: {ex.Message}");
+            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+        }
+        cargando = false;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+}

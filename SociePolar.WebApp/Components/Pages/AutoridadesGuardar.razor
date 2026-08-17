@@ -342,7 +342,6 @@
 
                     await repository.AddAsync(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Autoridad guardada correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
@@ -351,7 +350,6 @@
                     cargando = true;
                     repository.Update(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Autoridad actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }

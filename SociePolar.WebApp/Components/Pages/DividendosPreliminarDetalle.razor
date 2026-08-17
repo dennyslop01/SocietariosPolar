@@ -1,28 +1,55 @@
-﻿@rendermode InteractiveServer
+﻿@page "/dividendospreliminardetalle/{id:int}"
+@rendermode InteractiveServer
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-calculator me-2"></i>Detalle Dividendo Preliminar
-                </h5>
-                <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-calculator text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Detalle Dividendos Preliminares
+                    </h5>
+                </div>
+
+                <!-- Contenedor flex para alinear los botones en línea -->
+                <div class="d-flex gap-2 align-items-center">
+
+                    <!-- Botón Regresar -->
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="Regresar"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
+                    </button>
+
+                </div>
             </div>
+        </div>
 
-            <div class="modal-body py-4">
+        <div class="card-body">
+            <!-- Buscador Global por Nombre -->
+            <div class="row mb-3">
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Buscar por nombre..."
+                               @* @oninput="FiltrarBusqueda" *@ />
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
                 <PaginationComponent TItem="DividendoPreliminarDetalle" Items="Listgral" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">NombreAccionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">CantidadAcciones</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Rif</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Correos</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Telefonos</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Banco</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TipoCuenta</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">NroCuenta</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TitularCuenta</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TipoPago</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">MonedaPago</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Notificado</th>
@@ -40,41 +67,57 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3Monto</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3Porcentaje</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3FechaPago</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="text-start text-secondary small" style="width: 5%;">@p.NombreAccionista</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.CantidadAcciones</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Rif</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Correos</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Telefonos</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Banco</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.TipoCuenta</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.NroCuenta</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.TitularCuenta</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.TipoPago</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MonedaPago</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Notificado</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaNotificacion</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaNotificacion?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MontoDecretado</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaDecreto?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MontoRetenido</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.EjercicioFiscal</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1Monto</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1FechaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1FechaPago?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2Monto</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2FechaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2FechaPago?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3Monto</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3FechaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3FechaPago?.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end pe-3" style="width: 10%;">
+                                @if (idRol == 1 || idRol == 2)
+                                {
+                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
+                                        <i class="bi bi-pencil-square fs-6"></i>
+                                    </button>
+                                }
+                            </td>
                         </tr>
                     </ChildContentRow>
                 </PaginationComponent>
             </div>
         </div>
     </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 @if (cargando)
@@ -82,6 +125,10 @@
     <ModalCargando />
 }
 
+@if(mostrarModal)
+{
+    <DividendosDefinitivosDetalleGuardar idDetalle="@idDetalle" OnFinalizado="ManejarCierreModal" />
+}
 @code {
     [Parameter] public Int32 id { get; set; } = 0;
 
@@ -93,6 +140,9 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private bool cargando = false;
+    private int idRol = 0;
+    private bool mostrarModal = false;
+    private int idDetalle = 0;
 
     private List<DividendoPreliminarDetalle> Listgral = new();
 
@@ -102,7 +152,18 @@
     protected override async Task OnInitializedAsync()
     {
         cargando = true;
-
+        try
+        {
+            var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+            if (!string.IsNullOrEmpty(userrolaux.Value))
+            {
+                idRol = int.Parse(userrolaux.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+        }
         await LoadGenericDataAsync();
 
         cargando = false;
@@ -140,6 +201,36 @@
         mostrarAlerta = false;
         StateHasChanged();
     }
+
+    private async Task Regresar()
+    {
+        await jsRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private void Editar(DividendoPreliminarDetalle item)
+    {
+        idDetalle = item.Id;
+        mostrarModal = true;
+    }
+
+    private async Task ManejarCierreModal(bool guardadoExitoso)
+    {
+        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
+        // 1. Cierra el modal en cualquier caso (true o false)
+        mostrarModal = false;
+
+        // 2. Si se guardó con éxito, refresca los datos
+        if (guardadoExitoso)
+        {
+            await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
+            cargando = false; // Oculta el spinner después de todo
+            StateHasChanged();
+            await MostrarNotificacion($"Detalle Dividendo guardado correctamente");
+        }
+
+        cargando = false; // Oculta el spinner después de todo
+    }
+
 }
 
 

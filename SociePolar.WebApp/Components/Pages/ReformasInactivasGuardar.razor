@@ -456,7 +456,6 @@
 
                     await repository.AddAsync(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Reforma guardada correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
@@ -465,7 +464,6 @@
                     cargando = true;
                     repository.Update(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Reforma actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }

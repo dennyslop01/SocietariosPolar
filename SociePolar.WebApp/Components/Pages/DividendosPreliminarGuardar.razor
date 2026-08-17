@@ -463,7 +463,6 @@
                     if (streamToUploadDoc != null)
                         await streamToUploadDoc.DisposeAsync();
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Documento Soporte guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
@@ -496,98 +495,103 @@
         {
             streamExcelread.Position = 0;
         }
-
-        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-
-        using (var reader = ExcelReaderFactory.CreateReader(streamExcelread))
+        var useridaux = await SessionStorage.GetAsync<string>("UserId");
+        if (!string.IsNullOrEmpty(useridaux.Value))
         {
-            bool esPrimeraFila = true;
-            int fila = 1;
-            int vacios = 0;
-            try
+            int userid = int.Parse(useridaux.Value);
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            using (var reader = ExcelReaderFactory.CreateReader(streamExcelread))
             {
-                while (reader.Read())
+                bool esPrimeraFila = true;
+                int fila = 1;
+                int vacios = 0;
+                try
                 {
-                    if(fila < 4)
+                    while (reader.Read())
                     {
-                        fila++;
-                        continue;
-                    }
-
-                    if (esPrimeraFila)
-                    {
-                        esPrimeraFila = false;
-                        continue;
-                    }
-
-                    if (vacios > 5) return;
-
-                    if (reader.GetValue(1) == null)
-                    {
-                        vacios++;
-                        continue;
-                    }
-
-                    var nuevoDividendo = new DividendoPreliminarDetalle()
+                        if (fila < 4)
                         {
-                            DividendoPreliminarId = 0,
-                            NombreAccionista = GetString(reader.GetValue(1)),
-                            CantidadAcciones = GetLong(reader.GetValue(2)),
-                            Rif = GetString(reader.GetValue(3)),
-                            Correos = GetString(reader.GetValue(4)),
-                            Telefonos = GetString(reader.GetValue(5)),
-                            Banco = GetString(reader.GetValue(6)),
-                            TipoCuenta = GetString(reader.GetValue(7)),
-                            NroCuenta = GetString(reader.GetValue(8)),
-                            TitularCuenta = GetString(reader.GetValue(9)),
-                            TipoPago = GetString(reader.GetValue(10)),
-                            MonedaPago = GetString(reader.GetValue(11)),
-                            Notificado = GetBool(reader.GetValue(12)),
-                            FechaNotificacion = GetDateTime(reader.GetValue(13)),
-                            MontoDecretado = GetDecimal(reader.GetValue(14)),
-                            FechaDecreto = GetDateTime(reader.GetValue(15)),
-                            MontoRetenido = GetDecimal(reader.GetValue(16)),
-                            EjercicioFiscal = GetString(reader.GetValue(17)),
+                            fila++;
+                            continue;
+                        }
 
-                            Porcion1Monto = GetDecimal(reader.GetValue(18)),
-                            Porcion1Porcentaje = GetDecimal(reader.GetValue(19)),
-                            Porcion1FechaPago = GetDateTime(reader.GetValue(20)),
+                        if (esPrimeraFila)
+                        {
+                            fila++;
+                            esPrimeraFila = false;
+                            continue;
+                        }
 
-                            Porcion2Monto = GetDecimal(reader.GetValue(21)),
-                            Porcion2Porcentaje = GetDecimal(reader.GetValue(22)),
-                            Porcion2FechaPago = GetDateTime(reader.GetValue(23)),
+                        if (vacios > 5) return;
 
-                            Porcion3Monto = GetDecimal(reader.GetValue(24)),
-                            Porcion3Porcentaje = GetDecimal(reader.GetValue(25)),
-                            Porcion3FechaPago = GetDateTime(reader.GetValue(26)),
+                        if (reader.GetValue(1) == null)
+                        {
+                            vacios++;
+                            continue;
+                        }
 
-                            Porcion4Monto = GetDecimal(reader.GetValue(27)),
-                            Porcion4Porcentaje = GetDecimal(reader.GetValue(28)),
-                            Porcion4FechaPago = GetDateTime(reader.GetValue(29)),
+                        var nuevoDividendo = new DividendoPreliminarDetalle()
+                            {
+                                DividendoPreliminarId = 0,
+                                NombreAccionista = GetString(reader.GetValue(1)),
+                            //CantidadAcciones = GetLong(reader.GetValue(2)),
+                                Rif = GetString(reader.GetValue(2)),
+                            // Correos = GetString(reader.GetValue(4)),
+                            // Telefonos = GetString(reader.GetValue(5)),
+                            // Banco = GetString(reader.GetValue(6)),
+                            // TipoCuenta = GetString(reader.GetValue(7)),
+                            // NroCuenta = GetString(reader.GetValue(8)),
+                            // TitularCuenta = GetString(reader.GetValue(9)),
+                                TipoPago = GetString(reader.GetValue(3)),
+                                MonedaPago = GetString(reader.GetValue(4)),
+                                Notificado = GetBool(reader.GetValue(5)),
+                                FechaNotificacion = GetDateTime(reader.GetValue(6)),
+                                MontoDecretado = GetDecimal(reader.GetValue(7)),
+                                FechaDecreto = GetDateTime(reader.GetValue(8)),
+                                MontoRetenido = GetDecimal(reader.GetValue(9)),
+                                EjercicioFiscal = GetString(reader.GetValue(10)),
 
-                            Observaciones = GetString(reader.GetValue(30)),
+                                Porcion1Monto = GetDecimal(reader.GetValue(11)),
+                                Porcion1Porcentaje = GetDecimal(reader.GetValue(12)),
+                                Porcion1FechaPago = GetDateTime(reader.GetValue(13)),
 
-                            SoporteEnviadoP1 = GetBool(reader.GetValue(31)),
-                            SoporteFechaP1 = GetDateTime(reader.GetValue(32)),
-                            SoporteEnviadoP2 = GetBool(reader.GetValue(33)),
-                            SoporteFechaP2 = GetDateTime(reader.GetValue(34)),
-                            SoporteEnviadoP3 = GetBool(reader.GetValue(35)),
-                            SoporteFechaP3 = GetDateTime(reader.GetValue(36)),
-                            SoporteEnviadoP4 = GetBool(reader.GetValue(37)),
-                            SoporteFechaP4 = GetDateTime(reader.GetValue(38)),
-                            CreateDate = entidadEditando.CreateDate,
-                            CreateUserId = entidadEditando.CreateUserId,
-                        };
+                                Porcion2Monto = GetDecimal(reader.GetValue(14)),
+                                Porcion2Porcentaje = GetDecimal(reader.GetValue(15)),
+                                Porcion2FechaPago = GetDateTime(reader.GetValue(16)),
 
-                    listaDividendos.Add(nuevoDividendo);
-                    fila++;
+                                Porcion3Monto = GetDecimal(reader.GetValue(17)),
+                                Porcion3Porcentaje = GetDecimal(reader.GetValue(18)),
+                                Porcion3FechaPago = GetDateTime(reader.GetValue(19)),
+
+                                Porcion4Monto = GetDecimal(reader.GetValue(20)),
+                                Porcion4Porcentaje = GetDecimal(reader.GetValue(21)),
+                                Porcion4FechaPago = GetDateTime(reader.GetValue(22)),
+
+                                Observaciones = GetString(reader.GetValue(23)),
+
+                                SoporteEnviadoP1 = GetBool(reader.GetValue(24)),
+                                SoporteFechaP1 = GetDateTime(reader.GetValue(25)),
+                                SoporteEnviadoP2 = GetBool(reader.GetValue(26)),
+                                SoporteFechaP2 = GetDateTime(reader.GetValue(27)),
+                                SoporteEnviadoP3 = GetBool(reader.GetValue(28)),
+                                SoporteFechaP3 = GetDateTime(reader.GetValue(29)),
+                                SoporteEnviadoP4 = GetBool(reader.GetValue(30)),
+                                SoporteFechaP4 = GetDateTime(reader.GetValue(31)),
+                                CreateDate = DateTime.Now,
+                                CreateUserId = userid,
+                            };
+
+                        listaDividendos.Add(nuevoDividendo);
+                        fila++;
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al cargar el archivo Excel: {ex.Message}");
-                await MostrarNotificacion($"Error al cargar el archivo Excel en la Fila {fila}: {ex.Message}", true);
-                listaDividendos.Clear(); // Limpiar la lista si hay error
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al cargar el archivo Excel: {ex.Message}");
+                    await MostrarNotificacion($"Error al cargar el archivo Excel en la Fila {fila}: {ex.Message}", true);
+                    listaDividendos.Clear(); // Limpiar la lista si hay error
+                }
             }
         }
     }

@@ -352,7 +352,6 @@
 
                     await repository.AddAsync(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Accionista - Sociedad guardada correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
@@ -361,7 +360,6 @@
                     cargando = true;
                     repository.Update(entidadEditando);
 
-                    await LoadGenericDataAsync();
                     await MostrarNotificacion($"Accionista - Sociedad actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }

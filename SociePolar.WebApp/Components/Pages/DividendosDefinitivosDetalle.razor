@@ -15,14 +15,7 @@
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">NombreAccionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">CantidadAcciones</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Rif</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Correos</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Telefonos</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Banco</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TipoCuenta</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">NroCuenta</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TitularCuenta</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TipoPago</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">MonedaPago</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Notificado</th>
@@ -40,35 +33,30 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3Monto</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3Porcentaje</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3FechaPago</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="text-start text-secondary small" style="width: 5%;">@p.NombreAccionista</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.CantidadAcciones</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Rif</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Correos</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Telefonos</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Banco</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.TipoCuenta</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.NroCuenta</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.TitularCuenta</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.TipoPago</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MonedaPago</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Notificado</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaNotificacion</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaNotificacion?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MontoDecretado</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaDecreto?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MontoRetenido</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.EjercicioFiscal</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1Monto</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1FechaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1FechaPago?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2Monto</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2FechaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2FechaPago?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3Monto</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3FechaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3FechaPago?.ToString("dd/MM/yyyy")</td>
                         </tr>
                     </ChildContentRow>
                 </PaginationComponent>

@@ -52,9 +52,9 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Explicación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Nombre Dividendos</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Ruta Acta</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 20%; font-size: 0.85rem;">Observaciones</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Observaciones</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 5%; font-size: 0.85rem;">Acciones</th>
+                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
@@ -80,11 +80,15 @@
                                     @(p.NombreActa?.Length > 25 ? $"{p.NombreActa.Substring(0, 25)}..." : p.NombreActa)
                                 </button>
                             </td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@(p.Observaciones?.Length > 25 ? $"{p.Observaciones.Substring(0, 25)}..." : p.Observaciones)</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@(p.Observaciones?.Length > 25 ? $"{p.Observaciones.Substring(0, 25)}..." : p.Observaciones)</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3" style="width: 5%;">
+                            <td class="text-end pe-3" style="width: 10%;">
                                 @if (idRol == 1 || idRol == 2)
                                 {
+                                    <button class="btn btn-link btn-sm text-secondary p-0 ms-1"
+                                            @onclick="() => VerificarCerrar(p)" title="Cerrar Proceso">
+                                        <i class="bi bi-check2-circle fs-6"></i>
+                                    </button>
                                     <button class="btn btn-link btn-sm text-secondary p-0 ms-1"
                                             @onclick="() => Detalle(p)" title="Detalle Archivo">
                                         <i class="bi bi-file-earmark-text fs-6"></i>
@@ -148,6 +152,27 @@
     </div>
 }
 
+@if (mostrarModalActivar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-octagon text-secondary fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold">¿Estás seguro?</h5>
+                    <p class="text-secondary small">
+                        Vas a cerrar este proceso, <strong>@entidadParaEliminar?.Explicacion</strong>. Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalActivar">Cancelar</button>
+                    <button class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="ConfirmarActivar">Procesar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @* @if(mostrarDetalle)
 {
     <DividendosPreliminarDetalle id="@idDividendo" OnFinalizado="() => mostrarDetalle = false" />
@@ -168,8 +193,12 @@
     private int idRol = 0;
     // private bool mostrarDetalle = false;
     private Int32 idDividendo = 0;
+    private bool mostrarModalActivar = false;
 
     [Inject] private IDividendoPreliminar repository { get; set; } = null!;
+    [Inject] private IDividendoDefinitivo repodefinitivo { get; set; } = null!;
+    [Inject] private IAccionista repoaccionista { get; set; } = null!;
+    [Inject] private IMoneda repomoneda { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -349,5 +378,149 @@
         idDividendo = item.Id;
         // mostrarDetalle = true;
         navManager.NavigateTo($"/dividendospreliminardetalle/{idDividendo}");
+    }
+
+    private void VerificarCerrar(DividendoPreliminar item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalActivar = true;
+    }
+
+    private void VerificarActivar(DividendoPreliminar item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalActivar = true;
+    }
+
+    private void CerrarModalActivar() => mostrarModalActivar = false;
+
+    private async Task ConfirmarActivar()
+    {
+        string mensaje = "";
+        if (entidadParaEliminar == null) return;
+
+        cargando = true;
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                var listAaccionista = await repoaccionista.GetAllAsync();
+                var listMoneda = await repomoneda.GetAllAsync();
+
+                List<DividendoPreliminarDetalle> dividendodetalle = await repository.GetDetalleByIdAsync(entidadParaEliminar.Id);
+
+                List<DividendoDefinitivoDetalle> listadetalle = new();
+                foreach (DividendoPreliminarDetalle item in dividendodetalle)
+                {
+                    Moneda moneda = listMoneda.FirstOrDefault(x => x.Simbolo == item.MonedaPago);
+                    if (moneda == null)
+                    {
+                        mensaje += $"No se encontró la moneda {item.MonedaPago} para el accionista {item.NombreAccionista}.";
+                    }
+                    else
+                    {
+                        string[] documento = item.Rif.Split('-');
+                        Accionista accionista = listAaccionista.FirstOrDefault(x => x.TipoDocumento1?.Nombre == documento[0] && x.Documento1 == documento[1].Replace(".", "").Replace(",", ","));
+                        if (accionista == null)
+                        {
+                            mensaje += $"No se encontró el accionista con cédula {item.Rif}.";
+                        }
+                        else
+                        {                            
+                            listadetalle.Add(new DividendoDefinitivoDetalle
+                            {
+                                Accionista = accionista,
+                                Moneda = moneda,
+                                DividendoDefinitivoId = 0,
+                                TipoPago = item.TipoPago,
+                                Notificado = item.Notificado,
+                                FechaNotificacion = item.FechaNotificacion,
+                                MontoDecretado = item.MontoDecretado,
+                                FechaDecreto = item.FechaDecreto,
+                                MontoRetenido = item.MontoRetenido,
+                                EjercicioFiscal = item.EjercicioFiscal,
+                                Porcion1Monto = item.Porcion1Monto,
+                                Porcion1Porcentaje = item.Porcion1Porcentaje,
+                                Porcion1FechaPago = item.Porcion1FechaPago,
+                                Porcion2Monto = item.Porcion2Monto,
+                                Porcion2Porcentaje = item.Porcion2Porcentaje,
+                                Porcion2FechaPago = item.Porcion2FechaPago,
+                                Porcion3Monto = item.Porcion3Monto,
+                                Porcion3Porcentaje = item.Porcion3Porcentaje,
+                                Porcion3FechaPago = item.Porcion3FechaPago,
+                                Porcion4Monto = item.Porcion4Monto,
+                                Porcion4Porcentaje = item.Porcion4Porcentaje,
+                                Porcion4FechaPago = item.Porcion4FechaPago,
+                                Observaciones = item.Observaciones,
+                                SoporteEnviadoP1 = item.SoporteEnviadoP1,
+                                SoporteFechaP1 = item.SoporteFechaP1,
+                                SoporteEnviadoP2 = item.SoporteEnviadoP2,
+                                SoporteFechaP2 = item.SoporteFechaP2,
+                                SoporteEnviadoP3 = item.SoporteEnviadoP3,
+                                SoporteFechaP3 = item.SoporteFechaP3,
+                                SoporteEnviadoP4 = item.SoporteEnviadoP4,
+                                SoporteFechaP4 = item.SoporteFechaP4,
+                                CreateDate = DateTime.Now,
+                                CreateUserId = int.Parse(useridaux.Value)
+                            });
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(mensaje))
+                {
+                    cargando = false;
+                    StateHasChanged();
+                    await MostrarNotificacion(mensaje, true);
+                    return;
+                }
+
+                int userid = int.Parse(useridaux.Value);
+                DividendoDefinitivo entidad = new();
+                entidad.Sociedad = entidadParaEliminar.Sociedad;
+                entidad.Explicacion = entidadParaEliminar.Explicacion;
+                entidad.CreateDate = DateTime.Now;
+                entidad.CreateUserId = userid;
+                entidad.MontoPagadoAccionistas = entidadParaEliminar.MontoPagadoAccionistas;
+                entidad.MontoPagadoTesoreria = entidadParaEliminar.MontoPagadoTesoreria;
+                entidad.NombreActa = entidadParaEliminar.NombreActa;
+                entidad.NombreDividendos = entidadParaEliminar.NombreDividendos;
+                entidad.NombreDocumento = entidadParaEliminar.NombreDocumento;
+                entidad.Observaciones = entidadParaEliminar.Observaciones;
+                entidad.RutaActa = entidadParaEliminar.RutaActa;
+                entidad.RutaDividendos = entidadParaEliminar.RutaDividendos;
+                entidad.RutaDocumento = entidadParaEliminar.RutaDocumento;
+
+                int newId = await repodefinitivo.CreateAsync(entidad);
+                listadetalle.ForEach(x => x.DividendoDefinitivoId = newId);
+                await repodefinitivo.CreateDetalleAsync(listadetalle);
+
+                repository.Delete(entidadParaEliminar.Id);
+
+                mostrarModalActivar = false;
+                await MostrarNotificacion($"");
+                await LoadGenericDataAsync();
+                await MostrarNotificacion($"Proceso cerrado correctamente");
+            }
+            else
+            {
+                cargando = false;
+                StateHasChanged();
+                await MostrarNotificacion("No se pudo procesar el registro", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al activar: {ex.Message}");
+            await MostrarNotificacion("No se pudo procesar el registro", true);
+        }
+        finally
+        {
+            cargando = false;
+            entidadParaEliminar = null;
+        }
     }
 }

@@ -22,9 +22,12 @@
     {
         public int Id { get; set; }
         public int DividendoDefinitivoId { get; set; }
-        public string NombreAccionista { get; set; } = string.Empty;
+        public Accionista? Accionista { get; set; }
+        public Moneda? Moneda { get; set; }
+
+        //public string NombreAccionista { get; set; } = string.Empty;
         //public long CantidadAcciones { get; set; }
-        public string Rif { get; set; } = string.Empty;
+        //public string Rif { get; set; } = string.Empty;
         //public string Correos { get; set; } = string.Empty;
         //public string Telefonos { get; set; } = string.Empty;
         //public string Banco { get; set; } = string.Empty;
@@ -32,7 +35,7 @@
         //public string NroCuenta { get; set; } = string.Empty;
         //public string TitularCuenta { get; set; } = string.Empty;
         public string TipoPago { get; set; } = string.Empty;
-        public string MonedaPago { get; set; } = string.Empty;
+        //public string MonedaPago { get; set; } = string.Empty;
         public bool Notificado { get; set; }
         public DateTime? FechaNotificacion { get; set; }
         public decimal MontoDecretado { get; set; }

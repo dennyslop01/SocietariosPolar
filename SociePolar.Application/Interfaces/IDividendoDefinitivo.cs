@@ -14,5 +14,7 @@ namespace SociePolar.Application.Interfaces
         Task<DividendoDefinitivo?> GetByIdAsync(Int32 id);
         void Delete(Int32 id);
         Task<List<DividendoDefinitivoDetalle>?> GetDetalleByIdAsync(Int32 id);
+        Task<int> CreateAsync(DividendoDefinitivo entity);
+        Task CreateDetalleAsync(List<DividendoDefinitivoDetalle> entities);
     }
 }

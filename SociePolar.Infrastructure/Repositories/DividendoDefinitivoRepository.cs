@@ -37,12 +37,11 @@ namespace SociePolar.Infrastructure.Repositories
         public void Delete(Int32 id)
         {
             using var context = _contextFactory.CreateDbContext();
-            var entitydetall = context.Set<DividendoDefinitivoDetalle>().Find(id);
-            if (entitydetall != null)
-            {
-                context.Set<DividendoDefinitivoDetalle>().Remove(entitydetall);
-                context.SaveChanges();
-            }
+            context.Set<DividendoDefinitivoDetalle>()
+                  .Where(x => x.DividendoDefinitivoId == id)
+                  .ExecuteDelete();
+            context.SaveChanges();
+
             var entity = context.Set<DividendoDefinitivo>().Find(id);
             if (entity != null)
             {
@@ -55,8 +54,42 @@ namespace SociePolar.Infrastructure.Repositories
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<DividendoDefinitivoDetalle>()
+                .Include(b => b.Accionista)
+                .Include(b => b.Moneda)
                 .Where(b => b.DividendoDefinitivoId == id)
                 .ToListAsync();
+        }
+
+        public async Task<int> CreateAsync(DividendoDefinitivo entity)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            await context.Set<DividendoDefinitivo>().AddAsync(entity);
+            context.Entry(entity.Sociedad).State = EntityState.Unchanged;
+
+            await context.SaveChangesAsync();
+            context.Entry(entity.Sociedad).State = EntityState.Detached;
+
+            // El ID ya fue poblado por EF Core aquí
+            return entity.Id;
+        }
+
+        public async Task CreateDetalleAsync(List<DividendoDefinitivoDetalle> entities)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            await context.Set<DividendoDefinitivoDetalle>().AddRangeAsync(entities);
+            foreach (var entity in entities)
+            {
+                context.Entry(entity.Accionista).State = EntityState.Unchanged;
+                context.Entry(entity.Moneda).State = EntityState.Unchanged;
+            }   
+
+            await context.SaveChangesAsync();
+            foreach (var entity in entities)
+            {
+                context.Entry(entity.Accionista).State = EntityState.Detached;
+                context.Entry(entity.Moneda).State = EntityState.Detached;
+            }
         }
     }
 }

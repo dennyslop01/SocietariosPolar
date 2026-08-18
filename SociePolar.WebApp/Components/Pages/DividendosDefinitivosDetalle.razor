@@ -38,10 +38,10 @@
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.NombreAccionista</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Rif</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@(p.Accionista?.TipoAccionista?.Id != 3) ? @p.Accionista?.Nombre : (@p.Accionista?.NombreSusesion?.Length > 50) ? @p.Accionista?.NombreSusesion.Substring(0, 50) : @p.Accionista?.NombreSusesion</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Accionista?.Documento1</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.TipoPago</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.MonedaPago</td>
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Moneda?.Id</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Notificado</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.FechaNotificacion?.ToString("dd/MM/yyyy")</td>
                             <td class="text-start text-secondary small" style="width: 5%;">@p.MontoDecretado</td>

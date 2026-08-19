@@ -1,0 +1,226 @@
+﻿@page "/auditorias"
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-bezier text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Auditorías Módulos Principales
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold text-secondary small">Módulos</label>
+                    <select class="form-select form-select-sm" @onchange="OnTipoDocChanged">
+                        <option value="0">Seleccione ...</option>
+                        @if (ListModulos != null)
+                        {
+                            @foreach (var modulo in ListModulos)
+                            {
+                                <option value="@modulo.Id">@modulo.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Buscador Global por Nombre -->
+            <div class="row mb-3">
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Buscar por nombre..."
+                               @oninput="FiltrarBusqueda" />
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <PaginationComponent TItem="Auditoria" Items="Listgral" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Módulo</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 55%; font-size: 0.85rem;">Descripcción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Usuario</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="text-start text-secondary small" style="width: 5%;">@p.Id</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@ObtenerModulo(p.ModuloId)</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
+                            <td class="text-start text-secondary small" style="width: 55%;">@p.Descripcion</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@ObtenerUsuario(p.CreateUserId)</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+        </div>
+    </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@code{
+    private List<Auditoria> Listgral = new();
+    private List<Auditoria> ListgralBuscar = new();
+    private List<Usuario> ListUsuarios = new();
+
+    private string searchTerm = "";
+    private bool cargando = false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+
+    [Inject] private IAuditoria repository { get; set; } = null!;
+    [Inject] private IUsuario repousuario { get; set; } = null!;
+
+    public class Modulos
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public List<Modulos> ListModulos = new List<Modulos>
+    {
+        new Modulos { Id = 1, Nombre = "Sociedades" },
+        new Modulos { Id = 2, Nombre = "Autoridades" },
+        new Modulos { Id = 3, Nombre = "Asambleas" },
+        new Modulos { Id = 4, Nombre = "Reformas" },
+        new Modulos { Id = 5, Nombre = "Certificaciones" },
+        new Modulos { Id = 6, Nombre = "Libros" },
+        new Modulos { Id = 7, Nombre = "Accionistas" },
+        new Modulos { Id = 8, Nombre = "Títulos" },
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            ListUsuarios = await repousuario.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+        StateHasChanged();
+        await LoadGenericDataAsync(0);
+    }
+
+    private async Task LoadGenericDataAsync(int modulo)
+    {
+        cargando = true;
+        try
+        {
+            var listSociedades = await repository.GetByModuloIdAsync(modulo);
+            Listgral = listSociedades.OrderByDescending(x => x.CreateDate).Where(x => x.ModuloId == modulo).ToList();
+            ListgralBuscar = Listgral;
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+        StateHasChanged();
+    }
+
+    private string ObtenerModulo(int idmodulo)
+    {
+        return ListModulos.Where(m => m.Id == idmodulo).Select(m => m.Nombre).FirstOrDefault() ?? "Desconocido";
+    }
+
+    private string ObtenerUsuario(int idusuario)
+    {
+        return ListUsuarios.Where(u => u.Id == idusuario).Select(u => u.Email).FirstOrDefault() ?? "Desconocido";
+    }
+
+    private void FiltrarBusqueda(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            Listgral = ListgralBuscar;
+        }
+        else
+        {
+            Listgral = ListgralBuscar
+                .Where(b => b.Descripcion != null && b.Descripcion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private async Task OnTipoDocChanged(ChangeEventArgs e)
+    {
+        // El valor capturado siempre viene como string o texto
+        string valorSeleccionado = e.Value?.ToString();
+
+        // Si necesitas el valor como entero (ID) para tu función:
+        if (int.TryParse(valorSeleccionado, out int idDoc))
+        {
+            // Ejecuta aquí tu función pasándole el valor
+            await LoadGenericDataAsync(idDoc);
+        }
+    }
+}

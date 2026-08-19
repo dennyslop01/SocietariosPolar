@@ -43,10 +43,61 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<DividendoPreliminarDetalle> DividendosPreliminaresDetalles { get; set; }
         public DbSet<DividendoDefinitivo> DividendosDefinitivos { get; set; }
         public DbSet<DividendoDefinitivoDetalle> DividendosDefinitivosDetalles { get; set; }
+        public DbSet<Auditoria> Auditorias { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Sociedad>() 
+                .ToTable(tb => tb.HasTrigger("trg_Sociedades_Update"));
+
+            modelBuilder.Entity<Sociedad>() 
+                .ToTable(tb => tb.HasTrigger("trg_Sociedades_Delete"));
+
+            modelBuilder.Entity<Autoridad>() 
+                .ToTable(tb => tb.HasTrigger("trg_Autoridades_Update"));
+
+            modelBuilder.Entity<Autoridad>() 
+                .ToTable(tb => tb.HasTrigger("trg_Autoridades_Delete"));
+
+            modelBuilder.Entity<Asamblea>()
+                 .ToTable(tb => tb.HasTrigger("trg_Asambleas_Update"));
+
+            modelBuilder.Entity<Asamblea>()
+                .ToTable(tb => tb.HasTrigger("trg_Asambleas_Delete"));
+
+            modelBuilder.Entity<Certificacion>()
+                 .ToTable(tb => tb.HasTrigger("trg_Certificaciones_Update"));
+
+            modelBuilder.Entity<Certificacion>()
+                .ToTable(tb => tb.HasTrigger("trg_Certificaciones_Delete"));
+
+            modelBuilder.Entity<LibroSocietario>()
+                 .ToTable(tb => tb.HasTrigger("trg_LibrosSocietarios_Update"));
+
+            modelBuilder.Entity<LibroSocietario>()
+                .ToTable(tb => tb.HasTrigger("trg_LibrosSocietarios_Delete"));
+
+            modelBuilder.Entity<Accionista>()
+                 .ToTable(tb => tb.HasTrigger("trg_Accionistas_Update"));
+
+            modelBuilder.Entity<Accionista>()
+                .ToTable(tb => tb.HasTrigger("trg_Accionistas_Delete"));
+
+            modelBuilder.Entity<Titulo>()
+                 .ToTable(tb => tb.HasTrigger("trg_Titulos_Update"));
+
+            modelBuilder.Entity<Titulo>()
+                .ToTable(tb => tb.HasTrigger("trg_Titulos_Delete"));
+
+
+
+
+
+
+
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorAccion)
                 .HasPrecision(20, 10); // 10 decimales

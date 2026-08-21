@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace SociePolar.Domain.Dtos
+﻿namespace SociePolar.Domain.Dtos
 {
     public class AccionistaMostrarDto
     {

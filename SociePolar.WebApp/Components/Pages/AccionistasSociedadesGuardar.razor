@@ -188,7 +188,7 @@
     // Variables de estado para Accionista
     private bool isAccionistaDropdownOpen = false;
     private string textoBusquedaAccionista = "";
-    
+
     private ElementReference searchInputRef;
 
 
@@ -349,6 +349,7 @@
                     cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.NroAcciones = 0;
 
                     await repository.AddAsync(entidadEditando);
 

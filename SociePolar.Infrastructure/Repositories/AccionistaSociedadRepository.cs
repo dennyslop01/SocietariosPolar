@@ -72,6 +72,7 @@ namespace SociePolar.Infrastructure.Repositories
                 Sociedad = sociedad,
                 Accionista = accionista,
                 EstatusAccionista = estatus,
+                NroAcciones = entity.NroAcciones,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
@@ -140,6 +141,107 @@ namespace SociePolar.Infrastructure.Repositories
 
             context.Set<AccionistaSociedad>().Update(editaccionista);
             context.SaveChanges();
+        }
+
+        public async Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.Sociedad.Id == sociedadId && x.Accionista.Id == accionistaId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<AccionistaSociedad> AddReturnEntidadAsync(AccionistaSociedadDto entity)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            var accionista = await context.Set<Accionista>().FindAsync(entity.AccionistaId);
+            if (accionista == null) throw new Exception($"Accionista con ID {entity.AccionistaId} no existe.");
+
+            var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId);
+            if (sociedad == null) throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
+
+            var estatus = await context.Set<EstatusAccionista>().FindAsync(entity.EstatusAccionistaId);
+            if (estatus == null) throw new Exception($"Estatus Accionista con ID {entity.EstatusAccionistaId} no existe.");
+
+            AccionistaSociedad newEntidad = new()
+            {
+                Sociedad = sociedad,
+                Accionista = accionista,
+                EstatusAccionista = estatus,
+                NroAcciones = entity.NroAcciones,
+                CreateDate = DateTime.UtcNow,
+                UpdateDate = DateTime.UtcNow,
+                CreateUserId = entity.CreateUserId,
+                UpdateUserId = entity.UpdateUserId
+            };
+
+            await context.Set<AccionistaSociedad>().AddAsync(newEntidad);
+            context.Entry(newEntidad.EstatusAccionista).State = EntityState.Unchanged;
+            context.Entry(newEntidad.Accionista).State = EntityState.Unchanged;
+            context.Entry(newEntidad.Sociedad).State = EntityState.Unchanged;
+
+            await context.SaveChangesAsync();
+            context.Entry(newEntidad.EstatusAccionista).State = EntityState.Detached;
+            context.Entry(newEntidad.Accionista).State = EntityState.Detached;
+            context.Entry(newEntidad.Sociedad).State = EntityState.Detached;
+
+            AuditoriaNroAccion auditoria = new()
+            {
+                SociedadId = entity.SociedadId ?? 0,
+                AccionistaId = entity.AccionistaId ?? 0,
+                NroAcciones = entity.NroAcciones ?? 0,
+                Accion = "Insert",
+                Descripcion = $"Se creó la relación entre el accionista con ID {entity.AccionistaId} y la sociedad con ID {entity.SociedadId}.",
+                CreateUserId = entity.CreateUserId,
+                CreateDate = DateTime.UtcNow
+            };
+            await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
+            await context.SaveChangesAsync();
+
+            return newEntidad;
+        }
+
+        public async Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, int nroacciones, int updateUserId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+
+            var accionista = await context.Set<Accionista>().FindAsync(accionistaid);
+            if (accionista == null) throw new Exception($"Accionista con ID {accionistaid} no existe.");
+
+            var sociedad = await context.Set<Sociedad>().FindAsync(sociedadid);
+            if (sociedad == null) throw new Exception($"Sociedad con ID {sociedadid} no existe.");
+
+
+            AccionistaSociedad? editentidad = await context.AccionistasSociedades.Where(x => x.Accionista.Id == accionistaid && x.Sociedad.Id == sociedadid).FirstOrDefaultAsync();
+            if (editentidad == null) throw new Exception($"Accionista - Sodiedad con esa clave no existe.");
+
+            editentidad.NroAcciones = nroacciones;
+            editentidad.UpdateDate = DateTime.UtcNow;
+            editentidad.UpdateUserId = updateUserId;
+
+            context.Set<AccionistaSociedad>().Update(editentidad);
+            context.SaveChanges();
+
+            AuditoriaNroAccion auditoria = new()
+            {
+                SociedadId = sociedadid,
+                AccionistaId = accionistaid,
+                NroAcciones = nroacciones,
+                Accion = "Update",
+                Descripcion = $"Se actualizó el número de acciones del accionista con ID {accionistaid} en la sociedad con ID {sociedadid} a {nroacciones}.",
+                CreateUserId = updateUserId,
+                CreateDate = DateTime.UtcNow
+            };
+            await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
+            await context.SaveChangesAsync();
         }
     }
 }

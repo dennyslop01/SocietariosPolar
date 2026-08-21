@@ -3,7 +3,6 @@ using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
 using SociePolar.Infrastructure.DataContext;
-using System.Xml.Schema;
 
 namespace SociePolar.Infrastructure.Repositories
 {

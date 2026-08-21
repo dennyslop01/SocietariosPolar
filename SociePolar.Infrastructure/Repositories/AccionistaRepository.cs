@@ -484,5 +484,50 @@ namespace SociePolar.Infrastructure.Repositories
                 context.SaveChanges();
             }
         }
+
+        public async Task<Accionista?> GetByRifAsync(string tipoDoc, string rif)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<Accionista>()
+                .Include(b => b.TipoAccionista)
+                .Include(b => b.TipoDocumento1)
+                .Where(x => x.TipoDocumento1.Nombre == tipoDoc && x.Documento1 == rif)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Accionista> AddReturnEntidadAsync(AccionistaDto entity)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            TipoDocumento? tipodoc1 = null;
+            if (entity.TipoDocumento1Id != null)
+            {
+                if (entity.TipoDocumento1Id != 0)
+                {
+                    tipodoc1 = await context.Set<TipoDocumento>().FindAsync(entity.TipoDocumento1Id.Value);
+                    if (tipodoc1 == null) throw new Exception($"Tipo Documento con ID {entity.TipoDocumento1Id.Value} no existe.");
+                }
+            }
+
+            Accionista? newAccionista = new()
+            {
+                Nombre = entity.Nombre,
+                Documento1 = entity.Documento1,
+                TipoDocumento1 = tipodoc1,
+                CreateDate = DateTime.UtcNow,
+                UpdateDate = DateTime.UtcNow,
+                CreateUserId = entity.CreateUserId,
+                UpdateUserId = entity.UpdateUserId,
+            };
+
+            await context.Set<Accionista>().AddAsync(newAccionista);
+            if (tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Unchanged;
+
+            await context.SaveChangesAsync();
+            if (tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Detached;
+
+            return newAccionista;
+        }
+
     }
 }

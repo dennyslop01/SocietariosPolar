@@ -74,6 +74,36 @@ namespace SociePolar.Infrastructure.Repositories
 
             await context.SaveChangesAsync();
             context.Entry(newTitulo.AccionistaSociedad).State = EntityState.Detached;
+
+            string descripcion = $"En fecha {entity.Fecha} se crea la sociedad entre {accionista.Sociedad!.Empresa!.Nombre} y {accionista.Accionista!.Nombre} con el título {entity.Numero}.";
+            if(entity.Acciones != null)
+            {
+                if (entity.Acciones > 0)
+                {
+                    descripcion += $" Anulación Título {entity.Numero} con fecha {entity.Fecha}";
+                }
+            }
+
+            if (entity.Endosado != null)
+            {
+                if (entity.Endosado > 0)
+                {
+                    descripcion += $" Endoso Título {entity.Numero} con fecha {entity.Fecha}";
+                }
+            }
+
+            AuditoriaNroAccion auditoria = new()
+            {
+                SociedadId = accionista.Sociedad!.Id,
+                AccionistaId = accionista.Accionista!.Id,
+                NroAcciones = entity.Acciones ?? 0,
+                Accion = "Insert",
+                Descripcion = descripcion,
+                CreateUserId = entity.CreateUserId,
+                CreateDate = DateTime.UtcNow
+            };
+            await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
+            await context.SaveChangesAsync();
         }
 
         public async void Update(TituloDto entity)
@@ -101,6 +131,36 @@ namespace SociePolar.Infrastructure.Repositories
 
             context.Set<Titulo>().Update(editTitulo);
             context.SaveChanges();
+
+            string descripcion = $"En fecha {entity.Fecha} se actualiza la sociedad entre {accionista.Sociedad!.Empresa!.Nombre} y {accionista.Accionista!.Nombre} con el título {entity.Numero}.";
+            if (entity.Acciones != null)
+            {
+                if (entity.Acciones > 0)
+                {
+                    descripcion += $" Anulación Título {entity.Numero} con fecha {entity.Fecha}";
+                }
+            }
+
+            if (entity.Endosado != null)
+            {
+                if (entity.Endosado > 0)
+                {
+                    descripcion += $" Endoso Título {entity.Numero} con fecha {entity.Fecha}";
+                }
+            }
+
+            AuditoriaNroAccion auditoria = new()
+            {
+                SociedadId = accionista.Sociedad!.Id,
+                AccionistaId = accionista.Accionista!.Id,
+                NroAcciones = entity.Acciones ?? 0,
+                Accion = "Update",
+                Descripcion = descripcion,
+                CreateUserId = entity.CreateUserId,
+                CreateDate = DateTime.UtcNow
+            };
+            await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
+            await context.SaveChangesAsync();
         }
 
         public void Delete(int id)

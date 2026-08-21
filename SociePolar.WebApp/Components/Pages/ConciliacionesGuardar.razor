@@ -1,0 +1,649 @@
+﻿@using ExcelDataReader
+@rendermode InteractiveServer
+
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+                        @(entidadEditando.Id == 0 ? "Agregar Conciliaciones" : "Modificar Conciliaciones")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                            <div class="dropdown">
+                                <!-- Removido -sm para igualar el tamaño estándar del label -->
+                                <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                        type="button"
+                                        style="font-size: 0.8rem;"
+                                        @onclick="ToggleDropdown">
+                                    <span>@(ObtenerNombreSeleccionado())</span>
+                                </button>
+
+                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                    <li class="mb-2">
+                                        <!-- Cambiado a form-control normal para que la fuente de "Buscar..." coincida en tamaño -->
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="Buscar..."
+                                               style="font-size: 0.8rem;"
+                                               @bind="textoBusqueda"
+                                               @bind:event="oninput"
+                                               @ref="searchInputRef" />
+                                    </li>
+
+                                    <li>
+                                        <button type="button"
+                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                style="font-size: 0.8rem;"
+                                                @onclick="() => SeleccionarOpcion(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+
+                                    <!-- Opciones filtradas dinámicamente -->
+                                    @if (listSociedad != null)
+                                    {
+                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <li>
+                                                <!-- Se reemplazó 'small' por 'style="font-size: 0.8rem;"' para forzar la letra más pequeña -->
+                                                <button type="button"
+                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                    @sociedad.Empresa.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+
+                                </ul>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Archivo</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.TipoArchivo"
+                                   placeholder="Ingrese tipo de archivo..."
+                                   maxlength="200" />
+                            <ValidationMessage For="@(() => entidadEditando.TipoArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha del Archivo</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaArchivo" @bind:format="yyyy-MM-dd" />
+                            <ValidationMessage For="@(() => entidadEditando.FechaArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label for="fileInputExcel"
+                                   class="form-label fw-bold btn btn-primary btn-sm"
+                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                Seleccionar archivo Conciliaciones
+                            </label>
+
+                            <InputFile id="fileInputExcel"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args))"
+                                       accept=".xlsx,.xls"
+                                       capture="camera"
+                                       style="display:none;" />
+
+                            <label class="form-label fw-bold text-secondary small">@fileNameConciliacion</label>
+                            <ValidationMessage For="@(() => entidadEditando.RutaConciliaciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Comentarios</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Observaciones"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
+                            </textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+    bool esInvalido = false;
+    private string? fileNameConciliacion = null;
+
+    private ConciliacionDto entidadEditando = new();
+    private List<Sociedad> listSociedad = new();
+
+    private EditContext? editContext;
+    private ValidationMessageStore? mensajeStore;
+    private Stream streamToUploadConciliacion;
+    private Stream streamExcelread;
+    private string contentTypeConciliacion = string.Empty;
+
+    private List<ConciliacionDetalle> listaConciliaciones = new();
+    private List<ConciliacionArchivo> listaArchivo = new();
+    private List<IBaseEntity> listTipoDoc = new();
+
+
+    [Inject] private ISociedad repoSociedades { get; set; } = null!;
+    [Inject] private IAccionista repoAccionistas { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoaccionistasocie { get; set; } = null!;
+
+    [Inject] private IConciliacion repository { get; set; } = null!;
+
+    private bool isDropdownOpen = false;
+    private string textoBusqueda = "";
+    private ElementReference searchInputRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
+            await MostrarNotificacion("Error al preparar el formulario", true);
+        }
+
+        await LoadGenericDataAsync();
+
+        if (id == "0")
+        {
+            entidadEditando = new();
+            entidadEditando.SociedadId = 0;
+            entidadEditando.RutaConciliaciones = string.Empty;
+            entidadEditando.CreateDate = DateTime.Now;
+            editContext = new EditContext(entidadEditando);
+        }
+        cargando = false;
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            listTipoDoc = await GetEntityListAsync("tipodocumento");
+            listSociedad = await repoSociedades.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+    }
+
+    public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        // Invocamos el método asíncrono
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        // Obtenemos el resultado de la Task dinámica
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.ToList();
+    }
+
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task UploadFile(InputFileChangeEventArgs e)
+    {
+        mensajeAlerta = string.Empty;
+        mostrarAlerta = false;
+        cargando = true;
+        StateHasChanged();
+
+        fileNameConciliacion = string.Empty;
+        entidadEditando.NombreConciliaciones = null;
+        entidadEditando.RutaConciliaciones = null;
+
+        var file = e.File;
+        if (file == null) return;
+
+
+        try
+        {
+            contentTypeConciliacion = file.ContentType;
+            if (contentTypeConciliacion == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
+                contentTypeConciliacion == "application/vnd.ms-excel")
+            {
+                var memoryStream = new MemoryStream();
+                await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+                streamToUploadConciliacion = memoryStream;
+
+                var memoryStreamRead = new MemoryStream();
+                await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStreamRead);
+                memoryStreamRead.Position = 0;
+                streamExcelread = memoryStreamRead;
+
+                fileNameConciliacion = e.File.Name;
+                entidadEditando.RutaConciliaciones = e.File.Name;
+                entidadEditando.NombreConciliaciones = e.File.Name;
+                await CargarExcelConciliaciones();
+            }
+            else
+            {
+                mensajeAlerta = "Formato no soportado. Solo Excel.";/* imágenes y  */
+                mostrarAlerta = true;
+                cargando = false;
+                StateHasChanged();
+                await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+                return;
+            }
+
+            cargando = false;
+            StateHasChanged();
+
+            if (listaArchivo.Count == 0)
+            {
+                fileNameConciliacion = string.Empty;
+                entidadEditando.NombreConciliaciones = null;
+                entidadEditando.RutaConciliaciones = null;
+
+                mensajeAlerta = "El archivo Excel no contiene datos válidos.";
+                mostrarAlerta = true;
+                cargando = false;
+                StateHasChanged();
+                await MostrarNotificacion($"El archivo Excel no contiene datos válidos.", true);
+                await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            fileNameConciliacion = string.Empty;
+            entidadEditando.NombreConciliaciones = null;
+            entidadEditando.RutaConciliaciones = null;
+
+            mensajeAlerta = $"Error al procesar el archivo: {ex.Message}";
+            mostrarAlerta = true;
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion($"Error al procesar el archivo: {ex.Message}", true);
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+        cargando = true;
+        StateHasChanged();
+
+        bool formularioValido = editContext.Validate();
+        if (!formularioValido)
+        {
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        // Validación previa para evitar que el stream falle
+        if (streamToUploadConciliacion == null)
+        {
+            mensajeAlerta = "Debe seleccionar un archivo Excel válido antes de guardar.";
+            mostrarAlerta = true;
+            await MostrarNotificacion("Debe seleccionar un archivo Excel válido antes de guardar.", true);
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        if (listaArchivo.Count == 0)
+        {
+            fileNameConciliacion = string.Empty;
+            entidadEditando.NombreConciliaciones = null;
+            entidadEditando.RutaConciliaciones = null;
+
+            mensajeAlerta = "El archivo Excel no contiene datos válidos.";
+            mostrarAlerta = true;
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion($"El archivo Excel no contiene datos válidos.", true);
+            await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
+            return;
+        }
+
+        if (!await SubirDocumentosDrive(streamToUploadConciliacion, contentTypeConciliacion))
+        {
+            cargando = false;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (useridaux.Success && !string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+                if (entidadEditando.Id == 0)
+                {
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+
+                    Int32 idNew = await repository.AddAsync(entidadEditando);
+                    listaArchivo.ForEach(x => x.ConciliacionId = idNew);
+
+                    foreach (var item in listaArchivo)
+                    {
+                        string tipoDoc = item.Rif.Substring(0, 1).ToUpper();
+                        string rif = item.Rif.Substring(1).TrimStart('0').Trim();
+                        string accionreal = "Actualizado";
+
+                        Accionista? accionista = await repoAccionistas.GetByRifAsync(tipoDoc, rif);
+                        if (accionista == null)
+                        {
+                            AccionistaDto accionistaDto = new()
+                            {
+                                TipoDocumento1Id = listTipoDoc.Where(x => x.Nombre == tipoDoc).Select(x => x.Id).FirstOrDefault(),
+                                Documento1 = rif,
+                                Nombre = item.NombreAccionista,
+                                CreateDate = DateTime.Now,
+                                CreateUserId = userid,
+                                UpdateDate = DateTime.Now,
+                                UpdateUserId = userid
+                            };
+                            accionista = await repoAccionistas.AddReturnEntidadAsync(accionistaDto);
+                            accionreal = "Creado";
+                        }
+
+                        if (accionista != null)
+                        {
+                            AccionistaSociedad? accionistaSociedad = await repoaccionistasocie.GetBySociedadIdAccionistaIdAsync((int) entidadEditando.SociedadId, accionista.Id);
+                            if (accionistaSociedad == null)
+                            {
+                                AccionistaSociedadDto accionistaSociedadDto = new()
+                                {
+                                    AccionistaId = accionista.Id,
+                                    SociedadId = entidadEditando.SociedadId,
+                                    EstatusAccionistaId = 1,
+                                    NroAcciones = item.TotalAcciones,
+                                    CreateDate = DateTime.Now,
+                                    CreateUserId = userid,
+                                    UpdateDate = DateTime.Now,
+                                    UpdateUserId = userid
+                                };
+                                accionistaSociedad = await repoaccionistasocie.AddReturnEntidadAsync(accionistaSociedadDto);
+                            }
+
+                            if (accionistaSociedad != null)
+                            {
+                                ConciliacionDetalle detalle = new()
+                                {
+                                    ConciliacionId = idNew,
+                                    AccionistaId = accionista.Id,
+                                    TotalAcciones = item.TotalAcciones,
+                                    Accion = accionreal,
+                                    CreateDate = DateTime.Now,
+                                    CreateUserId = userid
+                                };
+                                listaConciliaciones.Add(detalle);
+                            }
+                        }
+                    }
+                    
+                    await repository.AddDetalleAsync(listaConciliaciones);
+
+                    foreach (var item in listaConciliaciones.Where(x => x.Accion == "Actualizado"))
+                    {
+                        await repoaccionistasocie.UpdateNroAccionesAsync(item.AccionistaId, (int)entidadEditando.SociedadId, item.TotalAcciones, userid);
+                    }
+
+                    // Liberar el stream de forma segura ahora que el proceso completo terminó bien
+                    await streamToUploadConciliacion.DisposeAsync();
+                    await streamExcelread.DisposeAsync();
+                    await MostrarNotificacion($"Conciliación guardado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+            else
+            {
+                // Corrección: Si no encuentra el usuario, debe apagar el cargando para no congelar la pantalla
+                await MostrarNotificacion("Error: No se pudo identificar la sesión del usuario.", true);
+                cargando = false;
+                StateHasChanged();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error en Base de Datos: {ex.Message}");
+            await MostrarNotificacion("Error al guardar en la base de datos: " + ex.Message, true);
+        }
+
+        cargando = false;
+        StateHasChanged();
+    }
+
+    private async Task CargarExcelConciliaciones()
+    {
+        listaArchivo.Clear();
+        if (streamExcelread.CanSeek)
+        {
+            streamExcelread.Position = 0;
+        }
+        var useridaux = await SessionStorage.GetAsync<string>("UserId");
+        if (!string.IsNullOrEmpty(useridaux.Value))
+        {
+            int userid = int.Parse(useridaux.Value);
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            using (var reader = ExcelReaderFactory.CreateReader(streamExcelread))
+            {
+                bool esPrimeraFila = true;
+                int fila = 1;
+                int vacios = 0;
+                try
+                {
+                    while (reader.Read())
+                    {
+                        if (fila < 2)
+                        {
+                            fila++;
+                            continue;
+                        }
+
+                        if (esPrimeraFila)
+                        {
+                            fila++;
+                            esPrimeraFila = false;
+                            continue;
+                        }
+
+                        if (vacios > 5) return;
+
+                        if (reader.GetValue(0) == null)
+                        {
+                            vacios++;
+                            continue;
+                        }
+
+                        if (GetString(reader.GetValue(0)).Contains("Total"))
+                        {
+                            vacios++;
+                            continue;
+                        }
+                        
+                        var nuevo = new ConciliacionArchivo()
+                        {
+                            ConciliacionId = 0,
+                            Rif = GetString(reader.GetValue(0)),
+                            NombreAccionista = GetString(reader.GetValue(1)),
+                            TotalAcciones = GetInt(reader.GetValue(2)),
+                            CreateDate = DateTime.Now,
+                            CreateUserId = userid,
+                        };
+
+                        listaArchivo.Add(nuevo);
+                        fila++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al cargar el archivo Excel: {ex.Message}");
+                    await MostrarNotificacion($"Error al cargar el archivo Excel en la Fila {fila}: {ex.Message}", true);
+                    listaArchivo.Clear(); // Limpiar la lista si hay error
+                }
+            }
+        }
+    }
+
+    private async Task<bool> SubirDocumentosDrive(Stream streamToUpload, string tipodoc)
+    {
+        try
+        {
+            string folderName = $"Conciliaciones_Sociedad_ID_{entidadEditando.SociedadId}";
+            string nombreLimpio = string.Empty;
+            nombreLimpio = entidadEditando.NombreConciliaciones.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
+            if (!nombreLimpio.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.xlsx";
+            }
+            entidadEditando.NombreConciliaciones = nombreLimpio;
+
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                string folderId = await DriveService.CreateFolderAsync(folderName);
+
+                // IMPORTANTE: NO uses 'using(streamToUpload)'. Deja que Blazor maneje el ciclo de vida
+                // o ciérralo manualmente AL FINAL de todo el proceso exitoso.
+                string fileIdResult = await DriveService.UploadFileAsync(streamToUpload, nombreLimpio, tipodoc, folderId);
+                entidadEditando.RutaConciliaciones = $"{folderId}/{fileIdResult}";
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Error al subir a Google Drive: " + ex.Message, true);
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(entidadEditando.RutaConciliaciones))
+        {
+            await MostrarNotificacion("No se pudo obtener la ruta de Google Drive para el archivo de Conciliaciones.", true);
+            cargando = false;
+            StateHasChanged();
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    // Alternar la apertura del menú desplegable
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+        if (!isDropdownOpen)
+        {
+            textoBusqueda = ""; // Limpia la búsqueda al cerrar
+        }
+    }
+
+    // Devuelve el texto del elemento seleccionado en el botón principal
+    private string ObtenerNombreSeleccionado()
+    {
+        if (entidadEditando?.SociedadId == 0 || listSociedad == null)
+        {
+            return "Seleccione ...";
+        }
+
+        var seleccionado = listSociedad.FirstOrDefault(s => s.Id == entidadEditando.SociedadId);
+        return seleccionado?.Empresa?.Nombre ?? "Seleccione ...";
+    }
+
+    // Asigna el ID real a tu modelo y cierra el menú
+    private void SeleccionarOpcion(int id)
+    {
+        entidadEditando.SociedadId = id;
+        isDropdownOpen = false;
+        textoBusqueda = ""; // Reinicia el filtro
+    }
+
+    static string GetString(object val)
+    {
+        var texto = val?.ToString()?.Trim();
+        return (texto == "-" || string.IsNullOrEmpty(texto)) ? string.Empty : texto;
+    }
+
+    static int GetInt(object val)
+    {
+        var texto = val?.ToString()?.Trim();
+        if (texto == "-" || string.IsNullOrEmpty(texto)) return 0;
+
+        return int.TryParse(texto, out int res) ? res : 0;
+    }
+}

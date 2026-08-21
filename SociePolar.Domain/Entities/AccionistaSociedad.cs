@@ -6,8 +6,7 @@
         public Sociedad? Sociedad { get; set; }
         public Accionista? Accionista { get; set; }
         public EstatusAccionista? EstatusAccionista { get; set; }
-
-
+        public Int64? NroAcciones { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

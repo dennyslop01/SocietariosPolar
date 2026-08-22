@@ -209,7 +209,7 @@ namespace SociePolar.Infrastructure.Repositories
             return newEntidad;
         }
 
-        public async Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, int nroacciones, int updateUserId)
+        public async Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, Int64 nroacciones, int updateUserId, int opcioaudi)
         {
             using var context = _contextFactory.CreateDbContext();
 
@@ -230,18 +230,21 @@ namespace SociePolar.Infrastructure.Repositories
             context.Set<AccionistaSociedad>().Update(editentidad);
             context.SaveChanges();
 
-            AuditoriaNroAccion auditoria = new()
+            if(opcioaudi == 1)
             {
-                SociedadId = sociedadid,
-                AccionistaId = accionistaid,
-                NroAcciones = nroacciones,
-                Accion = "Update",
-                Descripcion = $"Se actualizó el número de acciones del accionista con ID {accionistaid} en la sociedad con ID {sociedadid} a {nroacciones}.",
-                CreateUserId = updateUserId,
-                CreateDate = DateTime.UtcNow
-            };
-            await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
-            await context.SaveChangesAsync();
+                AuditoriaNroAccion auditoria = new()
+                {
+                    SociedadId = sociedadid,
+                    AccionistaId = accionistaid,
+                    NroAcciones = nroacciones,
+                    Accion = "Update",
+                    Descripcion = $"Se actualizó el número de acciones del accionista con ID {accionistaid} en la sociedad con ID {sociedadid} a {nroacciones}.",
+                    CreateUserId = updateUserId,
+                    CreateDate = DateTime.UtcNow
+                };
+                await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
+                await context.SaveChangesAsync();
+            }            
         }
     }
 }

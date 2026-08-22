@@ -1,4 +1,5 @@
 ﻿@page "/vertitulos/{id}"
+@using System.Text.Json
 
 @rendermode InteractiveServer
 
@@ -18,7 +19,6 @@
 
                 <!-- Contenedor flex para alinear los botones en línea -->
                 <div class="d-flex gap-2 align-items-center">
-
                     <!-- Botón Agregar -->
                     <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
                             @onclick="AbrirModalNuevo"
@@ -120,6 +120,7 @@
 {
     <ModalCargando />
 }
+
 
 @if (mostrarModal)
 {
@@ -300,10 +301,12 @@
     </div>
 }
 
+
 @if (descarga)
 {
     <ModalDescarga idModulo="8" idEstado="1" OnFinalizado="ManejarCierreDescarga" />
 }
+
 
 @code {
     [Parameter] public string id { get; set; } = "";
@@ -319,6 +322,7 @@
     private string iconoAlerta = "bi-check-circle-fill";
     private bool mostrarModalEliminar = false;
     private TituloDto entidadEditando = default!;
+    private TituloDto entidadEditandoAux = default!;
     private Titulo? entidadParaEliminar;
     private string nombreComplemento = "";
     private int Estado = 0;
@@ -429,7 +433,8 @@
         entidadEditando.CreateUserId = item.CreateUserId;
         entidadEditando.UpdateDate = item.UpdateDate;
         entidadEditando.UpdateUserId = item.UpdateUserId;
-        editContext = new EditContext(entidadEditando);
+
+        entidadEditandoAux = JsonSerializer.Deserialize<TituloDto>(JsonSerializer.Serialize(entidadEditando));
 
         try
         {
@@ -476,20 +481,28 @@
             {
                 int userid = int.Parse(useridaux.Value);
 
-                entidadEditando.UpdateDate = DateTime.Now;
-                entidadEditando.UpdateUserId = userid;
-
                 if (entidadEditando.Id == 0)
                 {
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
                     mostrarModal = false;
                 }
                 else
                 {
-                    repository.Update(entidadEditando);
+                    string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
+                    string jsonModificado = JsonSerializer.Serialize(entidadEditando);
+
+                    if (jsonOriginal != jsonModificado)
+                    {
+                        entidadEditando.UpdateDate = DateTime.Now;
+                        entidadEditando.UpdateUserId = userid;
+
+                        repository.Update(entidadEditando);
+                    }
                     mostrarModal = false;
                 }
             }
@@ -588,22 +601,33 @@
     }
 
     // Reemplaza 'int' por 'long' o 'decimal' según sea el tipo de tu propiedad
-    private void ProcesarEntradaAcciones(ChangeEventArgs e)
+    private async Task ProcesarEntradaAcciones(ChangeEventArgs e)
     {
         string input = e.Value?.ToString() ?? "";
 
-        // 1. Elimina todo lo que no sea un dígito numérico
-        string soloNumeros = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
+        // 1. Filtra para dejar solo números, puntos y comas
+        string soloNumerosPuntoComa = System.Text.RegularExpressions.Regex.Replace(input, @"[^0-9.,]", "");
 
-        // 2. Asigna el valor numérico limpio a tu propiedad de Blazor
-        if (Int64.TryParse(soloNumeros, out Int64 resultado))
+        // 2. Extrae solo los dígitos para la conversión numérica
+        string soloDigitos = System.Text.RegularExpressions.Regex.Replace(soloNumerosPuntoComa, @"[^\d]", "");
+
+        if (Int64.TryParse(soloDigitos, out Int64 resultado))
         {
             entidadEditando.Acciones = resultado;
         }
         else
         {
-            entidadEditando.Acciones = 0; // O el valor por defecto que manejes
+            // TRUCO PARA BORRAR LA LETRA: Si el usuario escribe una letra inválida,
+            // cambiamos el valor a algo que Blazor detecte como "nuevo" (0),
+            // pero primero forzamos un render intermedio con un valor vacío para limpiar la pantalla.
+            entidadEditando.Acciones = -1;
+            StateHasChanged();
+            await Task.Yield(); // Libera el hilo para que Blazor limpie la interfaz
+
+            entidadEditando.Acciones = 0;
         }
+
+        StateHasChanged();
     }
 
     private string FormatearMiles(Int64? valor)

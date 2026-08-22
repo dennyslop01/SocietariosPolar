@@ -15,6 +15,6 @@ namespace SociePolar.Application.Interfaces
         void Update(AccionistaSociedadDto entity);
         void Delete(int id);
         void Activar(int id, int estatus);
-        Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, int nroacciones, int updateUserId);
+        Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, Int64 nroacciones, int updateUserId, int opcioaudi);
     }
 }

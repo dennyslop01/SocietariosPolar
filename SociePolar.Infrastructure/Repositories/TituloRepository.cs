@@ -49,7 +49,12 @@ namespace SociePolar.Infrastructure.Repositories
         {
             using var context = await _contextFactory.CreateDbContextAsync();
 
-            var accionista = await context.Set<AccionistaSociedad>().FindAsync(entity.AccionistaSociedadId);
+            var accionista = await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Accionista)
+                .Where(b => b.Id == entity.AccionistaSociedadId)
+                .FirstOrDefaultAsync();
             if (accionista == null) throw new Exception($"Accionista - Sociedad con ID {entity.AccionistaSociedadId} no existe.");
 
             Titulo newTitulo = new()
@@ -76,9 +81,9 @@ namespace SociePolar.Infrastructure.Repositories
             context.Entry(newTitulo.AccionistaSociedad).State = EntityState.Detached;
 
             string descripcion = $"En fecha {entity.Fecha} se crea la sociedad entre {accionista.Sociedad!.Empresa!.Nombre} y {accionista.Accionista!.Nombre} con el título {entity.Numero}.";
-            if(entity.Acciones != null)
+            if(entity.Anulado != null)
             {
-                if (entity.Acciones > 0)
+                if (entity.Anulado > 0)
                 {
                     descripcion += $" Anulación Título {entity.Numero} con fecha {entity.Fecha}";
                 }
@@ -104,17 +109,29 @@ namespace SociePolar.Infrastructure.Repositories
             };
             await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
             await context.SaveChangesAsync();
+
+            Int64 nroacciones = (Int64)context.Set<Titulo?>().Where(x => x.AccionistaSociedad.Id == accionista.Id && x.Anulado != 1).Sum(x => x.Acciones);
+
+            IAccionistaSociedad accionistasociedad = new AccionistaSociedadRepository(_contextFactory);
+            await accionistasociedad.UpdateNroAccionesAsync(accionista.Accionista!.Id, accionista.Sociedad!.Id, nroacciones, entity.CreateUserId, 0);
         }
 
-        public async void Update(TituloDto entity)
+        public async Task Update(TituloDto entity)
         {
             using var context = _contextFactory.CreateDbContext();
 
-            var accionista = await context.Set<AccionistaSociedad>().FindAsync(entity.AccionistaSociedadId);
+            var accionista = await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Accionista)
+                .Where(b => b.Id == entity.AccionistaSociedadId)
+                .FirstOrDefaultAsync();
             if (accionista == null) throw new Exception($"Accionista - Sociedad con ID {entity.AccionistaSociedadId} no existe.");
 
             var editTitulo = await context.Set<Titulo>().FindAsync(entity.Id);
             if (editTitulo == null) throw new Exception($"Titulo con ID {entity.Id} no existe.");
+
+            Int64 nroaccionesOld = (Int64)accionista.NroAcciones;
 
             editTitulo.AccionistaSociedad = accionista;
             editTitulo.Numero = entity.Numero;
@@ -128,14 +145,13 @@ namespace SociePolar.Infrastructure.Repositories
             editTitulo.UpdateDate = DateTime.UtcNow;
             editTitulo.UpdateUserId = entity.UpdateUserId;
 
-
             context.Set<Titulo>().Update(editTitulo);
             context.SaveChanges();
 
             string descripcion = $"En fecha {entity.Fecha} se actualiza la sociedad entre {accionista.Sociedad!.Empresa!.Nombre} y {accionista.Accionista!.Nombre} con el título {entity.Numero}.";
-            if (entity.Acciones != null)
+            if (entity.Anulado != null)
             {
-                if (entity.Acciones > 0)
+                if (entity.Anulado > 0)
                 {
                     descripcion += $" Anulación Título {entity.Numero} con fecha {entity.Fecha}";
                 }
@@ -149,6 +165,11 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
+            if(nroaccionesOld != entity.Acciones)
+            {
+                descripcion += $" Se actualiza el número de acciones de {nroaccionesOld} a {entity.Acciones}.";
+            }
+
             AuditoriaNroAccion auditoria = new()
             {
                 SociedadId = accionista.Sociedad!.Id,
@@ -159,17 +180,23 @@ namespace SociePolar.Infrastructure.Repositories
                 CreateUserId = entity.CreateUserId,
                 CreateDate = DateTime.UtcNow
             };
+
             await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
             await context.SaveChangesAsync();
+
+            Int64 nroacciones = (Int64)context.Set<Titulo?>().Where(x => x.AccionistaSociedad.Id == accionista.Id && x.Anulado != 1).Sum(x => x.Acciones);
+
+            IAccionistaSociedad accionistasociedad = new AccionistaSociedadRepository(_contextFactory);
+            await accionistasociedad.UpdateNroAccionesAsync(accionista.Accionista!.Id, accionista.Sociedad!.Id, nroacciones, entity.CreateUserId, 0);
         }
 
-        public void Delete(int id)
+        public async Task Delete(int id)
         {
             using var context = _contextFactory.CreateDbContext();
-            var entity = context.Set<Sociedad>().Find(id);
+            var entity = context.Set<Titulo>().Find(id);
             if (entity != null)
             {
-                context.Set<Sociedad>().Remove(entity);
+                context.Set<Titulo>().Remove(entity);
                 context.SaveChanges();
             }
         }

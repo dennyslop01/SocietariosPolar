@@ -9,7 +9,7 @@ namespace SociePolar.Application.Interfaces
         Task<Titulo?> GetByIdAsync(int id);
         Task<List<Titulo>> GetByAccionistaSociedadIdAsync(int sociedadId);
         Task AddAsync(TituloDto entity);
-        void Update(TituloDto entity);
-        void Delete(int id);
+        Task Update(TituloDto entity);
+        Task Delete(int id);
     }
 }

@@ -443,7 +443,7 @@
 
                     foreach (var item in listaConciliaciones.Where(x => x.Accion == "Actualizado"))
                     {
-                        await repoaccionistasocie.UpdateNroAccionesAsync(item.AccionistaId, (int)entidadEditando.SociedadId, item.TotalAcciones, userid);
+                        await repoaccionistasocie.UpdateNroAccionesAsync(item.AccionistaId, (int)entidadEditando.SociedadId, item.TotalAcciones, userid, 1);
                     }
 
                     // Liberar el stream de forma segura ahora que el proceso completo terminó bien

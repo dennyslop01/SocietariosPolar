@@ -233,18 +233,31 @@
             {
                 Int64 nroacciones = 0;
                 decimal porcparticipa = 0;
+                Int64 accionesaux = 0;
+                if (item.NroAcciones != null)
+                {
+                    accionesaux = (Int64)item.NroAcciones;
+                }
 
                 var titulos = await repotitulo.GetByAccionistaSociedadIdAsync(item.Id);
                 if (titulos != null && titulos.Count() > 0)
                 {
                     nroacciones = (Int64)titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
+
+                    if (nroacciones > 0)
+                    {
+                        if (nroacciones != accionesaux)
+                        {
+                            await repository.UpdateNroAccionesAsync(item.Accionista.Id, item.Sociedad.Id, nroacciones, item.UpdateUserId, 0);
+                        }
+                    }
                 }
 
                 if (item.Sociedad != null)
                 {
                     if (item.Sociedad.NumeroAcciones != null)
                     {
-                        porcparticipa = Math.Round((decimal)nroacciones / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
+                        porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
                     }
                 }
 
@@ -253,8 +266,8 @@
                     Id = item.Id,
                     SociedadNombre = item.Sociedad?.Empresa?.Nombre,
                     TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
-                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista.NombreSusesion,
-                    NroAcciones = nroacciones,
+                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion,
+                    NroAcciones = (nroacciones != 0) ? nroacciones : accionesaux,
                     Participacion = porcparticipa,
                     CreateDate = item.CreateDate,
                     UpdateDate = item.UpdateDate
@@ -262,7 +275,6 @@
 
                 listNewAccionista.Add(accionista);
             }
-
 
             Listgral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
             ListgralBuscar = Listgral;

@@ -467,7 +467,7 @@
                     string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
                     string jsonModificado = JsonSerializer.Serialize(entidadEditando);
 
-                    if (jsonOriginal 1= jsonModificado)
+                    if (jsonOriginal != jsonModificado)
                     {
                         entidadEditando.UpdateDate = DateTime.Now;
                         entidadEditando.UpdateUserId = userid;

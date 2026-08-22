@@ -277,6 +277,7 @@
     private bool cargando = false;
 
     private AsambleaDto entidadEditando = new();
+    private AsambleaDto entidadEditandoAux = new();
 
     private List<Sociedad> listSociedad = new();
     private List<Asamblea> listAsamblea = new();
@@ -359,6 +360,7 @@
 
                 entidadEditando = dto;
                 editContext = new EditContext(entidadEditando);
+                entidadEditandoAux = JsonSerializer.Deserialize<AsambleaDto>(JsonSerializer.Serialize(entidadEditando));
             }
             catch (Exception ex)
             {
@@ -435,9 +437,6 @@
             {
                 int userid = int.Parse(useridaux.Value);
 
-                entidadEditando.UpdateDate = DateTime.Now;
-                entidadEditando.UpdateUserId = userid;
-
                 if (entidadEditando.AplicaReforma == 1)
                 {
                     if (entidadEditando.TipoReformaId == 0)
@@ -453,6 +452,8 @@
                     cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
 
@@ -462,7 +463,16 @@
                 else
                 {
                     cargando = true;
-                    repository.Update(entidadEditando);
+                    string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
+                    string jsonModificado = JsonSerializer.Serialize(entidadEditando);
+
+                    if (jsonOriginal != jsonModificado)
+                    {
+                        entidadEditando.UpdateDate = DateTime.Now;
+                        entidadEditando.UpdateUserId = userid;
+
+                        repository.Update(entidadEditando);
+                    }
 
                     await MostrarNotificacion($"Reforma actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);

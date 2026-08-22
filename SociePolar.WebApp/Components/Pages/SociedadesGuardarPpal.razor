@@ -445,6 +445,7 @@
     private bool cargando = false;
 
     private SociedadDto entidadEditando = new();
+    private SociedadDto entidadEditandoAux = new();
     private List<IBaseEntity> listRegiones = new();
     private List<IBaseEntity> listEmpresas = new();
     private List<IBaseEntity> listTipoSociedad = new();
@@ -572,6 +573,8 @@
                 }
                 entidadEditando = dto;
                 editContext = new EditContext(entidadEditando);
+
+                entidadEditandoAux = JsonSerializer.Deserialize<SociedadDto>(JsonSerializer.Serialize(entidadEditando));
             }
             catch (Exception ex)
             {
@@ -650,14 +653,12 @@
             if (!string.IsNullOrEmpty(useridaux.Value))
             {
                 int userid = int.Parse(useridaux.Value);
-
-                entidadEditando.UpdateDate = DateTime.Now;
-                entidadEditando.UpdateUserId = userid;
-
                 if (entidadEditando.Id == 0)
                 {
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
 
@@ -666,7 +667,16 @@
                 }
                 else
                 {
-                    repository.Update(entidadEditando);
+                    string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
+                    string jsonModificado = JsonSerializer.Serialize(entidadEditando);
+
+                    if (jsonOriginal != jsonModificado)
+                    {
+                        entidadEditando.UpdateDate = DateTime.Now;
+                        entidadEditando.UpdateUserId = userid;
+
+                        repository.Update(entidadEditando);
+                    }
 
                     await MostrarNotificacion($"Sociedad actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);

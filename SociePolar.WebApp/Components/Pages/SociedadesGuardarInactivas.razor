@@ -434,6 +434,7 @@
 {
     <ModalCargando />
 }
+
 @code {
     [Parameter] public string id { get; set; } = "";
 
@@ -447,6 +448,7 @@
     private bool cargando = false;
 
     private SociedadInactivaDto entidadEditando = new();
+    private SociedadInactivaDto entidadEditandoAux = new();
     private List<IBaseEntity> listRegiones = new();
     private List<IBaseEntity> listEmpresas = new();
     private List<IBaseEntity> listTipoSociedad = new();
@@ -574,6 +576,7 @@
                 }
                 entidadEditando = dto;
                 editContext = new EditContext(entidadEditando);
+                entidadEditandoAux = JsonSerializer.Deserialize<SociedadInactivaDto>(JsonSerializer.Serialize(entidadEditando));
             }
             catch (Exception ex)
             {
@@ -653,13 +656,12 @@
             {
                 int userid = int.Parse(useridaux.Value);
 
-                entidadEditando.UpdateDate = DateTime.Now;
-                entidadEditando.UpdateUserId = userid;
-
                 if (entidadEditando.Id == 0)
                 {
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
 
@@ -668,7 +670,15 @@
                 }
                 else
                 {
-                    repository.Update(entidadEditando);
+                    string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
+                    string jsonModificado = JsonSerializer.Serialize(entidadEditando);
+
+                    if (jsonOriginal != jsonModificado)
+                    {
+                        entidadEditando.UpdateDate = DateTime.Now;
+                        entidadEditando.UpdateUserId = userid;
+                        repository.Update(entidadEditando);
+                    }
 
                     await MostrarNotificacion($"Sociedad actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);

@@ -926,6 +926,7 @@
     private bool cargando = false;
 
     private AccionistaDto entidadEditando = new();
+    private AccionistaDto entidadEditandoAux = new();
 
     private List<Sociedad> listSociedad = new();
     private List<Accionista> listAccionista = new();
@@ -1098,6 +1099,8 @@
 
                 entidadEditando = dto;
                 editContext = new EditContext(entidadEditando);
+
+                entidadEditandoAux = JsonSerializer.Deserialize<AccionistaDto>(JsonSerializer.Serialize(entidadEditando));
             }
             catch (Exception ex)
             {
@@ -1223,14 +1226,13 @@
             {
                 int userid = int.Parse(useridaux.Value);
 
-                entidadEditando.UpdateDate = DateTime.Now;
-                entidadEditando.UpdateUserId = userid;
-
                 if (entidadEditando.Id == 0)
                 {
                     cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
 
@@ -1240,7 +1242,16 @@
                 else
                 {
                     cargando = true;
-                    repository.Update(entidadEditando);
+                    string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
+                    string jsonModificado = JsonSerializer.Serialize(entidadEditando);
+
+                    if (jsonOriginal != jsonModificado)
+                    {
+                        entidadEditando.UpdateDate = DateTime.Now;
+                        entidadEditando.UpdateUserId = userid;
+
+                        repository.Update(entidadEditando);
+                    }
 
                     await MostrarNotificacion($"Accionista actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);

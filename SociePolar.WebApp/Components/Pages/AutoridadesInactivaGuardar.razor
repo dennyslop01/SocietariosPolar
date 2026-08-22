@@ -179,6 +179,7 @@
     private bool cargando = false;
 
     private AutoridadDto entidadEditando = new();
+    private AutoridadDto entidadEditandoAux = new();
 
     private List<Sociedad> listSociedad = new();
     private List<Autoridad> listAutoridad = new();
@@ -247,6 +248,7 @@
 
                 entidadEditando = dto;
                 editContext = new EditContext(entidadEditando);
+                entidadEditandoAux = JsonSerializer.Deserialize<AutoridadDto>(JsonSerializer.Serialize(entidadEditando));
             }
             catch (Exception ex)
             {
@@ -321,9 +323,6 @@
             {
                 int userid = int.Parse(useridaux.Value);
 
-                entidadEditando.UpdateDate = DateTime.Now;
-                entidadEditando.UpdateUserId = userid;
-
                 if (entidadEditando.Id == 0)
                 {
                     // var existeAutoSociedad = listAutoridad.Any(x => x.Cargo.Id == entidadEditando.CargoId && x.Sociedad.Id == entidadEditando.SociedadId);
@@ -336,6 +335,8 @@
                     cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
 
                     await repository.AddAsync(entidadEditando);
 
@@ -345,7 +346,15 @@
                 else
                 {
                     cargando = true;
-                    repository.Update(entidadEditando);
+                    string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
+                    string jsonModificado = JsonSerializer.Serialize(entidadEditando);
+
+                    if (jsonOriginal != jsonModificado)
+                    {
+                        entidadEditando.UpdateDate = DateTime.Now;
+                        entidadEditando.UpdateUserId = userid;
+                        repository.Update(entidadEditando);
+                    }
 
                     await MostrarNotificacion($"Autoridad actualizado correctamente");
                     await OnFinalizado.InvokeAsync(true);

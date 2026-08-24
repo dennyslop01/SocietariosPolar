@@ -246,5 +246,13 @@ namespace SociePolar.Infrastructure.Repositories
                 await context.SaveChangesAsync();
             }            
         }
+
+        public async Task<List<AuditoriaNroAccion>> GetAuditoriaBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AuditoriaNroAccion>()
+                .Where(a => a.SociedadId == sociedadId && a.AccionistaId == accionistaId)
+                .ToListAsync();
+        }
     }
 }

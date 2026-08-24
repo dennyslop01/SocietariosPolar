@@ -115,6 +115,50 @@
     }
 </div>
 
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-file-medical text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Auditorias
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <PaginationComponent TItem="AuditoriaNroAccion" Items="ListgralAditoria" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Descripción</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha de creación</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@FormatearMiles(p.NroAcciones)</td>
+                            <td class="text-start text-secondary small" style="width: 25%;">@p.Descripcion</td>
+                            <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+        </div>
+    </div>
+</div>
+
 @if (cargando)
 {
     <ModalCargando />
@@ -312,6 +356,8 @@
 
     private List<Titulo> Listgral = new();
     private List<Titulo> ListgralBuscar = new();
+    private List<AuditoriaNroAccion?> ListgralAditoria = new();
+
     private string searchTerm = "";
     private bool cargando = false;
     private bool mostrarModal = false;
@@ -365,7 +411,7 @@
                 return;
             }
 
-            if(accionistaEntity.Accionista.TipoAccionista.Id == 3)
+            if(accionistaEntity.Accionista?.TipoAccionista?.Id == 3)
             {
                 nombreComplemento = accionistaEntity.Accionista?.NombreSusesion;
                 nombreComplemento = (nombreComplemento.Length > 20) ? nombreComplemento.Substring(0, 20) + "..." : nombreComplemento + " -- ";
@@ -379,6 +425,8 @@
 
             Listgral = await repository.GetByAccionistaSociedadIdAsync(int.Parse(id));
             ListgralBuscar = Listgral;
+
+            ListgralAditoria = await repoaccionista.GetAuditoriaBySociedadIdAccionistaIdAsync(accionistaEntity?.Sociedad?.Id ?? 0, accionistaEntity?.Accionista?.Id ?? 0);
         }
         catch (Exception ex)
         {

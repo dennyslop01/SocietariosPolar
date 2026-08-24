@@ -10,7 +10,7 @@
                         <i class="bi bi-file-earmark-x text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Documentos Vencidos o por Vencer
+                        Accionistas sin actualizar en Años
                     </h5>
                 </div>
 
@@ -41,7 +41,7 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Documento</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nombre</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha Vencimiento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha Última Actualización</th>
                             @* <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th> *@
                         </tr>
                     </ChildContentHeader>
@@ -96,7 +96,6 @@
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
 
-    [Inject] private ISociedad repoSociedad { get; set; } = null!;
     [Inject] private IAccionista repoAccionista { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
@@ -109,111 +108,19 @@
         cargando = true;
         try
         {
-            var listSociedades = await repoSociedad.GetAllAsync();
-            listSociedades = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.FechaVencimiento < DateTime.Now.AddDays(30)).ToList();            
-            foreach (var item in listSociedades)
+            var listAccionista = await repoAccionista.GetAllAsync();
+            listAccionista = listAccionista.OrderByDescending(x => x.UpdateDate).Where(x => x.UpdateDate < DateTime.Now.AddYears(-3)).ToList();
+            foreach (var item in listAccionista)
             {
                 Listgral.Add(new DocumentosVencidos
                 {
                     Id = item.Id,
-                    Modulo = "Sociedades",
-                    Documento = item.TipoDocumento1.Nombre,
+                    Modulo = "Accionistas",
+                    Documento = item.TipoDocumento1?.Nombre,
                     NroDocumento = item.Documento1,
-                    FechaVencimiento = item.FechaVencimiento,
-                    Nombre = item.Empresa.Nombre
+                    FechaVencimiento = item.UpdateDate,
+                    Nombre = item.Nombre
                 });
-            }
-
-            var listAccionista = await repoAccionista.GetAllAsync();
-            foreach (var item in listAccionista)
-            {
-                string documento = string.Empty;
-                string nrodocumento = string.Empty;
-                string nombreper = string.Empty;
-                DateTime fechavencimiento =  DateTime.Now;
-
-                if (item.FechaVencimiento1 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.Documento1;
-                    nombreper = item.Nombre;
-                    fechavencimiento = (DateTime)item.FechaVencimiento1;
-                }
-                if (item.FechaVencimiento2 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.Documento2;
-                    fechavencimiento = (DateTime)item.FechaVencimiento2;
-                    nombreper = item.Nombre;
-                }
-                if (item.FechaVencimiento3 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.Documento3;
-                    nombreper = item.Nombre;
-                    fechavencimiento = (DateTime)item.FechaVencimiento3;
-                }
-                if (item.FechaVencimiento4 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.Documento4;
-                    nombreper = item.Nombre;
-                    fechavencimiento = (DateTime)item.FechaVencimiento4;
-                }
-                if (item.FechaVencimientoApoderado1 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.DocumentoApoderado1;
-                    nombreper = item.NombreApoderado;
-                    fechavencimiento = (DateTime)item.FechaVencimientoApoderado1;
-                }
-                if (item.FechaVencimientoApoderado2 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.DocumentoApoderado2;
-                    nombreper = item.NombreApoderado;
-                    fechavencimiento = (DateTime)item.FechaVencimientoApoderado2;
-                }
-                if (item.FechaVencimientoApoderado3 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.DocumentoApoderado3;
-                    nombreper = item.NombreApoderado;
-                    fechavencimiento = (DateTime)item.FechaVencimientoApoderado3;
-                }
-                if (item.FechaVencimientoConyuge1 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.DocumentoConyuge1;
-                    nombreper = item.NombreConyuge;
-                    fechavencimiento = (DateTime)item.FechaVencimientoConyuge1;
-                }
-                if (item.FechaVencimientoConyuge2 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.DocumentoConyuge2;
-                    nombreper = item.NombreConyuge;
-                    fechavencimiento = (DateTime)item.FechaVencimientoConyuge2;
-                }
-                if (item.FechaVencimientoConyuge3 < DateTime.Now.AddDays(30))
-                {
-                    documento = "Cédula";
-                    nrodocumento = item.DocumentoConyuge3;
-                    nombreper = item.NombreConyuge;
-                    fechavencimiento = (DateTime)item.FechaVencimientoConyuge3;
-                }
-                if (!string.IsNullOrEmpty(documento))
-                {
-                    Listgral.Add(new DocumentosVencidos
-                        {
-                            Id = item.Id,
-                            Modulo = "Accionistas",
-                            Documento = documento,
-                            NroDocumento = nrodocumento,
-                            FechaVencimiento = (DateTime)fechavencimiento,
-                            Nombre = nombreper
-                        });
-                }
             }
 
             Listgral = Listgral.OrderBy(x => x.FechaVencimiento).ToList();

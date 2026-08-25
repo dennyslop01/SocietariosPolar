@@ -67,7 +67,7 @@
                                 <button type="button"
                                         class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent text-start"
                                         style="font-size: 0.999em;"
-                                        @onclick="() => VisualizarDocumentoAsync(p.RutaConciliaciones, p.NombreConciliaciones)"
+                                        @onclick="() => VisualizarExcelAsync(p.RutaConciliaciones, p.NombreConciliaciones)"
                                         @onclick:preventDefault>
                                     @(p.NombreConciliaciones?.Length > 25 ? $"{p.NombreConciliaciones.Substring(0, 25)}..." : p.NombreConciliaciones)
                                 </button>
@@ -221,8 +221,7 @@
         cargando = false; // Oculta el spinner después de todo
     }
 
-    // Método para obtener el enlace de Google Drive
-    private async Task VisualizarDocumentoAsync(string rutaCompleta, string nombreDocumento)
+    private async Task VisualizarExcelAsync(string rutaCompleta, string nombreDocumento)
     {
         cargando = true;
         StateHasChanged();
@@ -235,7 +234,7 @@
             string base64Data = await DriveService.GetFileAsync(fileId);
 
             // 3. Invocar al JavaScript para procesar el Blob y abrir la pestaña
-            await jsRuntime.InvokeVoidAsync("abrirPdfBase64", base64Data, nombreDocumento);
+            await jsRuntime.InvokeVoidAsync("abrirExcelBase64", base64Data, nombreDocumento);
         }
         catch (Exception ex)
         {

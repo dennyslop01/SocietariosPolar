@@ -470,7 +470,7 @@
             string encabezado = string.Empty;
 
             var listaGral = await repotitulo.GetAllAsync();
-            List<Titulo> Listgral = listaGral.OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre).Where(x => x.AccionistaSociedad?.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
+            List<Titulo> Listgral = listaGral.OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre).Where(x => x.AccionistaSociedad?.Id == int.Parse(idEstado)).ToList();
 
             encabezado += $"Id{separador}AccionistaSociedad{separador}Numero{separador}Acciones{separador}Preferente{separador}Ubicacion{separador}Anulado{separador}Endosado{separador}Fecha{separador}Observaciones{separador}";
             encabezado += $"CreateDate{separador}UpdateDate";

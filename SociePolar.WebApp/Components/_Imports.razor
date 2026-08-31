@@ -20,6 +20,7 @@
 @using SociePolar.Domain.Dtos
 @using SociePolar.Infrastructure.Services
 @using System.Text.Json
+@using SociePolar.WebApp.Services
 
 
 @inject AuthenticationStateProvider authStateProvider
@@ -28,3 +29,4 @@
 @inject IRepositoryFactory RepoFactory
 @inject IJSRuntime jsRuntime
 @inject GoogleDriveService DriveService
+@inject PdfReportService ReportService

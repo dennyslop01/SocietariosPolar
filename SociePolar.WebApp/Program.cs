@@ -6,7 +6,8 @@ using SociePolar.Infrastructure.DataContext;
 using SociePolar.Infrastructure.Repositories;
 using SociePolar.Infrastructure.Services;
 using SociePolar.WebApp.Components;
-using System;
+using SociePolar.WebApp.Services;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,7 @@ builder.Services.AddScoped<IDividendoDefinitivo, DividendoDefinitivoRepository>(
 builder.Services.AddScoped<IAuditoria, AuditoriaRepository>();
 builder.Services.AddScoped<IConciliacion, ConciliacionRepository>();
 builder.Services.AddScoped<GoogleDriveService>();
+builder.Services.AddScoped<PdfReportService>();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpClient();
@@ -75,6 +77,8 @@ builder.Services.AddServerSideBlazor()
     });
 
 builder.Services.AddMudServices();
+QuestPDF.Settings.License = LicenseType.Community;
+
 
 var app = builder.Build();
 

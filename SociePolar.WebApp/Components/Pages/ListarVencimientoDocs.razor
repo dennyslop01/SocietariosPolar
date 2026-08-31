@@ -117,8 +117,8 @@
                 {
                     Id = item.Id,
                     Modulo = "Sociedades",
-                    Documento = item.TipoDocumento1.Nombre,
-                    NroDocumento = item.Documento1,
+                    Documento = item.TipoDocumento1?.Nombre,
+                    NroDocumento = item.Documento1!,
                     FechaVencimiento = item.FechaVencimiento,
                     Nombre = item.Empresa.Nombre
                 });

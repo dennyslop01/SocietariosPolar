@@ -13,7 +13,7 @@ namespace SociePolar.Domain.Dtos
         public string? TipoArchivo { get; set; }
         public string? NombreConciliaciones { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un documento.")] 
+        [Required(ErrorMessage = "Debe seleccionar un documento.")]
         public string? RutaConciliaciones { get; set; }
         public string? Observaciones { get; set; }
 
@@ -21,5 +21,15 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaArchivo { get; set; }
         public DateTime CreateDate { get; set; }
         public int CreateUserId { get; set; }
+    }
+
+    public class ConciliacionDetalleDto
+    {
+        public int Id { get; set; }
+        public string? Accion { get; set; }
+        public string? Documento { get; set; }
+        public string? NroDocumento { get; set; }
+        public string? Nombre { get; set; }
+        public Int64? TotalAcciones { get; set; }
     }
 }

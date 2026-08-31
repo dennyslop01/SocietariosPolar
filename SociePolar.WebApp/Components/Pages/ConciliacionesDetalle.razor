@@ -1,5 +1,185 @@
-﻿<h3>ConciliacionDetalle</h3>
+﻿@page "/conciliacionesdetalle/{id:int}"
+@rendermode InteractiveServer
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-calculator text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Conciliaciones Detalles
+                    </h5>
+                </div>
+
+                <!-- Contenedor flex para alinear los botones en línea -->
+                <div class="d-flex gap-2 align-items-center">
+
+                    <!-- Botón Regresar -->
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="Regresar"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Buscador Global por Nombre -->
+            <div class="row mb-3">
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Buscar por nombre..."
+                               @* @oninput="FiltrarBusqueda" *@ />
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <PaginationComponent TItem="ConciliacionDetalleDto" Items="Listgral" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nombre Accionista</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Total Acciones</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroDocumento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.TotalAcciones</td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+        </div>
+    </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
 
 @code {
+    [Parameter] public Int32 id { get; set; } = 0;
 
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = false;
+    private int idRol = 0;
+
+    private List<ConciliacionDetalleDto> Listgral = new();
+
+
+    [Inject] private IConciliacion repository { get; set; } = null!;
+    [Inject] private IAccionista repoaccionista { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+            if (!string.IsNullOrEmpty(userrolaux.Value))
+            {
+                idRol = int.Parse(userrolaux.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+        }
+        await LoadGenericDataAsync();
+
+        cargando = false;
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            var listaDetalle = await repository.GetDetalleByIdAsync(id);
+
+            foreach (var item in listaDetalle)
+            {
+                var accionista = await repoaccionista.GetByIdAsync(item.AccionistaId);
+                if (accionista != null)
+                {
+                    Listgral.Add(new ConciliacionDetalleDto
+                    {
+                        Id = item.Id,
+                        Accion = item.Accion,
+                        Documento = accionista.TipoDocumento1?.Nombre,
+                        NroDocumento = accionista.Documento1,
+                        Nombre = accionista.Nombre,
+                        TotalAcciones = item.TotalAcciones
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+        }
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000); // 4 segundos para errores es mejor
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private async Task Regresar()
+    {
+        await jsRuntime.InvokeVoidAsync("history.back");
+    }
 }

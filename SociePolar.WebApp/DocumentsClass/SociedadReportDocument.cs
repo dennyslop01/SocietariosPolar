@@ -44,29 +44,58 @@ namespace SociePolar.WebApp.DocumentsClass
                 page.PageColor(Colors.White);
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
 
-                // 1. Encabezado del PDF
-                page.Header().Row(row =>
+                // 1. ENCABEZADO REESTRUCTURADO (LOGO ARRIBA, TÍTULO ABAJO CENTRADO)
+                page.Header().Column(column =>
                 {
-                    // Columna para el Logo (Si existen bytes, renderiza la imagen)
-                    if (_logoBytes != null && _logoBytes.Length > 0)
+                    // REGLÓN SUPERIOR: Logo a la izquierda y Fecha a la derecha
+                    column.Item().Row(row =>
                     {
-                        row.ConstantItem(120) // Ancho fijo para el logotipo corporativo
-                           .PaddingRight(10)
-                           .AlignMiddle()
-                           .Image(_logoBytes);
-                    }
+                        // Logotipo corporativo en el extremo izquierdo
+                        if (_logoBytes != null && _logoBytes.Length > 0)
+                        {
+                            row.ConstantItem(75) // Un poco más grande para mejor visibilidad arriba
+                               .AlignLeft()
+                               .AlignMiddle()
+                               .Image(_logoBytes)
+                               .FitArea();
+                        }
+                        else
+                        {
+                            // Celda vacía de relleno si no hay logo para mantener la fecha a la derecha
+                            row.RelativeItem().Text("");
+                        }
 
-                    // Columna para los títulos del Reporte
-                    row.RelativeItem().AlignMiddle().Column(column =>
-                    {
-                        column.Item().Text("REPORTE DETALLADO DE SOCIEDAD")
-                            .FontSize(16).Bold().FontColor(Colors.Blue.Medium);
-                        column.Item().Text($"Sociedad: {_sociedad.Empresa?.Nombre}").FontSize(11).Bold();
+                        // Empuja todo el espacio restante para mandar la fecha a la derecha
+                        row.RelativeItem().Text("");
+
+                        // Fecha del reporte en el extremo derecho
+                        row.ConstantItem(120)
+                           .AlignRight()
+                           .AlignMiddle()
+                           .Text($"Fecha: {DateTime.Now:dd/MM/yyyy}")
+                           .FontSize(9)
+                           .FontColor(Colors.Grey.Medium);
                     });
 
-                    // Columna para la fecha del reporte en el extremo derecho
-                    row.ConstantItem(100).AlignRight().AlignMiddle().Text($"Fecha: {DateTime.Now:dd/MM/yyyy}")
-                        .FontSize(9).FontColor(Colors.Grey.Medium);
+                    // Espaciador entre el renglón del logo/fecha y el título
+                    column.Item().PaddingTop(15);
+
+                    // REGLÓN INFERIOR: Títulos del Reporte Centrados
+                    column.Item().AlignCenter().Column(titleColumn =>
+                    {
+                        titleColumn.Item().AlignCenter().Text("REPORTE DETALLADO DE SOCIEDAD")
+                            .FontSize(16)
+                            .Bold()
+                            .FontColor(Colors.Blue.Medium);
+
+                        titleColumn.Item().PaddingTop(2).AlignCenter().Text($"Sociedad: {_sociedad.Empresa?.Nombre}")
+                            .FontSize(12)
+                            .Bold()
+                            .FontColor(Colors.Grey.Darken3);
+                    });
+
+                    // Línea divisoria decorativa al final del encabezado
+                    column.Item().PaddingTop(10).LineHorizontal(1f).LineColor(Colors.Grey.Lighten1); // <-- Corregido a LineColor
                 });
 
                 // 2. Contenido del PDF (Conversión de las Pestañas de Blazor)

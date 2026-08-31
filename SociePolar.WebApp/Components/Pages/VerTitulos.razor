@@ -75,7 +75,7 @@
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Numero</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@FormatearMiles(p.Acciones)</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">@UtilClass.FormatearMiles(p.Acciones)</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Preferente</td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.Ubicacion</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
@@ -148,7 +148,7 @@
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
                             <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@FormatearMiles(p.NroAcciones)</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
                             <td class="text-start text-secondary small" style="width: 25%;">@p.Descripcion</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                         </tr>
@@ -194,7 +194,7 @@
                                 <label class="form-label fw-bold text-secondary small">Número de Acciones</label>
                                 <input type="text"
                                        class="form-control form-control-sm small"
-                                       value="@FormatearMiles(entidadEditando.Acciones)"
+                                       value="@UtilClass.FormatearMiles(entidadEditando.Acciones)"
                                        @oninput="ProcesarEntradaAcciones"
                                        placeholder="Ingrese número de acciones..."
                                        maxlength="15"
@@ -675,14 +675,6 @@
         }
 
         StateHasChanged();
-    }
-
-    private string FormatearMiles(Int64? valor)
-    {
-        if (valor == null || valor == 0) return string.Empty;
-
-        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
-        return valor.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture);
     }
 
     private void AdminDocumentos(Titulo item)

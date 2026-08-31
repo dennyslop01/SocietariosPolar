@@ -2,6 +2,7 @@
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using SociePolar.Domain.Entities;
+using SociePolar.WebApp.Utilities;
 
 namespace SociePolar.WebApp.DocumentsClass
 {
@@ -83,13 +84,13 @@ namespace SociePolar.WebApp.DocumentsClass
                     // REGLÓN INFERIOR: Títulos del Reporte Centrados
                     column.Item().AlignCenter().Column(titleColumn =>
                     {
-                        titleColumn.Item().AlignCenter().Text("REPORTE DETALLADO DE SOCIEDAD")
-                            .FontSize(16)
-                            .Bold()
-                            .FontColor(Colors.Blue.Medium);
+                        //titleColumn.Item().AlignCenter().Text("REPORTE DETALLADO DE SOCIEDAD")
+                        //    .FontSize(16)
+                        //    .Bold()
+                        //    .FontColor(Colors.Blue.Medium);
 
                         titleColumn.Item().PaddingTop(2).AlignCenter().Text($"Sociedad: {_sociedad.Empresa?.Nombre}")
-                            .FontSize(12)
+                            .FontSize(14)
                             .Bold()
                             .FontColor(Colors.Grey.Darken3);
                     });
@@ -102,7 +103,7 @@ namespace SociePolar.WebApp.DocumentsClass
                 page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
                 {
                     // SECCIÓN 1: DATOS GENERALES
-                    column.Item().Text("1. Información General").FontSize(14).Bold().FontColor(Colors.Blue.Medium).Underline();
+                    column.Item().Text("Información General").FontSize(12).Bold().FontColor(Colors.Grey.Lighten1).Underline();
                     column.Item().PaddingTop(5).Table(table =>
                     {
                         // Definimos 2 columnas de igual ancho (proporcionales)
@@ -131,7 +132,7 @@ namespace SociePolar.WebApp.DocumentsClass
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Fecha Constitución: ").Bold(); t.Span(_sociedad.FechaConstitucion?.ToString("yyyy-MM-dd")); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Fecha Vencimiento: ").Bold(); t.Span(_sociedad.FechaVencimiento?.ToString("yyyy-MM-dd")); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Duración: ").Bold(); t.Span(_sociedad.Duracion); });
-                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Acciones: ").Bold(); t.Span(FormatearMiles(_sociedad.NumeroAcciones)); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Acciones: ").Bold(); t.Span(UtilClass.FormatearStringMiles(_sociedad.NumeroAcciones)); });
                     });
 
 
@@ -141,7 +142,7 @@ namespace SociePolar.WebApp.DocumentsClass
                     column.Item().PaddingTop(5).Text(t => { t.Span("Dirección Fiscal: ").Bold(); t.Span(_sociedad.DireccionFiscal); });
 
                     // SECCIÓN 2: AUTORIDADES
-                    column.Item().PaddingTop(20).Text("2. Autoridades").FontSize(14).Bold().FontColor(Colors.Blue.Medium).Underline();
+                    column.Item().PaddingTop(20).Text("Autoridades").FontSize(12).Bold().FontColor(Colors.Grey.Lighten1).Underline();
                     column.Item().PaddingTop(5).Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
@@ -162,12 +163,12 @@ namespace SociePolar.WebApp.DocumentsClass
                     {
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(aut.Cargo?.Nombre);
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(aut.Nombre);
-                        table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(aut.Documento1);
+                        table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(UtilClass.FormatearStringMiles(aut.Documento1));
                     }
                 });
 
                     // SECCIÓN 3: ASAMBLEAS
-                    column.Item().PaddingTop(20).Text("3. Asambleas").FontSize(14).Bold().FontColor(Colors.Blue.Medium).Underline();
+                    column.Item().PaddingTop(20).Text("Asambleas").FontSize(12).Bold().FontColor(Colors.Grey.Lighten1).Underline();
                     column.Item().PaddingTop(5).Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
@@ -196,7 +197,7 @@ namespace SociePolar.WebApp.DocumentsClass
                 });
 
                     // SECCIÓN 4: REFORMAS
-                    column.Item().PaddingTop(20).Text("4. Reformas").FontSize(14).Bold().FontColor(Colors.Blue.Medium).Underline();
+                    column.Item().PaddingTop(20).Text("Reformas").FontSize(12).Bold().FontColor(Colors.Grey.Lighten1).Underline();
                     column.Item().PaddingTop(5).Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
@@ -222,7 +223,7 @@ namespace SociePolar.WebApp.DocumentsClass
                 });
 
                     // SECCIÓN 5: LIBROS SOCIETARIOS
-                    column.Item().PaddingTop(20).Text("5. Libros Societarios").FontSize(14).Bold().FontColor(Colors.Blue.Medium).Underline();
+                    column.Item().PaddingTop(20).Text("Libros Societarios").FontSize(12).Bold().FontColor(Colors.Grey.Lighten1).Underline();
                     column.Item().PaddingTop(5).Table(table =>
                 {
                     table.ColumnsDefinition(columns =>
@@ -261,14 +262,6 @@ namespace SociePolar.WebApp.DocumentsClass
                     x.TotalPages().FontSize(9);
                 });
             });
-        }
-
-        private string FormatearMiles(string? valor)
-        {
-            if (valor == null || valor == "0")
-                return string.Empty;
-
-            return long.TryParse(valor, out long resultado) ? resultado.ToString("N0", System.Globalization.CultureInfo.CurrentCulture) : valor;
         }
     }
 }

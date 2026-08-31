@@ -15,11 +15,20 @@
                     </h5>
                 </div>
 
-                <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="Regresar"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-arrow-return-left me-2"></i> Regresar
-                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="ExportarAPdf"
+                            disabled="@cargando"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-file-earmark-pdf me-2"></i> Exportar PDF
+                    </button>
+
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="Regresar"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -172,7 +181,7 @@
                                     <!-- Número Acciones -->
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Número Acciones</label>
-                                        <label class="form-label text-secondary small">@FormatearMiles(entidadActual.NumeroAcciones)</label>
+                                        <label class="form-label text-secondary small">@UtilClass.FormatearStringMiles(entidadActual.NumeroAcciones)</label>
                                     </div>
 
                                     <!-- ¿Aplica Capital? -->
@@ -241,7 +250,7 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal</label>
-                                        <label class="form-label text-secondary small">@entidadActual.Documento1</label>
+                                        <label class="form-label text-secondary small">@UtilClass.FormatearStringMiles(entidadActual.Documento1)</label>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
@@ -249,7 +258,7 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 2</label>
-                                        <label class="form-label text-secondary small">@entidadActual.Documento2</label>
+                                        <label class="form-label text-secondary small">@UtilClass.FormatearStringMiles(entidadActual.Documento2)</label>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Tipo Documento</label>
@@ -257,7 +266,7 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 3</label>
-                                        <label class="form-label text-secondary small">@entidadActual.Documento3</label>
+                                        <label class="form-label text-secondary small">@UtilClass.FormatearStringMiles(entidadActual.Documento3)</label>
                                     </div>
 
                                     <!-- Nit -->
@@ -354,7 +363,7 @@
                                     <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
                                     <td class="text-start text-muted small" style="width: 15%; font-style: italic;">↳</td>
                                     <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Documento1</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@UtilClass.FormatearStringMiles(p.Documento1)</td>
                                     <td class="text-start text-secondary small" style="width: 5%;">@(p.Duracion != null ? $"{p.Duracion} años" : "")</td>
                                     <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                                     <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
@@ -696,13 +705,24 @@
 
     private void ManejarCierreModal() => mostrarModal = false;
 
-    private string FormatearMiles(string? valor)
+    private async Task ExportarAPdf()
     {
-        if (valor == null || valor == "0") return string.Empty;
+        try
+        {
+            cargando = true;
+            StateHasChanged();
 
-        long? numero = long.TryParse(valor, out long resultado) ? resultado : (long?)null;
+            await ReportService.GenerarYDescargarReporteSociedadAsync(int.Parse(id));
 
-        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
-        return numero.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture).ToString();
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Reporte PDF generado exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion($"Error al exportar PDF: {ex.Message}", true);
+        }
     }
 }

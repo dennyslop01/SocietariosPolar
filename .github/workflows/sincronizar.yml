@@ -19,8 +19,8 @@ jobs:
           git config --global user.name "dennyslop01"
           git config --global user.email "dennyslop@hotmail.com"
           
-          git remote add CSG-VE https://${{ secrets.POLAR_TOKEN }}@://github.com
+          git remote add empresa https://${{ secrets.POLAR_TOKEN }}@://github.com
           
-          git push CSG-VE dev:main --force
+          git push empresa dev:main --force
 
 

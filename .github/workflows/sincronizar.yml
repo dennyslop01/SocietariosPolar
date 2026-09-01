@@ -1,0 +1,26 @@
+name: Sincronizar Dev Personal a Dev CSG-VE
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  push-to-company:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo actual
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enviar cambios a repositorio de CSG-VE
+        run: |
+          git config --global user.name "dennyslop01"
+          git config --global user.email "dennyslop@hotmail.com"
+          
+          git remote add empresa https://${{ secrets.POLAR_TOKEN }}@://github.com
+          
+          git push empresa dev:dev --force
+
+

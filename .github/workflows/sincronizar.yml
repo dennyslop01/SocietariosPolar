@@ -1,4 +1,4 @@
-name: Sincronizar Dev Personal a Main Empresa
+name: Sincronizar Dev Personal a Main CSG-VE
 
 on:
   push:
@@ -14,12 +14,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enviar cambios a repositorio de empresa
+      - name: Enviar cambios a repositorio de CSG-VE
         run: |
           git config --global user.name "dennyslop01"
           git config --global user.email "dennyslop@hotmail.com"
           
-          git remote add empresa https://${{ secrets.POLAR_TOKEN }}@://github.com/CSG-VE/SocietariosPolar
+          git remote add CSG-VE https://${{ secrets.POLAR_TOKEN }}@://github.com
           
-          git push empresa dev:main --force
+          git push CSG-VE dev:main --force
+
 

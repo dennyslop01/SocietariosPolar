@@ -1,4 +1,4 @@
-name: Sincronizar Dev Personal a Main CSG-VE
+name: Sincronizar Dev Personal a Dev CSG-VE
 
 on:
   push:
@@ -21,6 +21,6 @@ jobs:
           
           git remote add empresa https://${{ secrets.POLAR_TOKEN }}@://github.com
           
-          git push empresa dev:main --force
+          git push empresa dev:dev --force
 
 

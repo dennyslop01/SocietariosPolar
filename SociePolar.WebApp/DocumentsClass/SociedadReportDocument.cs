@@ -96,7 +96,7 @@ namespace SociePolar.WebApp.DocumentsClass
                     });
 
                     // Línea divisoria decorativa al final del encabezado
-                    column.Item().PaddingTop(10).LineHorizontal(1f).LineColor(Colors.Grey.Lighten1); // <-- Corregido a LineColor
+                    column.Item().PaddingTop(10).LineHorizontal(1f).LineColor(Colors.Grey.Lighten1);
                 });
 
                 // 2. Contenido del PDF (Conversión de las Pestañas de Blazor)

@@ -15,15 +15,11 @@ jobs:
           fetch-depth: 0
 
       - name: Enviar cambios a repositorio de empresa
-        run: 
-          # Configurar identidad de Git en el servidor temporal
+        run: |
           git config --global user.name "dennyslop01"
           git config --global user.email "dennyslop@hotmail.com"
           
-          # Añadir el repositorio de la empresa como un destino remoto alternativo
-          # Reemplaza 'CSG-VE' y 'SocietariosPolar' si los nombres exactos varían en la URL
           git remote add empresa https://${{ secrets.POLAR_TOKEN }}@://github.com
           
-          # Empujar la rama local 'dev' hacia la rama remota 'main' de la empresa
-          # El parámetro -f (force) asegura que se sobrescriba, úsalo con precaución
           git push empresa dev:main --force
+

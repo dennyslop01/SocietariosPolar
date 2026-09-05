@@ -197,7 +197,7 @@
                             <label class="form-label fw-bold text-secondary small">Número Acciones</label>
                             <input type="text"
                                    class="form-control form-control-sm small"
-                                   value="@FormatearMiles(entidadEditando.NumeroAcciones)"
+                                   value="@UtilClass.FormatearStringMiles(entidadEditando.NumeroAcciones)"
                                    @oninput="ProcesarEntradaAcciones"
                                    placeholder="Ingrese número de acciones..."
                                    maxlength="26"
@@ -467,14 +467,14 @@
 
     private string CapitalSuscritoTexto
     {
-        get => FormatearNumero((decimal?)entidadEditando.CapitalSuscrito!);
-        set => entidadEditando.CapitalSuscrito = LimpiarYConvertir(value);
+        get => UtilClass.FormatearNumero((decimal?)entidadEditando.CapitalSuscrito!);
+        set => entidadEditando.CapitalSuscrito = UtilClass.LimpiarYConvertir(value);
     }
 
     private string CapitalPagadoTexto
     {
-        get => FormatearNumero((decimal?)entidadEditando.CapitalPagado!);
-        set => entidadEditando.CapitalPagado = LimpiarYConvertir(value);
+        get => UtilClass.FormatearNumero((decimal?)entidadEditando.CapitalPagado!);
+        set => entidadEditando.CapitalPagado = UtilClass.LimpiarYConvertir(value);
     }
 
     protected override async Task OnInitializedAsync()
@@ -785,47 +785,5 @@
         {
             entidadEditando.NumeroAcciones = "0"; // O el valor por defecto que manejes
         }
-    }
-
-    private string FormatearMiles(string? valor)
-    {
-        if (valor == null || valor == "0") return string.Empty;
-
-        long? numero = long.TryParse(valor, out long resultado) ? resultado : (long?)null;
-
-        // Formatea con separador de miles según la cultura local (ej: 1.000 o 1,000)
-        return numero.Value.ToString("N0", System.Globalization.CultureInfo.CurrentCulture).ToString();
-    }
-
-    // Toma el número de tu clase y lo muestra con puntos/comas de tu región
-    private string FormatearNumero(decimal? valor)
-    {
-        if (valor == null) return "";
-        if (valor == 0) return "";
-        return valor?.ToString("N2", System.Globalization.CultureInfo.CurrentCulture);
-    }
-
-    // Toma el texto del teclado, remueve separadores visuales y guarda el decimal puro en tu clase
-    private decimal LimpiarYConvertir(string? input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return 0;
-
-        try
-        {
-            string separadorMiles = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
-
-            // Eliminamos el separador de miles para que no rompa la conversión decimal
-            string limpio = input.Replace(separadorMiles, "");
-
-            if (decimal.TryParse(limpio, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out decimal resultado))
-            {
-                return resultado;
-            }
-        }
-        catch
-        {
-            // Protege el formulario de errores si escriben caracteres extraños
-        }
-        return 0;
     }
 }

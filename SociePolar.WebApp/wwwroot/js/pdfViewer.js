@@ -26,11 +26,8 @@
 }
 
 function abrirExcelBase64(base64String, nombreArchivo) {
-    // 1. Asegurar la extensión correcta
-    const nombreConExtension = nombreArchivo.endsWith('.xlsx') ? nombreArchivo : `${nombreArchivo}.xlsx`;
-
     try {
-        // 2. Convertir el string Base64 a bytes binarios
+        // 1. Convertir el string Base64 a bytes binarios
         const caracteresBinarios = atob(base64String);
         const numerosBinarios = new Array(caracteresBinarios.length);
 
@@ -40,15 +37,34 @@ function abrirExcelBase64(base64String, nombreArchivo) {
 
         const matrizBytes = new Uint8Array(numerosBinarios);
 
-        // 3. Crear el Blob con el tipo MIME de Excel (XLSX)
-        const blobExcel = new Blob([matrizBytes], {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        });
+        // 2. Validar el formato real analizando los "Magic Bytes" al inicio del archivo
+        let tipoMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"; // XLSX por defecto
+        let extensionCorrecta = ".xlsx";
 
-        // 4. Crear una URL temporal para el objeto Blob
+        if (matrizBytes.length >= 4) {
+            // XLS antiguo empieza por D0 CF 11 E0 (Composite Document File V2)
+            if (matrizBytes[0] === 0xD0 && matrizBytes[1] === 0xCF && matrizBytes[2] === 0x11 && matrizBytes[3] === 0xE0) {
+                tipoMime = "application/vnd.ms-excel";
+                extensionCorrecta = ".xls";
+            }
+            // XLSX moderno es un ZIP y empieza por 50 4B 03 04 (PK..)
+            else if (matrizBytes[0] === 0x50 && matrizBytes[1] === 0x4B && matrizBytes[2] === 0x03 && matrizBytes[3] === 0x04) {
+                tipoMime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                extensionCorrecta = ".xlsx";
+            }
+        }
+
+        // 3. Limpiar el nombre del archivo de extensiones previas incorrectas y poner la detectada
+        let nombreLimpio = nombreArchivo.replace(/\.xlsx$/i, '').replace(/\.xls$/i, '');
+        const nombreConExtension = `${nombreLimpio}${extensionCorrecta}`;
+
+        // 4. Crear el Blob con el tipo MIME dinámico correcto
+        const blobExcel = new Blob([matrizBytes], { type: tipoMime });
+
+        // 5. Crear una URL temporal para el objeto Blob
         const urlBlob = URL.createObjectURL(blobExcel);
 
-        // 5. Abrir en una nueva pestaña (forzará la descarga/apertura en el cliente)
+        // 6. Abrir en una nueva pestaña (forzará la descarga/apertura en el cliente)
         const nuevaPestana = window.open("", "_blank");
 
         if (nuevaPestana) {

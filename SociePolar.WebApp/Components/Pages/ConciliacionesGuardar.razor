@@ -554,10 +554,10 @@
             string folderName = $"Conciliaciones_Sociedad_ID_{entidadEditando.SociedadId}";
             string nombreLimpio = string.Empty;
             nombreLimpio = entidadEditando.NombreConciliaciones.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
-            if (!nombreLimpio.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.xlsx";
-            }
+            // if (!nombreLimpio.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            // {
+            //     nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.xlsx";
+            // }
             entidadEditando.NombreConciliaciones = nombreLimpio;
 
             if (!string.IsNullOrEmpty(folderName))

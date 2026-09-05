@@ -141,15 +141,38 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Total pagado según Tesorería</label>
-                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.MontoPagadoTesoreria" placeholder="0.0000" step="0.0001" />
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="MontoPagadoTesoreriaTexto" @bind:event="oninput" placeholder="0,00" /><br /><br />
+                            </div>
                             <ValidationMessage For="@(() => entidadEditando.MontoPagadoTesoreria)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Total pagado según accionistas</label>
-                            <input type="number" class="form-control form-control-sm small" @bind="entidadEditando.MontoPagadoAccionistas" placeholder="0.0000" step="0.0001" />
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="MontoPagadoAccionistasTexto" @bind:event="oninput" placeholder="0,00" />
+                            </div>
                             <ValidationMessage For="@(() => entidadEditando.MontoPagadoAccionistas)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Diferencia Total Tesorería - Accionistas</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="MontoPagadoDiferenciaTexto" placeholder="0,00" disabled/>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Monto total de dividendos a repartir</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">$</span>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="MontoTotalRepartirTexto" @bind:event="oninput" placeholder="0,00" />
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.MontoTotalRepartir)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
@@ -212,6 +235,41 @@
     private string textoBusqueda = "";
     private ElementReference searchInputRef;
     private List<DividendoPreliminarDetalle> listaDividendos = new ();
+
+    private string MontoPagadoTesoreriaTexto
+    {
+        get => UtilClass.FormatearNumero((decimal?)entidadEditando.MontoPagadoTesoreria!);
+        set => entidadEditando.MontoPagadoTesoreria = UtilClass.LimpiarYConvertir(value);
+    }
+
+    private string MontoPagadoAccionistasTexto
+    {
+        get => UtilClass.FormatearNumero((decimal?)entidadEditando.MontoPagadoAccionistas!);
+        set => entidadEditando.MontoPagadoAccionistas = UtilClass.LimpiarYConvertir(value);
+    }
+
+    private string MontoPagadoDiferenciaTexto
+    {
+        get
+        {
+            // Si ya son decimal, no hace falta el operador ??
+            decimal tesoreria = entidadEditando.MontoPagadoTesoreria;
+            decimal accionistas = entidadEditando.MontoPagadoAccionistas;
+
+            decimal diferencia = tesoreria - accionistas;
+
+            entidadEditando.MontoPagadoDiferencia = diferencia;
+
+            return UtilClass.FormatearNumero(diferencia);
+        }
+        set => entidadEditando.MontoPagadoDiferencia = UtilClass.LimpiarYConvertir(value);
+    }
+
+    private string MontoTotalRepartirTexto
+    {
+        get => UtilClass.FormatearNumero((decimal?)entidadEditando.MontoTotalRepartir!);
+        set => entidadEditando.MontoTotalRepartir = UtilClass.LimpiarYConvertir(value);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -606,10 +664,10 @@
             {
                 case 1:
                     nombreLimpio = entidadEditando.NombreDividendos.Replace(" ", "_").Replace("/", "_").Replace("\\", "_");
-                    if (!nombreLimpio.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-                    {
-                        nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.xlsx";
-                    }
+                    // if (!nombreLimpio.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                    // {
+                    //     nombreLimpio = nombreLimpio + $"_{DateTime.Now:yyyyMMdd}.xlsx";
+                    // }
                     entidadEditando.NombreDividendos = nombreLimpio;
                     break;
                 case 2:
@@ -774,5 +832,4 @@
 
         return DateTime.TryParse(texto, out DateTime res) ? res : (DateTime?)null;
     }
-
 }

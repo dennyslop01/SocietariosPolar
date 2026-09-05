@@ -26,8 +26,12 @@ namespace SociePolar.Domain.Dtos
         [Range(100, double.MaxValue, ErrorMessage = "El Monto Pagado en Tesorería debe ser un valor mayor a cien.")]
         public decimal MontoPagadoTesoreria { get; set; }
 
-        [Range(100, double.MaxValue, ErrorMessage = "El Monto Pagado a Accionistas debe ser un valor mayor a cien.")]
+        [Range(10, double.MaxValue, ErrorMessage = "El Monto Pagado a Accionistas debe ser un valor mayor a diez.")]
         public decimal MontoPagadoAccionistas { get; set; }
+        public decimal MontoPagadoDiferencia { get; set; }
+
+        [Range(100, double.MaxValue, ErrorMessage = "El Monto total a repartir debe ser un valor mayor a cien.")]
+        public decimal MontoTotalRepartir { get; set; }
 
         public DateTime CreateDate { get; set; }
         public int CreateUserId { get; set; }

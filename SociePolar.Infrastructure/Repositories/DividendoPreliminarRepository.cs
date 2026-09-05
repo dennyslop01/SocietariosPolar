@@ -50,6 +50,7 @@ namespace SociePolar.Infrastructure.Repositories
                 Observaciones = entity.Observaciones,
                 MontoPagadoTesoreria = entity.MontoPagadoTesoreria,
                 MontoPagadoAccionistas = entity.MontoPagadoAccionistas,
+                MontoTotalRepartir = entity.MontoTotalRepartir,
                 CreateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
             };

@@ -72,6 +72,14 @@
                         <small class="d-block opacity-75"></small>
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill"
+                            id="tab-6" data-bs-toggle="tab" data-bs-target="#panel-6"
+                            type="button" role="tab">
+                        <span class="fw-semibold">Accionistas</span>
+                        <small class="d-block opacity-75"></small>
+                    </button>
+                </li>
             </ul>
 
             <!-- Contenido de las Pestañas -->
@@ -577,6 +585,63 @@
                     </div>
                 </div>
             </div>
+            <div class="tab-content" id="talentTabsContent">
+                <div class="tab-pane fade" id="panel-6" role="tabpanel">
+                    <div class="table-responsive">
+                        <PaginationComponent TItem="AccionistaSociedadVerDto" Items="ListAccionistasGral" DefaultPageSize="10">
+                            <ChildContentHeader>
+                                <tr class="table-light border-bottom">
+                                    <!-- Columna 1: Sociedad -->
+                                    <th class="py-3 ps-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;">
+                                        Sociedad
+                                    </th>
+                                    <!-- Columna 3: Tipo Accionista -->
+                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;">
+                                        Tipo Accionista
+                                    </th>
+                                    <!-- Columna 2: Nombre y Apellido -->
+                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;">
+                                        Nombre y Apellido
+                                    </th>
+                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro. Acciones</th>
+                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">% Participación</th>
+                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
+                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
+                                </tr>
+                            </ChildContentHeader>
+                            <ChildContentRow Context="p">
+                                @{
+                                    var index = ListAccionistasGral.IndexOf(p);
+
+                                    // 1. Ruptura para Sociedad
+                                    bool esNuevaSociedad = index == 0 ||
+                                                           ListAccionistasGral[index - 1].SociedadNombre != p.SociedadNombre;
+                                }
+
+                                @if (esNuevaSociedad)
+                                {
+                                    <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
+                                    <tr class="table-secondary fw-bold text-primary border-bottom">
+                                        <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
+                                            🏢 @p.SociedadNombre
+                                        </td>
+                                    </tr>
+                                }
+
+                                <tr class="align-middle border-bottom">
+                                    <td class="text-muted small ps-3" style="width: 15%;">-</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@p.TipoAccionistaNombre</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@p.AccionistaNombre</td>
+                                    <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
+                                    <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
+                                    <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
+                                    <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
+                                </tr>
+                            </ChildContentRow>
+                        </PaginationComponent>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -618,6 +683,7 @@
     private List<Asamblea> ListAsambleaGral = new();
     private List<Asamblea> ListReformaGral = new();
     private List<Certificacion> ListCertificacionGral = new();
+    private List<AccionistaSociedadVerDto> ListAccionistasGral = new();
 
     int idAsamblea = 0;
     private bool mostrarModal = false;
@@ -626,6 +692,7 @@
     [Inject] private IAutoridad repoAutoridad { get; set; } = null!;
     [Inject] private IAsamblea repoAsamblea { get; set; } = null!;
     [Inject] private ICertificacion repoCertificacion { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoaccionista { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -669,6 +736,42 @@
             ListCertificacionGral = listCertificaciones.OrderBy(x => x.Sociedad.Empresa.Id)
                                     .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == int.Parse(id))
                                     .ToList();
+           List<AccionistaSociedadVerDto> listNewAccionista = new();
+
+            var listAaccionista = await repoaccionista.GetBySociedadIdAsync(int.Parse(id));
+            foreach (var item in listAaccionista)
+            {
+                Int64 nroacciones = 0;
+                decimal porcparticipa = 0;
+                Int64 accionesaux = 0;
+                if (item.NroAcciones != null)
+                {
+                    accionesaux = (Int64)item.NroAcciones;
+                }
+
+                if (item.Sociedad != null)
+                {
+                    if (item.Sociedad.NumeroAcciones != null)
+                    {
+                        porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
+                    }
+                }
+
+                AccionistaSociedadVerDto accionista = new()
+                {
+                    Id = item.Id,
+                    SociedadNombre = item.Sociedad?.Empresa?.Nombre,
+                    TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
+                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion,
+                    NroAcciones = (nroacciones != 0) ? nroacciones : accionesaux,
+                    Participacion = porcparticipa,
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                };
+
+                listNewAccionista.Add(accionista);
+            }
+            ListAccionistasGral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
         }
         catch (Exception ex)
         {

@@ -9,7 +9,7 @@
         <i class="bi bi-house-fill m-2"></i> Inicio
     </MudButton>
 
-    @if (userrol == 1 || userrol == 2)
+    @if (userrol == 1)
     {
         <MudMenu Label="Administración"
                  Variant="Variant.Text"
@@ -171,94 +171,104 @@
 
     @if (userrol != 0)
     {
-        <MudMenu Label="Sociedades"
-            Variant="Variant.Text"
-                 Dense="true"
-                 Padding="false"
-                 Style="color: white; text-transform: none;"
-                 StartIcon="@Icons.Material.Filled.DeviceHub"
-                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                 AnchorOrigin="Origin.BottomLeft"
-                 TransformOrigin="Origin.TopLeft">
-            <ChildContent>
-                <MudMenu Label="Activas"
+        switch(userrol)
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 6:
+                <MudMenu Label="Sociedades"
                          Variant="Variant.Text"
                          Dense="true"
                          Padding="false"
-                         Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
-                         EndIcon="@Icons.Material.Filled.ChevronRight"
-                         AnchorOrigin="Origin.TopRight"
+                         Style="color: white; text-transform: none;"
+                         StartIcon="@Icons.Material.Filled.DeviceHub"
+                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         AnchorOrigin="Origin.BottomLeft"
                          TransformOrigin="Origin.TopLeft">
                     <ChildContent>
-                        <MudMenuItem href="/sociedades">
-                            <div style="font-size: 0.85rem;">
-                                Ficha Sociedad
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/autoridades">
-                            <div style="font-size: 0.85rem;">
-                                Autoridades
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/asambleas">
-                            <div style="font-size: 0.85rem;">
-                                Asambleas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/reformas">
-                            <div style="font-size: 0.85rem;">
-                                Reformas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/certificaciones">
-                            <div style="font-size: 0.85rem;">
-                                Certificaciones
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/librosocietarios">
-                            <div style="font-size: 0.85rem;">
-                                Libros Societarios
-                            </div>
-                        </MudMenuItem>
+                        <MudMenu Label="Activas"
+                                 Variant="Variant.Text"
+                                 Dense="true"
+                                 Padding="false"
+                                 Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
+                                 EndIcon="@Icons.Material.Filled.ChevronRight"
+                                 AnchorOrigin="Origin.TopRight"
+                                 TransformOrigin="Origin.TopLeft">
+                            <ChildContent>
+                                <MudMenuItem href="/sociedades">
+                                    <div style="font-size: 0.85rem;">
+                                        Ficha Sociedad
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/autoridades">
+                                    <div style="font-size: 0.85rem;">
+                                        Autoridades
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/asambleas">
+                                    <div style="font-size: 0.85rem;">
+                                        Asambleas
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/reformas">
+                                    <div style="font-size: 0.85rem;">
+                                        Reformas
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/certificaciones">
+                                    <div style="font-size: 0.85rem;">
+                                        Certificaciones
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/librosocietarios">
+                                    <div style="font-size: 0.85rem;">
+                                        Libros Societarios
+                                    </div>
+                                </MudMenuItem>
+                                <MudDivider />
+
+                            </ChildContent>
+                        </MudMenu>
                         <MudDivider />
 
+                        <MudMenu Label="Inactivas"
+                                 Variant="Variant.Text"
+                                 Dense="true"
+                                 Padding="false"
+                                 Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
+                                 EndIcon="@Icons.Material.Filled.ChevronRight"
+                                 AnchorOrigin="Origin.TopRight"
+                                 TransformOrigin="Origin.TopLeft">
+                            <ChildContent>
+                                <MudMenuItem href="/sociedadesinactivas">
+                                    <div style="font-size: 0.85rem;">
+                                        Ficha Sociedad
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/asambleasinactivas">
+                                    <div style="font-size: 0.85rem;">
+                                        Asambleas
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/reformasinactivas">
+                                    <div style="font-size: 0.85rem;">
+                                        Reformas
+                                    </div>
+                                </MudMenuItem>
+                                <MudMenuItem href="/autoridadesinactivas">
+                                    <div style="font-size: 0.85rem;">
+                                        Autoridades
+                                    </div>
+                                </MudMenuItem>
+                            </ChildContent>
+                        </MudMenu>
                     </ChildContent>
                 </MudMenu>
-                <MudDivider />
 
-                <MudMenu Label="Inactivas"
-                         Variant="Variant.Text"
-                         Dense="true"
-                         Padding="false"
-                         Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
-                         EndIcon="@Icons.Material.Filled.ChevronRight"
-                         AnchorOrigin="Origin.TopRight"
-                         TransformOrigin="Origin.TopLeft">
-                    <ChildContent>
-                        <MudMenuItem href="/sociedadesinactivas">
-                            <div style="font-size: 0.85rem;">
-                                Ficha Sociedad
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/asambleasinactivas">
-                            <div style="font-size: 0.85rem;">
-                                Asambleas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/reformasinactivas">
-                            <div style="font-size: 0.85rem;">
-                                Reformas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/autoridadesinactivas">
-                            <div style="font-size: 0.85rem;">
-                                Autoridades
-                            </div>
-                        </MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-            </ChildContent>
-        </MudMenu>
+                break;
+        }
 
         <MudMenu Label="Accionistas"
                  Variant="Variant.Text"
@@ -270,60 +280,86 @@
                  AnchorOrigin="Origin.BottomLeft"
                  TransformOrigin="Origin.TopLeft">
             <ChildContent>
-                <MudMenuItem href="/accionistassociedad">
-                    <div style="font-size: 0.85rem;">
-                        Accionistas Activos
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/accionistassociedadinactivas">
-                    <div style="font-size: 0.85rem;">
-                        Accionistas Inactivos
-                    </div>
-                </MudMenuItem>
+                @switch (userrol)
+                {
+                    case 1:
+                    case 3:
+                    case 6:
+                        <MudMenuItem href="/accionistassociedad">
+                            <div style="font-size: 0.85rem;">
+                                Accionistas Activos
+                            </div>
+                        </MudMenuItem>
+                        break;
+                }
+                @switch (userrol)
+                {
+                    case 1:
+                    case 6:
+                        <MudMenuItem href="/accionistassociedadinactivas">
+                            <div style="font-size: 0.85rem;">
+                                Accionistas Inactivos
+                            </div>
+                        </MudMenuItem>
+                        break;
+                }
+                
             </ChildContent>
         </MudMenu>
 
-        <MudMenu Label="Dividendos"
-                 Variant="Variant.Text"
-                 Dense="true"
-                 Padding="false"
-                 Style="color: white; text-transform: none;"
-                 StartIcon="@Icons.Material.Filled.DeviceHub"
-                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                 AnchorOrigin="Origin.BottomLeft"
-                 TransformOrigin="Origin.TopLeft">
-            <ChildContent>
-                <MudMenuItem href="/dividendospreliminares">
-                    <div style="font-size: 0.85rem;">
-                        Dividendos Preliminares
-                    </div>
-                </MudMenuItem>
-                <MudMenuItem href="/dividendosdefinitivos">
-                    <div style="font-size: 0.85rem;">
-                        Dividendos Definitivos
-                    </div>
-                </MudMenuItem>
-            </ChildContent>
-        </MudMenu>
+        switch (userrol)
+        {
+            case 1:
+            case 5:
+            case 6:
+                <MudMenu Label="Dividendos"
+                         Variant="Variant.Text"
+                         Dense="true"
+                         Padding="false"
+                         Style="color: white; text-transform: none;"
+                         StartIcon="@Icons.Material.Filled.DeviceHub"
+                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         AnchorOrigin="Origin.BottomLeft"
+                         TransformOrigin="Origin.TopLeft">
+                    <ChildContent>
+                        <MudMenuItem href="/dividendospreliminares">
+                            <div style="font-size: 0.85rem;">
+                                Dividendos Preliminares
+                            </div>
+                        </MudMenuItem>
+                        <MudMenuItem href="/dividendosdefinitivos">
+                            <div style="font-size: 0.85rem;">
+                                Dividendos Definitivos
+                            </div>
+                        </MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+                break;
+        }
 
-        <MudMenu Label="Conciliaciones"
-                 Variant="Variant.Text"
-                 Dense="true"
-                 Padding="false"
-                 Style="color: white; text-transform: none;"
-                 StartIcon="@Icons.Material.Filled.DeviceHub"
-                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                 AnchorOrigin="Origin.BottomLeft"
-                 TransformOrigin="Origin.TopLeft">
-            <ChildContent>
-                <MudMenuItem href="/conciliaciones">
-                    <div style="font-size: 0.85rem;">
-                        Conciliaciones Subir Archivos
-                    </div>
-                </MudMenuItem>
-            </ChildContent>
-        </MudMenu>
-
+        switch (userrol)
+        {
+            case 1:
+            case 6:
+                <MudMenu Label="Conciliaciones"
+                Variant="Variant.Text"
+                Dense="true"
+                Padding="false"
+                Style="color: white; text-transform: none;"
+                StartIcon="@Icons.Material.Filled.DeviceHub"
+                EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                AnchorOrigin="Origin.BottomLeft"
+                TransformOrigin="Origin.TopLeft">
+                    <ChildContent>
+                        <MudMenuItem href="/conciliaciones">
+                            <div style="font-size: 0.85rem;">
+                                Conciliaciones Subir Archivos
+                            </div>
+                        </MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+                break;
+        }
     }
     <MudSpacer />
     @* Botón alineado a la derecha con el valor de la variable *@

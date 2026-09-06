@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
@@ -223,7 +224,10 @@ namespace SociePolar.Infrastructure.Repositories
             AccionistaSociedad? editentidad = await context.AccionistasSociedades.Where(x => x.Accionista.Id == accionistaid && x.Sociedad.Id == sociedadid).FirstOrDefaultAsync();
             if (editentidad == null) throw new Exception($"Accionista - Sodiedad con esa clave no existe.");
 
+            var estatus = await context.Set<EstatusAccionista>().FindAsync(1);
+
             editentidad.NroAcciones = nroacciones;
+            editentidad.EstatusAccionista = estatus;
             editentidad.UpdateDate = DateTime.UtcNow;
             editentidad.UpdateUserId = updateUserId;
 
@@ -253,6 +257,15 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<AuditoriaNroAccion>()
                 .Where(a => a.SociedadId == sociedadId && a.AccionistaId == accionistaId)
                 .ToListAsync();
+        }
+
+        public async Task AccionistasSociedadInactivar(int procesoid)
+        {
+            using var context = _contextFactory.CreateDbContext();
+
+            var paramProcesoId = new SqlParameter("@ProcesoId", procesoid);
+
+            await context.Database.ExecuteSqlRawAsync("EXEC SP_AccionistasSociedadInactivar @ProcesoId", paramProcesoId);
         }
     }
 }

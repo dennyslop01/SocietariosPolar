@@ -44,8 +44,106 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        Cantidad Total de Acciones:
+                    </h7>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        @UtilClass.FormatearMiles(CantidadAcciones)
+                    </h7>
+                </div>
+                <div class="col-md-6 mb-3">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        Total de Accionistas:
+                    </h7>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        @UtilClass.FormatearMiles(TotalAccionista)
+                    </h7>
+                </div>
+                <hr />
+                <div class="col-md-10 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        Accionistas nuevos
+                    </h7>
+                </div>
+            </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="ConciliacionDetalleDto" Items="Listgral" DefaultPageSize="10">
+                <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralNuevos" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nombre Accionista</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Total Acciones</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroDocumento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.TotalAcciones</td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        Accionistas Actualizados
+                    </h7>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralActualizados" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro Documento</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nombre Accionista</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Total Acciones</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroDocumento</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Nombre</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.TotalAcciones</td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <h7 class="mb-0 fw-bold text-dark">
+                        Accionistas inhabilitados
+                    </h7>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralInactivos" DefaultPageSize="10">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
@@ -101,12 +199,17 @@
     private string iconoAlerta = "bi-check-circle-fill";
     private bool cargando = false;
     private int idRol = 0;
+    private Int64 CantidadAcciones = 0;
+    private Int64 TotalAccionista = 0;
 
-    private List<ConciliacionDetalleDto> Listgral = new();
+    private List<ConciliacionDetalleDto> ListgralNuevos = new();
+    private List<ConciliacionDetalleDto> ListgralActualizados = new();
+    private List<ConciliacionDetalleDto> ListgralInactivos = new();
 
 
     [Inject] private IConciliacion repository { get; set; } = null!;
     [Inject] private IAccionista repoaccionista { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoaccionistasocie { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,21 +235,58 @@
     {
         try
         {
+            var conciliacion = await repository.GetByIdAsync(id);
             var listaDetalle = await repository.GetDetalleByIdAsync(id);
+            var listaAccionistas = await repoaccionistasocie.GetBySociedadIdAsync((int)conciliacion?.Sociedad?.Id);
 
             foreach (var item in listaDetalle)
             {
                 var accionista = await repoaccionista.GetByIdAsync(item.AccionistaId);
                 if (accionista != null)
                 {
-                    Listgral.Add(new ConciliacionDetalleDto
+                    if (item.Accion == "Creado")
+                    {
+                        ListgralNuevos.Add(new ConciliacionDetalleDto
+                        {
+                            Id = item.Id,
+                            Accion = item.Accion,
+                            Documento = accionista.TipoDocumento1?.Nombre,
+                            NroDocumento = accionista.Documento1,
+                            Nombre = accionista.Nombre,
+                            TotalAcciones = item.TotalAcciones
+                        });
+                    }
+                    else if (item.Accion == "Actualizado")
+                    {
+                        ListgralActualizados.Add(new ConciliacionDetalleDto
+                        {
+                            Id = item.Id,
+                            Accion = item.Accion,
+                            Documento = accionista.TipoDocumento1?.Nombre,
+                            NroDocumento = accionista.Documento1,
+                            Nombre = accionista.Nombre,
+                            TotalAcciones = item.TotalAcciones
+                        });
+                    }
+                }
+            }
+
+            CantidadAcciones = listaDetalle.Sum(x => x.TotalAcciones);
+            TotalAccionista = listaDetalle.Count();
+
+            foreach (var item in listaAccionistas.Where(a => a.EstatusAccionista?.Id == 2))
+            {
+                var accionista = await repoaccionista.GetByIdAsync((int)item.Accionista?.Id);
+                if (accionista != null)
+                {
+                    ListgralInactivos.Add(new ConciliacionDetalleDto
                     {
                         Id = item.Id,
-                        Accion = item.Accion,
+                        Accion = "Inactivado",
                         Documento = accionista.TipoDocumento1?.Nombre,
                         NroDocumento = accionista.Documento1,
                         Nombre = accionista.Nombre,
-                        TotalAcciones = item.TotalAcciones
+                        TotalAcciones = item.NroAcciones
                     });
                 }
             }

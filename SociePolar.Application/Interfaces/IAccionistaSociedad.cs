@@ -16,6 +16,6 @@ namespace SociePolar.Application.Interfaces
         void Activar(int id, int estatus);
         Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, Int64 nroacciones, int updateUserId, int opcioaudi);
         Task<List<AuditoriaNroAccion>?> GetAuditoriaBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
-
+        Task AccionistasSociedadInactivar(int procesoid);
     }
 }

@@ -136,6 +136,7 @@
     <ModalCargando />
 }
 
+
 @code {
     [Parameter] public string id { get; set; } = "";
 
@@ -445,6 +446,8 @@
                     {
                         await repoaccionistasocie.UpdateNroAccionesAsync(item.AccionistaId, (int)entidadEditando.SociedadId, item.TotalAcciones, userid, 1);
                     }
+
+                    await repoaccionistasocie.AccionistasSociedadInactivar(idNew);
 
                     // Liberar el stream de forma segura ahora que el proceso completo terminó bien
                     await streamToUploadConciliacion.DisposeAsync();

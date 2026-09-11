@@ -1,0 +1,501 @@
+@if (cargando)
+{
+    <ModalCargando />
+}
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
+
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Libro Societario Inactivo" : "Agregar Libro Societario Inactivo")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
+
+                    <div class="modal-body py-4">
+                        <!-- Iniciamos la grilla de filas y columnas -->
+                        <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Sociedad Inactiva</label>
+                            <div class="dropdown">
+                                <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                        type="button"
+                                        style="font-size: 0.8rem;"
+                                        @onclick="ToggleDropdown">
+                                    <span>@(ObtenerNombreSeleccionado())</span>
+                                </button>
+
+                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                    <li class="mb-2">
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="Buscar sociedad inactiva..."
+                                               style="font-size: 0.8rem;"
+                                               @bind="textoBusqueda"
+                                               @bind:event="oninput"
+                                               @ref="searchInputRef" />
+                                    </li>
+
+                                    <li>
+                                        <button type="button"
+                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                style="font-size: 0.8rem;"
+                                                @onclick="() => SeleccionarOpcion(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+
+                                    @if (listSociedad != null)
+                                    {
+                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || (s.Empresa != null && s.Empresa.Nombre != null && s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))))
+                                        {
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                    @sociedad.Empresa?.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+
+                                </ul>
+                            </div>
+
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Clase Libro</label>
+                            <select class="form-select form-select-sm" value="@entidadEditando.ClaseLibroId" @onchange="OnClaseLibroChanged">
+                                <option value="0">Seleccione ...</option>
+                                @if (listClaseLibro != null)
+                                {
+                                    @foreach (var claselibro in listClaseLibro)
+                                    {
+                                        <option value="@claselibro.Id">@claselibro.Nombre</option>
+                                    }
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => entidadEditando.ClaseLibroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Libro</label>
+                            <select class="form-select form-select-sm" value="@entidadEditando.TipoLibroId" @onchange="OnTipoLibroChanged">
+                                <option value="0">Seleccione ...</option>
+                                @if (listTipoLibro != null)
+                                {
+                                    @foreach (var tipolibro in listTipoLibro)
+                                    {
+                                        <option value="@tipolibro.Id">@tipolibro.Nombre</option>
+                                    }
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => entidadEditando.TipoLibroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tomo</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.TomoUso"
+                                   placeholder="Ingrese el tomo de uso..."
+                                   maxlength="3"
+                                   inputmode="numeric"
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
+                            <ValidationMessage For="@(() => entidadEditando.TomoUso)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Folio</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.Folios"
+                                   placeholder="Ingrese el folio..."
+                                   maxlength="3"
+                                   inputmode="numeric"
+                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
+                            <ValidationMessage For="@(() => entidadEditando.Folios)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha Desde</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaDesde" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha Hasta</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaHasta" @bind:format="yyyy-MM-dd" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">¿Está Sellado?</label>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaSelloGroup"
+                                       id="selloSi"
+                                       class="form-check-input"
+                                       value="1"
+                                       checked="@(entidadEditando.LibrosSellados == 1)"
+                                       @onchange="() => ActualizarSello(1)" />
+                                <label class="form-check-label small text-secondary" for="selloSi">Sí</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaSelloGroup"
+                                       id="selloNo"
+                                       class="form-check-input"
+                                       value="0"
+                                       checked="@(entidadEditando.LibrosSellados == 0)"
+                                       @onchange="() => ActualizarSello(0)" />
+                                <label class="form-check-label small text-secondary" for="selloNo">No</label>
+                            </div>
+                        </div>
+                        @if (entidadEditando.LibrosSellados == 1)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Sello</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaSello" @bind:format="yyyy-MM-dd" />
+                            </div>
+                        }
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-bold text-secondary small d-block">¿Está Vacío?</label>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaVacioGroup"
+                                       id="vacioSi"
+                                       class="form-check-input"
+                                       value="1"
+                                       checked="@(entidadEditando.Vacio == 1)"
+                                       @onchange="() => ActualizarVacio(1)" />
+                                <label class="form-check-label small text-secondary" for="vacioSi">Sí</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       name="aplicaVacioGroup"
+                                       id="vacioNo"
+                                       class="form-check-input"
+                                       value="0"
+                                       checked="@(entidadEditando.Vacio == 0)"
+                                       @onchange="() => ActualizarVacio(0)" />
+                                <label class="form-check-label small text-secondary" for="vacioNo">No</label>
+                            </div>
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Ubicación</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Ubicacion"
+                                      @bind:event="oninput"
+                                      rows="4"
+                                      maxlength="250"
+                                      placeholder="Ingrese la ubicación (máximo 250 caracteres)...">
+                            </textarea>
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Observaciones</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Observaciones"
+                                      @bind:event="oninput"
+                                      rows="4"
+                                      maxlength="4000"
+                                      placeholder="Ingrese las observaciones (máximo 4,000 caracteres)...">
+                            </textarea>
+                        </div>
+                        @if (!string.IsNullOrEmpty(mensajeAlerta))
+                        {
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+}
+
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<bool> OnFinalizado { get; set; }
+
+    private string mensajeAlerta = "";
+    private string claseAlerta = "alert-success";
+    private string iconoAlerta = "bi-check-circle-fill";
+    private bool cargando = true;
+    private bool guardando = false;
+
+    private LibroSocietarioDto entidadEditando = new();
+    private List<IBaseEntity> listClaseLibro = new();
+    private List<IBaseEntity> listTipoLibro = new();
+    private List<Sociedad> listSociedad = new();
+
+    private EditContext editContext = new(new LibroSocietarioDto());
+    private ValidationMessageStore? mensajeStore;
+
+    [Inject] private ISociedad reposociedad { get; set; } = null!;
+    [Inject] private ILibroSocietario repository { get; set; } = null!;
+
+    private bool isDropdownOpen = false;
+    private string textoBusqueda = "";
+    private ElementReference searchInputRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+        try
+        {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new()
+                {
+                    SociedadId = 0,
+                    ClaseLibroId = 0,
+                    TipoLibroId = 0,
+                    LibrosSellados = 0,
+                    Vacio = 0,
+                    CreateDate = DateTime.Now,
+                    UpdateDate = DateTime.Now
+                };
+            }
+            else
+            {
+                var item = await repository.GetByIdAsync(int.Parse(id));
+                if (item != null)
+                {
+                    entidadEditando = new()
+                    {
+                        Id = item.Id,
+                        SociedadId = item.Sociedad?.Id ?? 0,
+                        ClaseLibroId = item.ClaseLibro?.Id ?? 0,
+                        TipoLibroId = item.TipoLibro?.Id ?? 0,
+                        TomoUso = item.TomoUso,
+                        Folios = item.Folios,
+                        LibrosSellados = int.TryParse(item.LibrosSellados, out var sellado) ? sellado : 0,
+                        FechaDesde = item.FechaDesde,
+                        FechaHasta = item.FechaHasta,
+                        FechaSello = item.FechaSello,
+                        Vacio = item.Vacio,
+                        Ubicacion = item.Ubicacion,
+                        Observaciones = item.Observaciones,
+                        CreateDate = item.CreateDate,
+                        CreateUserId = item.CreateUserId,
+                        UpdateDate = item.UpdateDate,
+                        UpdateUserId = item.UpdateUserId
+                    };
+                }
+            }
+            editContext = new EditContext(entidadEditando);
+            mensajeStore = new ValidationMessageStore(editContext);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al inicializar libro inactivo: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos", true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.ToList();
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        listClaseLibro = await GetEntityListAsync("claselibros");
+        listTipoLibro = await GetEntityListAsync("tipolibros");
+
+        var listSociedades = await reposociedad.GetAllAsync();
+        // Filtro exclusivo para Sociedades Inactivas (EstatusSociedad.Id == 2)
+        listSociedad = listSociedades.OrderBy(x => x.Empresa?.Nombre).Where(x => x.EstatusSociedad?.Id == 2).ToList();
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnFinalizado.InvokeAsync(false);
+    }
+
+    private async Task GuardarCambios()
+    {
+        mensajeAlerta = string.Empty;
+        guardando = true;
+
+        bool formularioValido = editContext.Validate();
+
+        if (!formularioValido)
+        {
+            StateHasChanged();
+            guardando = false;
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
+            return;
+        }
+
+        try
+        {
+            var useridaux = await SessionStorage.GetAsync<string>("UserId");
+            if (!string.IsNullOrEmpty(useridaux.Value))
+            {
+                int userid = int.Parse(useridaux.Value);
+
+                if (entidadEditando.Id == 0)
+                {
+                    entidadEditando.CreateDate = DateTime.Now;
+                    entidadEditando.CreateUserId = userid;
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
+
+                    await repository.AddAsync(entidadEditando);
+
+                    await MostrarNotificacion($"Libro societario inactivo guardado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+                else
+                {
+                    entidadEditando.UpdateDate = DateTime.Now;
+                    entidadEditando.UpdateUserId = userid;
+
+                    repository.Update(entidadEditando);
+
+                    await MostrarNotificacion($"Libro societario inactivo actualizado correctamente");
+                    await OnFinalizado.InvokeAsync(true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            guardando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error: {ex.Message}");
+            await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
+        }
+        guardando = false;
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+        StateHasChanged();
+
+        await Task.Delay(4000);
+        mensajeAlerta = string.Empty;
+        StateHasChanged();
+    }
+
+    private void OnSociedadChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.SociedadId = idSeleccionado;
+        }
+    }
+
+    private void OnTipoLibroChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.TipoLibroId = idSeleccionado;
+        }
+    }
+
+    private void OnClaseLibroChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.ClaseLibroId = idSeleccionado;
+        }
+    }
+
+    private void ActualizarSello(int aplica)
+    {
+        entidadEditando.LibrosSellados = aplica;
+
+        if (aplica == 0)
+        {
+            entidadEditando.FechaSello = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ActualizarVacio(int aplica)
+    {
+        entidadEditando.Vacio = aplica;
+        StateHasChanged();
+    }
+
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+        if (!isDropdownOpen)
+        {
+            textoBusqueda = "";
+        }
+    }
+
+    private string ObtenerNombreSeleccionado()
+    {
+        if (entidadEditando?.SociedadId == 0 || listSociedad == null)
+        {
+            return "Seleccione ...";
+        }
+
+        var seleccionado = listSociedad.FirstOrDefault(s => s.Id == entidadEditando.SociedadId);
+        return seleccionado?.Empresa?.Nombre ?? "Seleccione ...";
+    }
+
+    private void SeleccionarOpcion(int id)
+    {
+        entidadEditando.SociedadId = id;
+        isDropdownOpen = false;
+        textoBusqueda = "";
+    }
+}

@@ -1,0 +1,320 @@
+@page "/librosocietariosinactivas"
+@rendermode InteractiveServer
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-journal-text text-white fs-5"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">
+                        Libros Societarios Inactivos
+                    </h5>
+                </div>
+
+                <!-- Contenedor flex para alinear los botones en línea -->
+                <div class="d-flex gap-2 align-items-center">
+                    @if (idRol == 1 || idRol == 2 || idRol == 3)
+                    {
+                        <!-- Botón Agregar -->
+                        <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                                @onclick="AbrirModalNuevo"
+                                style="height: 32px; font-weight: 500;">
+                            <i class="bi bi-plus-lg me-2"></i> Agregar
+                        </button>
+
+                        <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                                @onclick="MostrarDescarga"
+                                style="height: 32px; font-weight: 500;" title="Generar csv">
+                            <i class="bi bi-filetype-csv me-2"></i> Descargar
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Buscador Global por Nombre -->
+            <div class="row mb-3">
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control border-start-0 ps-0"
+                               placeholder="Buscar por sociedad..."
+                               @oninput="FiltrarBusqueda" />
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <PaginationComponent TItem="LibroSocietario" Items="Listgral" DefaultPageSize="10">
+                    <ChildContentHeader>
+                        <tr class="table-light border-bottom">
+                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Clase</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tomo en Uso</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Folio</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Fecha Desde</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Libros Sellados</th>
+                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                        </tr>
+                    </ChildContentHeader>
+                    <ChildContentRow Context="p">
+                        <tr class="align-middle border-bottom">
+                            <td class="text-start text-dark fw-semibold small ps-3" style="width: 20%;">
+                                @(p.Sociedad?.Empresa?.Nombre ?? "-")
+                            </td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@(p.ClaseLibro?.Nombre ?? "-")</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@(p.TipoLibro?.Nombre ?? "-")</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.TomoUso</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@p.Folios</td>
+                            <td class="text-start text-secondary small" style="width: 20%;">@p.FechaDesde?.ToString("dd/MM/yyyy")</td>
+                            <td class="text-start text-secondary small" style="width: 10%;">@(p.LibrosSellados == "1" ? "Sí" : "No")</td>
+                            <td class="text-end pe-3" style="width: 10%;">
+                                @if (idRol == 1 || idRol == 2 || idRol == 3)
+                                {
+                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
+                                        <i class="bi bi-pencil-square fs-6"></i>
+                                    </button>
+                                    <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                        <i class="bi bi-trash3 fs-6"></i>
+                                    </button>
+                                    <button class="btn btn-link btn-sm text-secondary p-0 me-2"
+                                            @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                        <i class="bi bi-file-earmark-pdf fs-6"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    </ChildContentRow>
+                </PaginationComponent>
+            </div>
+        </div>
+    </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@if (mostrarModal)
+{
+    <LibroSocietariosInactivasGuardar id="@idLibroSocietario.ToString()" OnFinalizado="ManejarCierreModal" />
+}
+
+@if (mostrarModalEliminar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold">¿Estás seguro?</h5>
+                    <p class="text-secondary small">
+                        Vas a eliminar <strong>@entidadParaEliminar?.TipoLibro?.Nombre</strong>. Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
+                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (descarga)
+{
+    <ModalDescarga idModulo="6" idEstado="2" OnFinalizado="ManejarCierreDescarga" />
+}
+
+@code {
+    private List<LibroSocietario> Listgral = new();
+    private List<LibroSocietario> ListgralBuscar = new();
+    private string searchTerm = "";
+    private bool cargando = false;
+    private bool mostrarModal = false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private bool mostrarModalEliminar = false;
+    private LibroSocietario? entidadParaEliminar;
+    private string claseAlerta = "alert-success";
+    private string iconoAlerta = "bi-check-circle-fill";
+    private int idLibroSocietario = 0;
+    private int idRol = 0;
+    private bool descarga = false;
+
+    [Inject] private ILibroSocietario repository { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+            if (!string.IsNullOrEmpty(userrolaux.Value))
+            {
+                idRol = int.Parse(userrolaux.Value);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+        }
+        await LoadGenericDataAsync();
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        cargando = true;
+        try
+        {
+            var listLibros = await repository.GetAllAsync();
+            // Filtro exclusivo para Sociedades Inactivas (EstatusSociedad.Id == 2)
+            Listgral = listLibros.OrderBy(x => x.Sociedad?.Empresa?.Nombre)
+                                 .Where(x => x.Sociedad?.EstatusSociedad?.Id == 2)
+                                 .ToList();
+            ListgralBuscar = Listgral;
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AbrirModalNuevo()
+    {
+        idLibroSocietario = 0;
+        mostrarModal = true;
+    }
+
+    private void FiltrarBusqueda(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            Listgral = ListgralBuscar;
+        }
+        else
+        {
+            Listgral = ListgralBuscar
+                .Where(b => b.Sociedad?.Empresa?.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000);
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private void Editar(LibroSocietario item)
+    {
+        idLibroSocietario = item.Id;
+        mostrarModal = true;
+    }
+
+    private void VerificarEliminar(LibroSocietario item)
+    {
+        entidadParaEliminar = item;
+        mostrarModalEliminar = true;
+    }
+
+    private void CerrarModalEliminar() => mostrarModalEliminar = false;
+
+    private async Task ConfirmarEliminar()
+    {
+        if (entidadParaEliminar == null) return;
+
+        cargando = true;
+        try
+        {
+            repository.Delete(entidadParaEliminar.Id);
+            mostrarModalEliminar = false;
+            await LoadGenericDataAsync();
+            await MostrarNotificacion($"Libro societario inactivo eliminado correctamente");
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            Console.WriteLine($"Error al eliminar: {ex.Message}");
+            await MostrarNotificacion("No se pudo eliminar el registro", true);
+        }
+        finally
+        {
+            cargando = false;
+            entidadParaEliminar = null;
+        }
+    }
+
+    private async Task ManejarCierreModal(bool guardadoExitoso)
+    {
+        cargando = true;
+        mostrarModal = false;
+
+        if (guardadoExitoso)
+        {
+            await LoadGenericDataAsync();
+            await MostrarNotificacion($"Libro societario inactivo guardado correctamente");
+        }
+
+        cargando = false;
+    }
+
+    private void AdminDocumentos(LibroSocietario item)
+    {
+        navManager.NavigateTo($"/documentossoporte/6/{item.Id}");
+    }
+
+    private void MostrarDescarga()
+    {
+        descarga = true;
+    }
+
+    private async Task ManejarCierreDescarga(bool guardadoExitoso)
+    {
+        cargando = true;
+        descarga = false;
+        cargando = false;
+
+        if (guardadoExitoso)
+        {
+            await MostrarNotificacion($"Archivo generado exitosamente");
+        }
+    }
+}

@@ -1,141 +1,138 @@
-﻿@using ExcelDataReader
+@using ExcelDataReader
 @rendermode InteractiveServer
-
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
-            <DataAnnotationsValidator />
-
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Conciliaciones" : "Modificar Conciliaciones")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
-
-                <div class="modal-body py-4">
-                    <!-- Iniciamos la grilla de filas y columnas -->
-                    <div class="row">
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
-                            <div class="dropdown">
-                                <!-- Removido -sm para igualar el tamaño estándar del label -->
-                                <button class="form-select text-start d-flex justify-content-between align-items-center"
-                                        type="button"
-                                        style="font-size: 0.8rem;"
-                                        @onclick="ToggleDropdown">
-                                    <span>@(ObtenerNombreSeleccionado())</span>
-                                </button>
-
-                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
-                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
-                                    <li class="mb-2">
-                                        <!-- Cambiado a form-control normal para que la fuente de "Buscar..." coincida en tamaño -->
-                                        <input type="text"
-                                               class="form-control"
-                                               placeholder="Buscar..."
-                                               style="font-size: 0.8rem;"
-                                               @bind="textoBusqueda"
-                                               @bind:event="oninput"
-                                               @ref="searchInputRef" />
-                                    </li>
-
-                                    <li>
-                                        <button type="button"
-                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
-                                                style="font-size: 0.8rem;"
-                                                @onclick="() => SeleccionarOpcion(0)">
-                                            Seleccione ...
-                                        </button>
-                                    </li>
-
-                                    <!-- Opciones filtradas dinámicamente -->
-                                    @if (listSociedad != null)
-                                    {
-                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
-                                        {
-                                            <li>
-                                                <!-- Se reemplazó 'small' por 'style="font-size: 0.8rem;"' para forzar la letra más pequeña -->
-                                                <button type="button"
-                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
-                                                        style="font-size: 0.8rem;"
-                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
-                                                    @sociedad.Empresa.Nombre
-                                                </button>
-                                            </li>
-                                        }
-                                    }
-
-                                </ul>
-                            </div>
-                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tipo Archivo</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.TipoArchivo"
-                                   placeholder="Ingrese tipo de archivo..."
-                                   maxlength="200" />
-                            <ValidationMessage For="@(() => entidadEditando.TipoArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Fecha del Archivo</label>
-                            <input type="date" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.FechaArchivo" @bind:format="yyyy-MM-dd" />
-                            <ValidationMessage For="@(() => entidadEditando.FechaArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-10 mb-3">
-                            <label for="fileInputExcel"
-                                   class="form-label fw-bold btn btn-primary btn-sm"
-                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
-                                Seleccionar archivo Conciliaciones
-                            </label>
-
-                            <InputFile id="fileInputExcel"
-                                       class="small"
-                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args))"
-                                       accept=".xlsx,.xls"
-                                       capture="camera"
-                                       style="display:none;" />
-
-                            <label class="form-label fw-bold text-secondary small">@fileNameConciliacion</label>
-                            <ValidationMessage For="@(() => entidadEditando.RutaConciliaciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Comentarios</label>
-                            <textarea class="form-control form-control-sm small"
-                                      @bind="entidadEditando.Observaciones"
-                                      rows="4"
-                                      maxlength="2000"
-                                      placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
-                            </textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
-                        <i class="bi bi-save me-1"></i> Guardar
-                    </button>
-                </div>
-            </div>
-        </EditForm>
-    </div>
-</div>
 
 @if (cargando)
 {
     <ModalCargando />
 }
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
 
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Conciliación" : "Agregar Conciliación")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
+
+                    <div class="modal-body py-4">
+                        <!-- Iniciamos la grilla de filas y columnas -->
+                        <div class="row">
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                                <div class="dropdown">
+                                    <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                            type="button"
+                                            style="font-size: 0.8rem;"
+                                            @onclick="ToggleDropdown">
+                                        <span>@(ObtenerNombreSeleccionado())</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                        style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                        <li class="mb-2">
+                                            <input type="text"
+                                                   class="form-control"
+                                                   placeholder="Buscar..."
+                                                   style="font-size: 0.8rem;"
+                                                   @bind="textoBusqueda"
+                                                   @bind:event="oninput"
+                                                   @ref="searchInputRef" />
+                                        </li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarOpcion(0)">
+                                                Seleccione ...
+                                            </button>
+                                        </li>
+
+                                        @if (listSociedad != null)
+                                        {
+                                            @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                            {
+                                                <li>
+                                                    <button type="button"
+                                                            class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                            style="font-size: 0.8rem;"
+                                                            @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                        @sociedad.Empresa.Nombre
+                                                    </button>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                                <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tipo Archivo</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.TipoArchivo"
+                                       placeholder="Ingrese tipo de archivo..."
+                                       maxlength="200" />
+                                <ValidationMessage For="@(() => entidadEditando.TipoArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha del Archivo</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaArchivo" @bind:format="yyyy-MM-dd" />
+                                <ValidationMessage For="@(() => entidadEditando.FechaArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label for="fileInputExcel"
+                                       class="form-label fw-bold btn btn-primary btn-sm"
+                                       style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                    Seleccionar archivo Conciliaciones
+                                </label>
+
+                                <InputFile id="fileInputExcel"
+                                           class="small"
+                                           OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args))"
+                                           accept=".xlsx,.xls"
+                                           capture="camera"
+                                           style="display:none;" />
+
+                                <label class="form-label fw-bold text-secondary small">@fileNameConciliacion</label>
+                                <ValidationMessage For="@(() => entidadEditando.RutaConciliaciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Comentarios</label>
+                                <textarea class="form-control form-control-sm small"
+                                          @bind="entidadEditando.Observaciones"
+                                          rows="4"
+                                          maxlength="2000"
+                                          placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
+                                </textarea>
+                            </div>
+                            @if (!string.IsNullOrEmpty(mensajeAlerta))
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                            <i class="bi bi-save me-1"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
 
 @code {
     [Parameter] public string id { get; set; } = "";
@@ -147,14 +144,15 @@
     private bool mostrarAlerta = false;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    private bool cargando = false;
+    private bool cargando = true;
+    private bool guardando = false;
     bool esInvalido = false;
     private string? fileNameConciliacion = null;
 
     private ConciliacionDto entidadEditando = new();
     private List<Sociedad> listSociedad = new();
 
-    private EditContext? editContext;
+    private EditContext editContext = new(new ConciliacionDto());
     private ValidationMessageStore? mensajeStore;
     private Stream streamToUploadConciliacion;
     private Stream streamExcelread;
@@ -180,43 +178,36 @@
         cargando = true;
         try
         {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new()
+                {
+                    SociedadId = 0,
+                    RutaConciliaciones = string.Empty,
+                    CreateDate = DateTime.Now
+                };
+            }
+
             editContext = new EditContext(entidadEditando);
             mensajeStore = new ValidationMessageStore(editContext);
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
+            Console.WriteLine($"Error al inicializar conciliación: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
         }
-
-        await LoadGenericDataAsync();
-
-        if (id == "0")
+        finally
         {
-            entidadEditando = new();
-            entidadEditando.SociedadId = 0;
-            entidadEditando.RutaConciliaciones = string.Empty;
-            entidadEditando.CreateDate = DateTime.Now;
-            editContext = new EditContext(entidadEditando);
+            cargando = false;
         }
-        cargando = false;
     }
 
     private async Task LoadGenericDataAsync()
     {
-        try
-        {
-            listTipoDoc = await GetEntityListAsync("tipodocumento");
-            listSociedad = await repoSociedades.GetAllAsync();
-        }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-        }
+        listTipoDoc = await GetEntityListAsync("tipodocumento");
+        listSociedad = await repoSociedades.GetAllAsync();
     }
 
     public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
@@ -324,14 +315,29 @@
     private async Task GuardarCambios()
     {
         mensajeAlerta = string.Empty;
-        cargando = true;
+        guardando = true;
         StateHasChanged();
 
         bool formularioValido = editContext.Validate();
         if (!formularioValido)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -341,7 +347,7 @@
             mensajeAlerta = "Debe seleccionar un archivo Excel válido antes de guardar.";
             mostrarAlerta = true;
             await MostrarNotificacion("Debe seleccionar un archivo Excel válido antes de guardar.", true);
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             return;
         }
@@ -354,7 +360,7 @@
 
             mensajeAlerta = "El archivo Excel no contiene datos válidos.";
             mostrarAlerta = true;
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             await MostrarNotificacion($"El archivo Excel no contiene datos válidos.", true);
             await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
@@ -363,7 +369,7 @@
 
         if (!await SubirDocumentosDrive(streamToUploadConciliacion, contentTypeConciliacion))
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             return;
         }
@@ -460,20 +466,20 @@
             {
                 // Corrección: Si no encuentra el usuario, debe apagar el cargando para no congelar la pantalla
                 await MostrarNotificacion("Error: No se pudo identificar la sesión del usuario.", true);
-                cargando = false;
+                guardando = false;
                 StateHasChanged();
                 return;
             }
         }
         catch (Exception ex)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             Console.WriteLine($"Error en Base de Datos: {ex.Message}");
             await MostrarNotificacion("Error al guardar en la base de datos: " + ex.Message, true);
         }
 
-        cargando = false;
+        guardando = false;
         StateHasChanged();
     }
 

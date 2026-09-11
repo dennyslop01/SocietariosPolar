@@ -109,8 +109,8 @@
         try
         {
             var listAccionista = await repoAccionista.GetAllAsync();
-            listAccionista = listAccionista.OrderByDescending(x => x.UpdateDate).Where(x => x.UpdateDate < DateTime.Now.AddYears(-3)).ToList();
-            foreach (var item in listAccionista)
+            var listAccionistaFiltrada = listAccionista.OrderByDescending(x => x.UpdateDate).Where(x => x.FaltaActualizar == 1).ToList();
+            foreach (var item in listAccionistaFiltrada)
             {
                 Listgral.Add(new DocumentosVencidos
                 {
@@ -123,6 +123,19 @@
                 });
             }
 
+            listAccionistaFiltrada = listAccionista.OrderByDescending(x => x.UpdateDate).Where(x => x.UpdateDate < DateTime.Now.AddYears(-3)).ToList();
+            foreach (var item in listAccionistaFiltrada)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Accionistas",
+                    Documento = item.TipoDocumento1?.Nombre,
+                    NroDocumento = item.Documento1,
+                    FechaVencimiento = item.UpdateDate,
+                    Nombre = item.Nombre
+                });
+            }
             Listgral = Listgral.OrderBy(x => x.FechaVencimiento).ToList();
             ListgralBuscar = Listgral;
         }

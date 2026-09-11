@@ -94,7 +94,10 @@ namespace SociePolar.Infrastructure.Repositories
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
-                UpdateUserId = entity.UpdateUserId
+                UpdateUserId = entity.UpdateUserId,
+                FechaDuracion = entity.FechaDuracion,
+                VencimientoDocumento1 = entity.VencimientoDocumento1,
+                VencimientoDocumento2 = entity.VencimientoDocumento2
             };
 
             await context.Set<Autoridad>().AddAsync(newAutoridad);
@@ -153,6 +156,9 @@ namespace SociePolar.Infrastructure.Repositories
             editautoridad.Duracion = entity.Duracion;
             editautoridad.UpdateDate = DateTime.UtcNow;
             editautoridad.UpdateUserId = entity.UpdateUserId;
+            editautoridad.FechaDuracion = entity.FechaDuracion;
+            editautoridad.VencimientoDocumento1 = entity.VencimientoDocumento1;
+            editautoridad.VencimientoDocumento2 = entity.VencimientoDocumento2;
 
 
             context.Set<Autoridad>().Update(editautoridad);

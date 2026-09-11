@@ -1,98 +1,135 @@
-.page {
-    position: relative;
+/* Estilos Modernos para MainLayout - Look and Feel Angular Material / Quorum */
+
+.polar-app-layout {
+    background-color: #F8FAFC !important;
+    min-height: 100vh;
+}
+
+/* Protección visual SVG explícita */
+.polar-app-layout svg, 
+.polar-topbar svg, 
+.polar-sidebar svg {
+    max-width: 24px !important;
+    max-height: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    fill: currentColor;
+    display: inline-block !important;
+    vertical-align: middle;
+}
+
+/* Topbar Azul Corporativo Estilo Quorum (64px Delgado y Elegante) */
+.polar-topbar {
+    background: linear-gradient(90deg, #002B7A 0%, #00338D 60%, #004B87 100%) !important;
+    color: #FFFFFF !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    padding: 0 1.5rem !important;
+    box-shadow: 0 4px 12px rgba(0, 43, 122, 0.25) !important;
+    z-index: 1200;
+}
+
+::deep .polar-topbar .mud-toolbar,
+::deep .polar-topbar .mud-toolbar-appbar,
+.polar-topbar .mud-toolbar,
+.polar-topbar .mud-toolbar-appbar {
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.polar-menu-toggle {
+    color: #FFFFFF !important;
+    transition: background-color 0.2s;
+}
+
+.polar-menu-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #FFFFFF !important;
+}
+
+/* Logo de Polar escalado a 40px preservando su aspecto natural */
+.polar-topbar-logo {
+    display: inline-block !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    transition: transform 0.2s ease;
+}
+
+.polar-topbar-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+}
+
+.polar-user-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    line-height: 1.2;
+}
+
+.polar-user-email {
+    font-size: 0.75rem;
+    color: #CBD5E1;
+}
+
+.polar-avatar {
+    background-color: #0284C7 !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.polar-avatar svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Sidebar Lateral (Drawer) */
+.polar-sidebar {
+    border-right: 1px solid #E2E8F0 !important;
+    background-color: #FFFFFF !important;
     display: flex;
     flex-direction: column;
 }
 
-main {
+.polar-drawer-content {
     flex: 1;
+    overflow-y: auto;
+    padding-top: 0.5rem;
 }
 
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+/* Área de contenido con proporción Áurea y fluidez responsive */
+.polar-main-content {
+    background-color: #F8FAFC !important;
+    min-height: calc(100vh - 64px);
 }
 
-.top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-}
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
-
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
-}
-
-@media (min-width: 641px) {
-    .page {
-        flex-direction: row;
-    }
-
-    .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-    }
-
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
-    }
-}
-
-#blazor-error-ui {
-    color-scheme: light only;
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
+.polar-container {
     width: 100%;
-    z-index: 1000;
+    max-width: 1440px; /* Proporción áurea estándar para legibilidad en escritorio */
+    margin: 0 auto;
+    padding: 1.75rem 2rem;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
+/* Adaptación para monitores 4:3 (cuadrados), 16:9, 16:10 y pantallas verticales 9:16 */
+@media (max-width: 1200px) {
+    .polar-container {
+        max-width: 100%;
+        padding: 1.25rem 1.5rem;
     }
+}
+
+@media (max-width: 768px) {
+    .polar-container {
+        padding: 1rem;
+    }
+}

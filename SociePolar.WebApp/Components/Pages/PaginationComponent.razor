@@ -1,8 +1,8 @@
-﻿@typeparam TItem
+@typeparam TItem
 
-<div>
+<div class="polar-table-container">
     <table class="table">
-        <thead class="table">
+        <thead class="table-light">
             @ChildContentHeader
         </thead>
         <tbody>
@@ -13,11 +13,11 @@
         </tbody>
     </table>
 
-    <div class="d-flex align-items-center justify-content-between mt-3 px-3 pb-3">
+    <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 gap-3 bg-white border-top">
         <div class="d-flex align-items-center">
             <!-- Selector de Tamaño -->
-            <label class="me-2 fw-bold text-secondary small">Tamaño:</label>
-            <select @bind="PageSize" class="form-select form-select-sm border-light-subtle shadow-sm" style="width: 65px; height: 28px; font-size: 0.75rem;">
+            <label class="me-2 text-muted small fw-semibold">Filas por página:</label>
+            <select @bind="PageSize" class="form-select form-select-sm polar-pagination-select">
                 @foreach (var size in PageSizes)
                 {
                     <option value="@size">@size</option>
@@ -25,32 +25,36 @@
             </select>
 
             <!-- Botones de Navegación -->
-            <div class="ms-3">
-                <button class="btn btn-outline-light btn-sm border text-secondary me-1"
-                        @onclick="PreviousPage" disabled="@IsPreviousDisabled">
+            <div class="ms-3 d-flex align-items-center gap-1">
+                <button class="polar-page-btn"
+                        @onclick="PreviousPage" 
+                        disabled="@IsPreviousDisabled" 
+                        title="Página anterior">
                     <i class="bi bi-chevron-left"></i>
                 </button>
 
                 @foreach (var pageNumber in Enumerable.Range(1, TotalPages))
                 {
-                    <!-- Ejemplo para un botón numérico -->
                     <button @onclick="() => GoToPage(pageNumber)"
-                            class="btn btn-pagination @(CurrentPage == pageNumber ? "active" : "")">
+                            class="polar-page-btn @(CurrentPage == pageNumber ? "active" : "")">
                         @pageNumber
                     </button>
                 }
 
-                <button class="btn-pagination" @onclick="NextPage" disabled="@IsNextDisabled">
-                    <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+                <button class="polar-page-btn" 
+                        @onclick="NextPage" 
+                        disabled="@IsNextDisabled" 
+                        title="Página siguiente">
+                    <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
         </div>
 
         <!-- Info de Registros -->
-        <div class="text-secondary small">
-            Mostrando <span class="fw-bold text-dark">@RecordStart</span> al
-            <span class="fw-bold text-dark">@RecordEnd</span> de
-            <span class="fw-bold text-dark">@TotalItems</span> registros
+        <div class="text-muted small">
+            Mostrando <span class="fw-semibold text-dark">@RecordStart</span> a
+            <span class="fw-semibold text-dark">@RecordEnd</span> de
+            <span class="fw-semibold text-dark">@TotalItems</span> registros
         </div>
     </div>
 </div>
@@ -76,6 +80,7 @@
             }
         }
     }
+
     // Lógica de datos paginados
     private List<TItem> PaginatedData => Items?
         .Skip((CurrentPage - 1) * PageSize)
@@ -113,69 +118,58 @@
 }
 
 <style>
-    /* Estilizamos la tabla para que sea minimalista */
-    .table thead th {
-        background-color: #f8f9fa;
-        border-top: none;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
+    .polar-table-container {
+        border-radius: 8px;
+        overflow: hidden;
     }
 
-    /* Ajuste para que los botones desactivados no resalten tanto */
-    .btn:disabled {
-        opacity: 0.4;
-        background-color: #f8f9fa !important;
-        border-color: #dee2e6 !important;
+    .polar-pagination-select {
+        width: 70px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+        border: 1px solid #CBD5E1 !important;
+        background-color: #FFFFFF !important;
+        padding: 2px 8px !important;
+        cursor: pointer;
     }
 
-    /* Quitar el borde azul feo al hacer clic */
-    .btn:focus, .form-select:focus {
-        box-shadow: none;
-        border-color: #dee2e6;
+    .polar-pagination-select:focus {
+        border-color: #004B87 !important;
+        box-shadow: 0 0 0 2px rgba(0, 75, 135, 0.12) !important;
     }
 
-    .btn-pagination {
-        /* Tamaño mínimo para que sean cuadraditos */
-        min-width: 28px;
-        height: 28px;
-        padding: 0 4px;
-        font-size: 0.75rem; /* Letra más pequeña */
+    .polar-page-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 4px;
-        background-color: #fff;
-        border: 1px solid #dee2e6;
-        color: #6c757d;
-        margin: 0 2px;
-        transition: all 0.2s;
+        border-radius: 6px;
+        background-color: transparent;
+        border: 1px solid transparent;
+        color: #475569;
+        transition: all 0.15s ease;
+        cursor: pointer;
     }
 
-    .btn-pagination:hover:not(:disabled) {
-        background-color: #f8f9fa;
-        color: #007bff;
-        border-color: #007bff;
+    .polar-page-btn:hover:not(:disabled):not(.active) {
+        background-color: #F1F5F9;
+        color: #0F172A;
     }
 
-    .btn-pagination.active {
-        background-color: #0d6efd; /* Azul Bootstrap 5 */
-        color: white;
-        border-color: #0d6efd;
+    .polar-page-btn.active {
+        background-color: #004B87;
+        color: #FFFFFF;
         font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 75, 135, 0.2);
     }
 
-    .btn-pagination:disabled {
-        opacity: 0.5;
+    .polar-page-btn:disabled {
+        opacity: 0.35;
         cursor: not-allowed;
-        background-color: #f8f9fa;
-    }
-
-    /* Reducir también el tamaño del selector (Select) */
-    .form-select-sm {
-        font-size: 0.75rem;
-        padding-top: 2px;
-        padding-bottom: 2px;
-        height: 28px;
     }
 </style>
-

@@ -35,6 +35,9 @@ namespace SociePolar.Domain.Entities
         public string? Documento1 { get; set; }
         public string? Documento2 { get; set; }
         public string? Documento3 { get; set; }
+        public DateTime? VencimientoDocumento1 { get; set; }
+        public DateTime? VencimientoDocumento2 { get; set; }
+        public DateTime? VencimientoDocumento3 { get; set; }
         public string? Nit { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }

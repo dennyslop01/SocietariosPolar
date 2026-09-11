@@ -1,22 +1,28 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
-            <DataAnnotationsValidator />
+@if (cargando)
+{
+    <ModalCargando />
+}
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
 
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Accionista" : "Modificar Accionista")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Accionista" : "Agregar Accionista")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
 
-                <div class="modal-body py-4">
-                    <!-- Pestañas de Navegación -->
-                    <ul class="nav nav-tabs mb-4" id="accionistaTabs" role="tablist">
+                    <div class="modal-body py-4">
+                        <!-- Pestañas de Navegación -->
+                        <ul class="nav nav-tabs mb-4" id="accionistaTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active btn-sm" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">Datos Básicos</button>
                         </li>
@@ -897,7 +903,7 @@
                     @if (entidadEditando.TipoAccionistaId != 0)
                     {
                         <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
                             <i class="bi bi-save me-1"></i> Guardar
                         </button>
                     }
@@ -906,12 +912,7 @@
         </EditForm>
     </div>
 </div>
-
-@if (cargando)
-{
-    <ModalCargando />
 }
-
 
 @code {
     [Parameter] public string id { get; set; } = "";
@@ -923,7 +924,8 @@
     private bool mostrarAlerta = false;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    private bool cargando = false;
+    private bool cargando = true;
+    private bool guardando = false;
 
     private AccionistaDto entidadEditando = new();
     private AccionistaDto entidadEditandoAux = new();
@@ -940,7 +942,7 @@
     private List<IBaseEntity> listCondicionEspecial = new();
     private List<IBaseEntity> listEstatusAccionista = new();
 
-    private EditContext? editContext;
+    private EditContext editContext = new(new AccionistaDto());
     private ValidationMessageStore? mensajeStore;
     private string tabConyuge = "Cónyuge";
 
@@ -956,160 +958,152 @@
         cargando = true;
         try
         {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new();
+                entidadEditando.TipoAccionistaId = 0;
+                entidadEditando.DirigidoAId = 0;
+                entidadEditando.EstadoCivilId = 0;
+                entidadEditando.BancoId = 0;
+                entidadEditando.TipoCuentaId = 0;
+                entidadEditando.CondicionEspecialId = 0;
+
+                entidadEditando.TipoDocumento1Id = 0;
+                entidadEditando.TipoDocumento2Id = 0;
+                entidadEditando.TipoDocumento3Id = 0;
+                entidadEditando.TipoDocumento4Id = 0;
+                entidadEditando.TipoDocumentoConyugeId1 = 0;
+                entidadEditando.TipoDocumentoConyugeId2 = 0;
+                entidadEditando.TipoDocumentoConyugeId3 = 0;
+                entidadEditando.TipoDocumentoApoderadoId1 = 0;
+                entidadEditando.TipoDocumentoApoderadoId2 = 0;
+                entidadEditando.TipoDocumentoApoderadoId3 = 0;
+
+                entidadEditando.CreateDate = DateTime.Now;
+                entidadEditando.UpdateDate = DateTime.Now;
+            }
+            else
+            {
+                var entity = await repository.GetByIdAsync(int.Parse(id));
+                if (entity != null)
+                {
+                    AccionistaDto dto = new()
+                    {
+                        Id = entity.Id,
+                        TipoAccionistaId = entity.TipoAccionista?.Id,
+                        Nombre = entity.Nombre,
+                        Documento1 = entity.Documento1,
+                        Documento2 = entity.Documento2,
+                        Documento3 = entity.Documento3,
+                        Documento4  = entity.Documento4,
+                        DocumentoApoderado1 = entity.DocumentoApoderado1,
+                        DocumentoApoderado2 = entity.DocumentoApoderado2,
+                        DocumentoApoderado3 = entity.DocumentoApoderado3,
+                        DocumentoConyuge1 = entity.DocumentoConyuge1,
+                        DocumentoConyuge2 = entity.DocumentoConyuge2,
+                        DocumentoConyuge3 = entity.DocumentoConyuge3,
+                        FechaEmision1 = entity.FechaEmision1,
+                        FechaEmision2 = entity.FechaEmision2,
+                        FechaEmision3 = entity.FechaEmision3,
+                        FechaEmision4 = entity.FechaEmision4,
+                        FechaEmisionApoderado1 = entity.FechaEmisionApoderado1,
+                        FechaEmisionApoderado2 = entity.FechaEmisionApoderado2,
+                        FechaEmisionApoderado3 = entity.FechaEmisionApoderado3,
+                        FechaEmisionConyuge1 = entity.FechaEmisionConyuge1,
+                        FechaEmisionConyuge2 = entity.FechaEmisionConyuge2,
+                        FechaEmisionConyuge3 = entity.FechaEmisionConyuge3,
+                        FechaVencimiento1 = entity.FechaVencimiento1,
+                        FechaVencimiento2 = entity.FechaVencimiento2,
+                        FechaVencimiento3 = entity.FechaVencimiento3,
+                        FechaVencimiento4 = entity.FechaVencimiento4,
+                        FechaVencimientoApoderado1 = entity.FechaVencimientoApoderado1,
+                        FechaVencimientoApoderado2 = entity.FechaVencimientoApoderado2,
+                        FechaVencimientoApoderado3  = entity.FechaVencimientoApoderado3,
+                        FechaVencimientoConyuge1 = entity.FechaVencimientoConyuge1,
+                        FechaVencimientoConyuge2 = entity.FechaVencimientoConyuge2,
+                        FechaVencimientoConyuge3    = entity.FechaVencimientoConyuge3,
+                        TipoDocumentoApoderadoId1 = entity.TipoDocumentoApoderadoId1,
+                        TipoDocumentoApoderadoId2 = entity.TipoDocumentoApoderadoId2,
+                        TipoDocumentoApoderadoId3 = entity.TipoDocumentoApoderadoId3,
+                        TipoDocumentoConyugeId1 = entity.TipoDocumentoConyugeId1,
+                        TipoDocumentoConyugeId2 = entity.TipoDocumentoConyugeId2,
+                        TipoDocumentoConyugeId3 = entity.TipoDocumentoConyugeId3,
+                        TipoDocumento1Id = entity.TipoDocumento1?.Id,
+                        TipoDocumento2Id = entity.TipoDocumento2?.Id,
+                        TipoDocumento3Id = entity.TipoDocumento3?.Id,
+                        TipoDocumento4Id = entity.TipoDocumento4?.Id,                    
+                        DirigidoAId = entity.DirigidoA?.Id,
+                        EstadoCivilId = entity.EstadoCivil?.Id,
+                        NombreConyuge = entity.NombreConyuge,                    
+                        SeparacionBienes = entity.SeparacionBienes,
+                        FechaNacimiento = entity.FechaNacimiento,
+                        FechaIngreso = entity.FechaIngreso,
+                        Email1 = entity.Email1,
+                        Email2 = entity.Email2,
+                        Email3 = entity.Email3,
+                        TelefonoMovil = entity.TelefonoMovil,
+                        Telefono1 = entity.Telefono1,
+                        Telefono2 = entity.Telefono2,
+                        Telefono3 = entity.Telefono3,
+                        Telefono4 = entity.Telefono4,
+                        Direccion1 = entity.Direccion1,
+                        Direccion2 = entity.Direccion2,
+                        GrupoFamiliar = entity.GrupoFamiliar,
+                        Nacionalidad = entity.Nacionalidad,
+                        DomiciliadoEn = entity.DomiciliadoEn,
+                        BancoId = entity.Banco?.Id,
+                        NumeroCuenta = entity.NumeroCuenta,
+                        TipoCuentaId = entity.TipoCuenta?.Id,
+                        NombreTitularCuenta = entity.NombreTitularCuenta,
+                        UltimaActualizacion = entity.UltimaActualizacion,
+                        AnoActualizacion = entity.AnoActualizacion,
+                        FaltaActualizar = entity.FaltaActualizar,
+                        TieneApoderado = entity.TieneApoderado,
+                        NombreApoderado = entity.NombreApoderado,
+                        DatosPoder = entity.DatosPoder,
+                        NombreContacto = entity.NombreContacto,
+                        TelefonoContacto = entity.TelefonoContacto,
+                        EmailContacto = entity.EmailContacto,
+                        CondicionEspecialId = entity.CondicionEspecial?.Id,
+                        Observaciones = entity.Observaciones,
+                        DocumentosRelacionados = entity.DocumentosRelacionados,
+                        AnoDuracion = entity.AnoDuracion,
+                        JuntaDirectiva = entity.JuntaDirectiva,
+                        VigenciaJunta = entity.VigenciaJunta,
+                        FechaVencimientoJunta = entity.FechaVencimientoJunta,
+                        RegistradaEn = entity.RegistradaEn,
+                        NombreSusesion = entity.NombreSusesion,
+                        CedulaSusesion = entity.CedulaSusesion,
+                        FechaEmisionSucesion = entity.FechaEmisionSucesion,
+                        FechaVencimientoSucesion = entity.FechaVencimientoSucesion,
+                        OtroDocumentoSucesion = entity.OtroDocumentoSucesion,
+                        FechaEmisionOtroSucesion = entity.FechaEmisionOtroSucesion,
+                        FechaVencimientoOtroSucesion = entity.FechaVencimientoOtroSucesion,
+                        CreateDate = entity.CreateDate,
+                        CreateUserId = entity.CreateUserId,
+                        UpdateDate = entity.UpdateDate,
+                        UpdateUserId = entity.UpdateUserId,
+                    };
+
+                    entidadEditando = dto;
+                    entidadEditandoAux = JsonSerializer.Deserialize<AccionistaDto>(JsonSerializer.Serialize(entidadEditando)) ?? new();
+                }
+            }
+
             editContext = new EditContext(entidadEditando);
             mensajeStore = new ValidationMessageStore(editContext);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error al inicializar accionista: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
             cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
         }
-
-        await LoadGenericDataAsync();
-
-        if (id == "0")
-        {
-            entidadEditando = new();
-            entidadEditando.TipoAccionistaId = 0;
-            entidadEditando.DirigidoAId = 0;
-            entidadEditando.EstadoCivilId = 0;
-            entidadEditando.BancoId = 0;
-            entidadEditando.TipoCuentaId = 0;
-            entidadEditando.CondicionEspecialId = 0;
-
-            entidadEditando.TipoDocumento1Id = 0;
-            entidadEditando.TipoDocumento2Id = 0;
-            entidadEditando.TipoDocumento3Id = 0;
-            entidadEditando.TipoDocumento4Id = 0;
-            entidadEditando.TipoDocumentoConyugeId1 = 0;
-            entidadEditando.TipoDocumentoConyugeId2 = 0;
-            entidadEditando.TipoDocumentoConyugeId3 = 0;
-            entidadEditando.TipoDocumentoApoderadoId1 = 0;
-            entidadEditando.TipoDocumentoApoderadoId2 = 0;
-            entidadEditando.TipoDocumentoApoderadoId3 = 0;
-
-            entidadEditando.CreateDate = DateTime.Now;
-            entidadEditando.UpdateDate = DateTime.Now;
-            editContext = new EditContext(entidadEditando);
-        }
-        else
-        {
-            try
-            {
-                var entity = await repository.GetByIdAsync(int.Parse(id));
-                AccionistaDto dto = new()
-                {
-                    Id = entity.Id,
-                    TipoAccionistaId = entity.TipoAccionista?.Id,
-                    Nombre = entity.Nombre,
-                    Documento1 = entity.Documento1,
-                    Documento2 = entity.Documento2,
-                    Documento3 = entity.Documento3,
-                    Documento4  = entity.Documento4,
-                    DocumentoApoderado1 = entity.DocumentoApoderado1,
-                    DocumentoApoderado2 = entity.DocumentoApoderado2,
-                    DocumentoApoderado3 = entity.DocumentoApoderado3,
-                    DocumentoConyuge1 = entity.DocumentoConyuge1,
-                    DocumentoConyuge2 = entity.DocumentoConyuge2,
-                    DocumentoConyuge3 = entity.DocumentoConyuge3,
-                    FechaEmision1 = entity.FechaEmision1,
-                    FechaEmision2 = entity.FechaEmision2,
-                    FechaEmision3 = entity.FechaEmision3,
-                    FechaEmision4 = entity.FechaEmision4,
-                    FechaEmisionApoderado1 = entity.FechaEmisionApoderado1,
-                    FechaEmisionApoderado2 = entity.FechaEmisionApoderado2,
-                    FechaEmisionApoderado3 = entity.FechaEmisionApoderado3,
-                    FechaEmisionConyuge1 = entity.FechaEmisionConyuge1,
-                    FechaEmisionConyuge2 = entity.FechaEmisionConyuge2,
-                    FechaEmisionConyuge3 = entity.FechaEmisionConyuge3,
-                    FechaVencimiento1 = entity.FechaVencimiento1,
-                    FechaVencimiento2 = entity.FechaVencimiento2,
-                    FechaVencimiento3 = entity.FechaVencimiento3,
-                    FechaVencimiento4 = entity.FechaVencimiento4,
-                    FechaVencimientoApoderado1 = entity.FechaVencimientoApoderado1,
-                    FechaVencimientoApoderado2 = entity.FechaVencimientoApoderado2,
-                    FechaVencimientoApoderado3  = entity.FechaVencimientoApoderado3,
-                    FechaVencimientoConyuge1 = entity.FechaVencimientoConyuge1,
-                    FechaVencimientoConyuge2 = entity.FechaVencimientoConyuge2,
-                    FechaVencimientoConyuge3    = entity.FechaVencimientoConyuge3,
-                    TipoDocumentoApoderadoId1 = entity.TipoDocumentoApoderadoId1,
-                    TipoDocumentoApoderadoId2 = entity.TipoDocumentoApoderadoId2,
-                    TipoDocumentoApoderadoId3 = entity.TipoDocumentoApoderadoId3,
-                    TipoDocumentoConyugeId1 = entity.TipoDocumentoConyugeId1,
-                    TipoDocumentoConyugeId2 = entity.TipoDocumentoConyugeId2,
-                    TipoDocumentoConyugeId3 = entity.TipoDocumentoConyugeId3,
-                    TipoDocumento1Id = entity.TipoDocumento1?.Id,
-                    TipoDocumento2Id = entity.TipoDocumento2?.Id,
-                    TipoDocumento3Id = entity.TipoDocumento3?.Id,
-                    TipoDocumento4Id = entity.TipoDocumento4?.Id,                    
-                    DirigidoAId = entity.DirigidoA?.Id,
-                    EstadoCivilId = entity.EstadoCivil?.Id,
-                    NombreConyuge = entity.NombreConyuge,                    
-                    SeparacionBienes = entity.SeparacionBienes,
-                    FechaNacimiento = entity.FechaNacimiento,
-                    FechaIngreso = entity.FechaIngreso,
-                    Email1 = entity.Email1,
-                    Email2 = entity.Email2,
-                    Email3 = entity.Email3,
-                    TelefonoMovil = entity.TelefonoMovil,
-                    Telefono1 = entity.Telefono1,
-                    Telefono2 = entity.Telefono2,
-                    Telefono3 = entity.Telefono3,
-                    Telefono4 = entity.Telefono4,
-                    Direccion1 = entity.Direccion1,
-                    Direccion2 = entity.Direccion2,
-                    GrupoFamiliar = entity.GrupoFamiliar,
-                    Nacionalidad = entity.Nacionalidad,
-                    DomiciliadoEn = entity.DomiciliadoEn,
-                    BancoId = entity.Banco?.Id,
-                    NumeroCuenta = entity.NumeroCuenta,
-                    TipoCuentaId = entity.TipoCuenta?.Id,
-                    NombreTitularCuenta = entity.NombreTitularCuenta,
-                    UltimaActualizacion = entity.UltimaActualizacion,
-                    AnoActualizacion = entity.AnoActualizacion,
-                    FaltaActualizar = entity.FaltaActualizar,
-                    TieneApoderado = entity.TieneApoderado,
-                    NombreApoderado = entity.NombreApoderado,
-                    DatosPoder = entity.DatosPoder,
-                    NombreContacto = entity.NombreContacto,
-                    TelefonoContacto = entity.TelefonoContacto,
-                    EmailContacto = entity.EmailContacto,
-                    CondicionEspecialId = entity.CondicionEspecial?.Id,
-                    Observaciones = entity.Observaciones,
-                    DocumentosRelacionados = entity.DocumentosRelacionados,
-                    AnoDuracion = entity.AnoDuracion,
-                    JuntaDirectiva = entity.JuntaDirectiva,
-                    VigenciaJunta = entity.VigenciaJunta,
-                    FechaVencimientoJunta = entity.FechaVencimientoJunta,
-                    RegistradaEn = entity.RegistradaEn,
-                    NombreSusesion = entity.NombreSusesion,
-                    CedulaSusesion = entity.CedulaSusesion,
-                    FechaEmisionSucesion = entity.FechaEmisionSucesion,
-                    FechaVencimientoSucesion = entity.FechaVencimientoSucesion,
-                    OtroDocumentoSucesion = entity.OtroDocumentoSucesion,
-                    FechaEmisionOtroSucesion = entity.FechaEmisionOtroSucesion,
-                    FechaVencimientoOtroSucesion = entity.FechaVencimientoOtroSucesion,
-                    CreateDate = entity.CreateDate,
-                    CreateUserId = entity.CreateUserId,
-                    UpdateDate = entity.UpdateDate,
-                    UpdateUserId = entity.UpdateUserId,
-                };
-
-                entidadEditando = dto;
-                editContext = new EditContext(entidadEditando);
-
-                entidadEditandoAux = JsonSerializer.Deserialize<AccionistaDto>(JsonSerializer.Serialize(entidadEditando));
-            }
-            catch (Exception ex)
-            {
-                cargando = false;
-                StateHasChanged();
-                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-            }
-        }
-        cargando = false;
     }
 
     public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
@@ -1119,11 +1113,9 @@
 
         if (method == null) return new List<IBaseEntity>();
 
-        // Invocamos el método asíncrono
         var task = (Task)method.Invoke(repo, null)!;
         await task;
 
-        // Obtenemos el resultado de la Task dinámica
         var resultProperty = task.GetType().GetProperty("Result");
         var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
 
@@ -1132,28 +1124,17 @@
 
     private async Task LoadGenericDataAsync()
     {
-        try
-        {
-            listTipoAccionista = await GetEntityListAsync("tipoaccionistas");
-            listDirigidoA = await GetEntityListAsync("dirigidosa");
-            listEstadoCivil = await GetEntityListAsync("estadosciviles");
-            listBanco = await GetEntityListAsync("banco");
-            listTipoCuenta = await GetEntityListAsync("tipocuenta");
-            listCondicionEspecial = await GetEntityListAsync("condicionesespeciales");
-            listEstatusAccionista = await GetEntityListAsync("estatusaccionistas");
-            listTipoDoc = await GetEntityListAsync("tipodocumento");
+        listTipoAccionista = await GetEntityListAsync("tipoaccionistas");
+        listDirigidoA = await GetEntityListAsync("dirigidosa");
+        listEstadoCivil = await GetEntityListAsync("estadosciviles");
+        listBanco = await GetEntityListAsync("banco");
+        listTipoCuenta = await GetEntityListAsync("tipocuenta");
+        listCondicionEspecial = await GetEntityListAsync("condicionesespeciales");
+        listEstatusAccionista = await GetEntityListAsync("estatusaccionistas");
+        listTipoDoc = await GetEntityListAsync("tipodocumento");
 
-            var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.OrderBy(x => x.Empresa.Nombre).ToList();//.Where(x => x.EstatusSociedad.Id == 1)
-
-            listAccionista = await repository.GetAllAsync();
-        }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-        }
+        var listSociedades = await reposociedad.GetAllAsync();
+        listSociedad = listSociedades.OrderBy(x => x.Empresa?.Nombre).ToList();
     }
 
     private async Task CerrarModal()
@@ -1164,13 +1145,29 @@
     private async Task GuardarCambios()
     {
         mensajeAlerta = string.Empty;
+        guardando = true;
 
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
         {
             StateHasChanged();
-            cargando = false;
+            guardando = false;
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -1209,13 +1206,22 @@
 
         if (!string.IsNullOrEmpty(mensajeAlerta))
         {
+            guardando = false;
             await MostrarNotificacion(mensajeAlerta, true);
             await jsRuntime.InvokeVoidAsync("eval", @"
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                document.querySelector('.main')?.scrollTo({ top: 0, behavior: 'smooth' });
-                                                document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
-                                                document.body.scrollTo({ top: 0, behavior: 'smooth' });
-                                            ");
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -1228,7 +1234,6 @@
 
                 if (entidadEditando.Id == 0)
                 {
-                    cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
                     entidadEditando.UpdateDate = DateTime.Now;
@@ -1241,7 +1246,6 @@
                 }
                 else
                 {
-                    cargando = true;
                     string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
                     string jsonModificado = JsonSerializer.Serialize(entidadEditando);
 
@@ -1260,13 +1264,13 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
-        cargando = false;
+        guardando = false;
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

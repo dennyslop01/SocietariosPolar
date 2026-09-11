@@ -1,11 +1,28 @@
-﻿@page "/"
+@page "/"
 @rendermode InteractiveServer
 
 @if (!string.IsNullOrEmpty(usuario))
 {
-    <h6 class="fw-bold text-primary mt-3">Bienvenido: @usuario</h6>
-    <ListarVencimientoDocs />
-    <ListarActualizacionSociedades />
+    <div class="mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 pb-2">
+            <div>
+                <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">Panel de Control</h4>
+                <p class="text-muted mb-0 small">
+                    Bienvenido, <span class="fw-semibold text-primary">@usuario</span> &bull; Resumen societario y alertas operativas
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
+                    <i class="bi bi-calendar3 me-1"></i> @DateTime.Now.ToString("dd MMMM, yyyy")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column gap-4">
+        <ListarVencimientoDocs />
+        <ListarActualizacionSociedades />
+    </div>
 }
 
 @code {

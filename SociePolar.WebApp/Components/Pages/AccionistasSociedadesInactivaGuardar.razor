@@ -1,22 +1,26 @@
-﻿@rendermode InteractiveServer
+@if (cargando)
+{
+    <ModalCargando />
+}
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
-            <DataAnnotationsValidator />
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Accionista - Sociedad Inactiva" : "Agregar Accionista - Sociedad Inactiva")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
 
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Accionista - Sociedad" : "Modificar Accionista - Sociedad")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
-
-                <div class="modal-body py-4">
-                    <!-- Iniciamos la grilla de filas y columnas -->
-                    <div class="row">
+                    <div class="modal-body py-4">
+                        <!-- Iniciamos la grilla de filas y columnas -->
+                        <div class="row">
                         <!-- COMBO SOCIEDAD -->
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Sociedad</label>
@@ -141,7 +145,7 @@
 
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
                         <i class="bi bi-save me-1"></i> Guardar
                     </button>
                 </div>
@@ -149,11 +153,8 @@
         </EditForm>
     </div>
 </div>
-
-@if (cargando)
-{
-    <ModalCargando />
 }
+
 @code {
     [Parameter] public string id { get; set; } = "";
 
@@ -164,7 +165,8 @@
     private bool mostrarAlerta = false;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    private bool cargando = false;
+    private bool cargando = true;
+    private bool guardando = false;
 
     private AccionistaSociedadDto entidadEditando = new();
 
@@ -174,7 +176,7 @@
 
     private List<IBaseEntity> listEstatus = new();
 
-    private EditContext? editContext;
+    private EditContext editContext = new(new AccionistaSociedadDto());
     private ValidationMessageStore? mensajeStore;
 
     [Inject] private ISociedad reposociedad { get; set; } = null!;
@@ -197,57 +199,50 @@
         cargando = true;
         try
         {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new()
+                {
+                    SociedadId = 0,
+                    AccionistaId = 0,
+                    EstatusAccionistaId = 2,
+                    CreateDate = DateTime.Now,
+                    UpdateDate = DateTime.Now
+                };
+            }
+            else
+            {
+                var item = await repository.GetByIdAsync(int.Parse(id));
+                if (item != null)
+                {
+                    entidadEditando = new()
+                    {
+                        Id = item.Id,
+                        SociedadId = item.Sociedad?.Id ?? 0,
+                        AccionistaId = item.Accionista?.Id ?? 0,
+                        EstatusAccionistaId = item.EstatusAccionista?.Id ?? 2,
+                        CreateDate = item.CreateDate,
+                        CreateUserId = item.CreateUserId,
+                        UpdateDate = item.UpdateDate,
+                        UpdateUserId = item.UpdateUserId
+                    };
+                }
+            }
+
             editContext = new EditContext(entidadEditando);
             mensajeStore = new ValidationMessageStore(editContext);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error al inicializar formulario de accionista sociedad inactiva: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
             cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
         }
-
-        await LoadGenericDataAsync();
-
-        if (id == "0")
-        {
-            entidadEditando = new();
-            entidadEditando.SociedadId = 0;
-            entidadEditando.AccionistaId = 0;
-            entidadEditando.EstatusAccionistaId = 2;
-            entidadEditando.CreateDate = DateTime.Now;
-            entidadEditando.UpdateDate = DateTime.Now;
-            editContext = new EditContext(entidadEditando);
-        }
-        else
-        {
-            try
-            {
-                var item = await repository.GetByIdAsync(int.Parse(id));
-                AccionistaSociedadDto dto = new()
-                {
-                    Id = item.Id,
-                    SociedadId = item.Sociedad.Id,
-                    AccionistaId = item.Accionista.Id,
-                    EstatusAccionistaId = item.EstatusAccionista.Id,
-                    CreateDate = item.CreateDate,
-                    CreateUserId = item.CreateUserId,
-                    UpdateDate = item.UpdateDate,
-                    UpdateUserId = item.UpdateUserId
-                };
-
-                entidadEditando = dto;
-                editContext = new EditContext(entidadEditando);
-            }
-            catch (Exception ex)
-            {
-                cargando = false;
-                StateHasChanged();
-                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-            }
-        }
-        cargando = false;
     }
 
     public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
@@ -270,43 +265,31 @@
 
     private async Task LoadGenericDataAsync()
     {
-        try
+        listEstatus = await GetEntityListAsync("estatusaccionistas");
+        listEntidades = await repository.GetAllAsync();
+
+        var listSociedades = await reposociedad.GetAllAsync();
+        listSociedad = listSociedades.OrderBy(x => x.Empresa?.Nombre).Where(x => x.EstatusSociedad?.Id == 1).ToList();
+
+        var listAaccionista = await repoaccionista.GetAllAsync();
+        List<AccionistaMostrarDto> accionistas = new();
+
+        foreach (var item in listAaccionista)
         {
-            listEstatus = await GetEntityListAsync("estatusaccionistas");
-
-            listEntidades = await repository.GetAllAsync();
-
-            var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
-
-            var listAaccionista = await repoaccionista.GetAllAsync();
-            List<AccionistaMostrarDto> accionistas = new();
-
-            foreach (var item in listAaccionista)
+            accionistas.Add(new AccionistaMostrarDto
             {
-                accionistas.Add(new AccionistaMostrarDto
-                {
-                    Id = item.Id,
-                    TipoAccionistaV = item.TipoAccionista?.Nombre,
-                    Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion?.Substring(0, 50) : item.NombreSusesion,
-                    // TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
-                    // Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion?.Substring(0, 50) : item.CedulaSusesion,
-                    TipoDocumentoV = item.TipoDocumento1?.Nombre,
-                    Documento = item.Documento1,
-                    Telefono = item.Telefono1,
-                    CreateDate = item.CreateDate,
-                    UpdateDate = item.UpdateDate
-                });
-            }
+                Id = item.Id,
+                TipoAccionistaV = item.TipoAccionista?.Nombre,
+                Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion?.Substring(0, 50) : item.NombreSusesion,
+                TipoDocumentoV = item.TipoDocumento1?.Nombre,
+                Documento = item.Documento1,
+                Telefono = item.Telefono1,
+                CreateDate = item.CreateDate,
+                UpdateDate = item.UpdateDate
+            });
+        }
 
-            listAccionista = accionistas.OrderBy(x => x.Nombre).ToList();
-        }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-        }
+        listAccionista = accionistas.OrderBy(x => x.Nombre).ToList();
     }
 
     private async Task CerrarModal()
@@ -317,13 +300,29 @@
     private async Task GuardarCambios()
     {
         mensajeAlerta = string.Empty;
+        guardando = true;
 
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
         {
             StateHasChanged();
-            cargando = false;
+            guardando = false;
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -342,11 +341,11 @@
                     var existeAutoSociedad = listEntidades.Any(x => x.Sociedad.Id == entidadEditando.SociedadId && x.Accionista.Id == entidadEditando.AccionistaId);
                     if (existeAutoSociedad)
                     {
+                        guardando = false;
                         mensajeAlerta = "Ya existe esta combinacion de Accionista - Sociedad";
                         await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
                         return;
                     }
-                    cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
                     entidadEditando.NroAcciones = 0;
@@ -358,7 +357,6 @@
                 }
                 else
                 {
-                    cargando = true;
                     repository.Update(entidadEditando);
 
                     await MostrarNotificacion($"Accionista - Sociedad actualizado correctamente");
@@ -368,13 +366,13 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
-        cargando = false;
+        guardando = false;
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

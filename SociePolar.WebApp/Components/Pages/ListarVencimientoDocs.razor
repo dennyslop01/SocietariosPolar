@@ -10,7 +10,7 @@
                         <i class="bi bi-file-earmark-x text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
-                        Documentos Vencidos o por Vencer
+                        Alertas de Vencimiento
                     </h5>
                 </div>
 
@@ -98,6 +98,7 @@
 
     [Inject] private ISociedad repoSociedad { get; set; } = null!;
     [Inject] private IAccionista repoAccionista { get; set; } = null!;
+    [Inject] private IAutoridad repoAutoridad { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,8 +111,22 @@
         try
         {
             var listSociedades = await repoSociedad.GetAllAsync();
-            listSociedades = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.FechaVencimiento < DateTime.Now.AddDays(30)).ToList();            
-            foreach (var item in listSociedades)
+            var listSociedades1 = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.FechaVencimiento < DateTime.Now.AddDays(30)).ToList();            
+            foreach (var item in listSociedades1)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Sociedades",
+                    // Documento = item.TipoDocumento1?.Nombre,
+                    // NroDocumento = item.Documento1!,
+                    FechaVencimiento = item.FechaVencimiento,
+                    Nombre = item.Empresa.Nombre
+                });
+            }
+
+            var listSociedades2 = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.VencimientoDocumento1 < DateTime.Now.AddDays(30)).ToList();
+            foreach (var item in listSociedades2)
             {
                 Listgral.Add(new DocumentosVencidos
                 {
@@ -119,8 +134,79 @@
                     Modulo = "Sociedades",
                     Documento = item.TipoDocumento1?.Nombre,
                     NroDocumento = item.Documento1!,
-                    FechaVencimiento = item.FechaVencimiento,
+                    FechaVencimiento = item.VencimientoDocumento1,
                     Nombre = item.Empresa.Nombre
+                });
+            }
+
+            var listSociedades3 = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.VencimientoDocumento2 < DateTime.Now.AddDays(30)).ToList();            
+            foreach (var item in listSociedades3)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Sociedades",
+                    Documento = item.TipoDocumento2?.Nombre,
+                    NroDocumento = item.Documento2!,
+                    FechaVencimiento = item.VencimientoDocumento2,
+                    Nombre = item.Empresa.Nombre
+                });
+            }
+
+            var listSociedades4 = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.VencimientoDocumento3 < DateTime.Now.AddDays(30)).ToList();
+            foreach (var item in listSociedades4)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Sociedades",
+                    Documento = item.TipoDocumento3?.Nombre,
+                    NroDocumento = item.Documento3!,
+                    FechaVencimiento = item.VencimientoDocumento3,
+                    Nombre = item.Empresa.Nombre
+                });
+            }
+
+            var listAutoridades = await repoAutoridad.GetAllAsync();
+            var listAutoridades1 = listAutoridades.OrderBy(x => x.Nombre).Where(x => x.FechaDuracion < DateTime.Now.AddDays(30)).ToList();
+            foreach (var item in listAutoridades1)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Autoridades",
+                    // Documento = item.TipoDocumento1?.Nombre,
+                    // NroDocumento = item.Documento1!,
+                    FechaVencimiento = item.FechaDuracion,
+                    Nombre = item.Nombre
+                });
+            }
+
+            var listAutoridades2 = listAutoridades.OrderBy(x => x.Nombre).Where(x => x.VencimientoDocumento1 < DateTime.Now.AddDays(30)).ToList();
+            foreach (var item in listAutoridades2)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Autoridades",
+                    Documento = item.TipoDocumento1?.Nombre,
+                    NroDocumento = item.Documento1!,
+                    FechaVencimiento = item.VencimientoDocumento1,
+                    Nombre = item.Nombre
+                });
+            }
+
+            var listAutoridades3 = listAutoridades.OrderBy(x => x.Nombre).Where(x => x.VencimientoDocumento2 < DateTime.Now.AddDays(30)).ToList();
+            foreach (var item in listAutoridades3)
+            {
+                Listgral.Add(new DocumentosVencidos
+                {
+                    Id = item.Id,
+                    Modulo = "Autoridades",
+                    Documento = item.TipoDocumento2?.Nombre,
+                    NroDocumento = item.Documento2!,
+                    FechaVencimiento = item.VencimientoDocumento2,
+                    Nombre = item.Nombre
                 });
             }
 

@@ -1,35 +1,119 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
 
 <PageTitle>Societarios Polar</PageTitle>
 <head>
     <meta charset="utf-8" />
     <title>Societarios Polar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="app.css?v=20260909_04" rel="stylesheet" />
+    <link href="SociePolar.WebApp.styles.css?v=20260909_04" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
-    <base href="/" />
-    <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="@Assets["SociePolar.WebApp.styles.css"]" />
-
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
-    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" /> @* Corregido: Sin @Assets *@
-
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet @rendermode="InteractiveServer" /> @* Agregado: Rendermode *@
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer" /> @* Agregado: Rendermode para toda la app *@
+    <!-- Modal Personalizado de Reconexión Blazor en Español -->
+    <div id="components-reconnect-modal" class="components-reconnect-hide">
+        <div class="polar-reconnect-box">
+            <div class="components-reconnect-show d-flex align-items-center gap-3">
+                <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                <span>Reconectando con el servidor... Por favor espere.</span>
+            </div>
+            <div class="components-reconnect-failed d-flex align-items-center justify-content-between gap-3">
+                <span class="text-danger fw-semibold">Se perdió la conexión con el servidor.</span>
+                <button class="btn btn-primary btn-sm ms-2" onclick="location.reload()">Reintentar</button>
+            </div>
+            <div class="components-reconnect-rejected d-flex align-items-center justify-content-between gap-3">
+                <span class="text-warning fw-semibold">La sesión se ha actualizado o expirado.</span>
+                <button class="btn btn-primary btn-sm ms-2" onclick="location.reload()">Recargar Página</button>
+            </div>
+        </div>
+    </div>
+
+    <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
-    @* FUNDAMENTAL: Script de MudBlazor *@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="js/pdfViewer.js"></script>
+    <script>
+        window.focusFirstInvalidField = function () {
+            function executeScrollAndFocus() {
+                var modal = document.querySelector('.modal.show, .modal');
+                var modalBody = document.querySelector('.modal-body');
+
+                // Desplazar TODOS los contenedores posibles hacia arriba de forma incondicional
+                if (modal) {
+                    modal.scrollTop = 0;
+                    try { modal.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                if (modalBody) {
+                    modalBody.scrollTop = 0;
+                    try { modalBody.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+
+                // Buscar el primer control inválido
+                var container = modal || document;
+                var allErrors = container.querySelectorAll('.validation-message, .text-danger, .is-invalid, .invalid');
+                var targetInput = null;
+
+                for (var i = 0; i < allErrors.length; i++) {
+                    var el = allErrors[i];
+                    if (el.textContent && el.textContent.trim().length > 0) {
+                        var group = el.closest('.mb-3, .form-group, .col-md-6, .col-md-4, div');
+                        if (group) {
+                            targetInput = group.querySelector('input:not([type="hidden"]), select, textarea, button.form-select') || el;
+                            break;
+                        }
+                    }
+                }
+
+                if (!targetInput) {
+                    targetInput = container.querySelector('select.is-invalid, input.is-invalid, select.invalid, input.invalid, select, input');
+                }
+
+                if (targetInput) {
+                    try { targetInput.focus(); } catch(e) {}
+                    targetInput.classList.remove('pulse-invalid-field');
+                    void targetInput.offsetWidth;
+                    targetInput.classList.add('pulse-invalid-field');
+                    setTimeout(function() {
+                        targetInput.classList.remove('pulse-invalid-field');
+                    }, 3000);
+                    return true;
+                }
+                return false;
+            }
+
+            executeScrollAndFocus();
+            setTimeout(executeScrollAndFocus, 100);
+            setTimeout(executeScrollAndFocus, 300);
+            setTimeout(executeScrollAndFocus, 600);
+        };
+
+        // Escucha global en clicks a botón Guardar / Submit
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('button[type="submit"], .btn-primary');
+            if (btn && (btn.innerText.indexOf('Guardar') !== -1 || btn.type === 'submit')) {
+                setTimeout(window.focusFirstInvalidField, 50);
+                setTimeout(window.focusFirstInvalidField, 200);
+                setTimeout(window.focusFirstInvalidField, 500);
+            }
+        }, true);
+    </script>
 </body>
 
 </html>

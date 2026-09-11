@@ -1,4 +1,4 @@
-﻿@page "/accionistassociedadinactivas"
+@page "/accionistassociedadinactivas"
 
 @rendermode InteractiveServer
 
@@ -64,27 +64,13 @@
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
-                        @{
-                            var index = Listgral.IndexOf(p);
-
-                            // 1. Ruptura para Sociedad
-                            bool esNuevaSociedad = index == 0 ||
-                                                   Listgral[index - 1].SociedadNombre != p.SociedadNombre;
-                        }
-
-                        @if (esNuevaSociedad)
-                        {
-                            <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
-                            <tr class="table-secondary fw-bold text-primary border-bottom">
-                                <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                    🏢 @p.SociedadNombre
-                                </td>
-                            </tr>
-                        }
-
                         <tr class="align-middle border-bottom">
-                            <td class="text-muted small ps-3" style="width: 15%;">-</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.TipoAccionistaNombre</td>
+                            <td class="text-start text-dark fw-semibold small ps-3" style="width: 15%;">
+                                @(p.SociedadNombre ?? "-")
+                            </td>
+                            <td class="text-start text-secondary small" style="width: 15%;">
+                                <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
+                            </td>
                             <td class="text-start text-secondary small" style="width: 15%;">@p.AccionistaNombre</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
@@ -96,9 +82,6 @@
                                 </button>
                                 @if (idRol == 1 || idRol == 2)
                                 {
-                                    @* <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button> *@
                                     <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                         <i class="bi bi-trash3 fs-6"></i>
                                     </button>

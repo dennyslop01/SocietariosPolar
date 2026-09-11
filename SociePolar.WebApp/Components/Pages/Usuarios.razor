@@ -1,4 +1,4 @@
-﻿@page "/usuarios"
+@page "/usuarios"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -7,23 +7,28 @@
             <div class="d-flex align-items-center justify-content-between">
                 <!-- Parte Izquierda: Icono y Título -->
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
-                        <i class="bi bi-gear-fill text-white fs-5"></i>
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm" style="background-color: #00338D !important;">
+                        <i class="bi bi-people-fill text-white fs-5"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-dark">
-                        Usuarios
-                    </h5>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            Gestión de Usuarios
+                        </h5>
+                        <small class="text-muted">Administración de accesos y roles corporativos</small>
+                    </div>
                 </div>
 
                 <!-- Parte Derecha: Botón Agregar -->
-                <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="AbrirModalNuevo"
-                        style="height: 32px; font-weight: 500;">
-                    <i class="bi bi-plus-lg me-2"></i> Agregar
-                </button>
+                @if (idRol == 1 || idRol == 2)
+                {
+                    <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="AbrirModalNuevo"
+                            style="height: 36px; font-weight: 500; border-radius: 8px;">
+                        <i class="bi bi-plus-lg me-2"></i> Agregar Usuario
+                    </button>
+                }
             </div>
         </div>
-
 
         <div class="card-body">
             <div class="table-responsive">
@@ -32,35 +37,58 @@
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 25%; font-size: 0.85rem;">Email</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Rol</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Estatus</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha de creación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última modificación</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Rol Corporativo</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Estatus</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha Creación</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última Modificación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="text-start text-secondary small" style="width: 25%; text-align: left !important;">@p.Email</td>
-                            <td class="text-start text-secondary small" style="width: 10%; text-align: left !important;">
-                                @(ListaRoles.FirstOrDefault(r => r.Id == p.IdRol)?.Nombre ?? p.IdRol.ToString())
+                            <td class="text-start fw-medium text-dark" style="width: 25%;">@p.Email</td>
+                            <td class="text-start" style="width: 20%;">
+                                @{
+                                    var rolNombre = ListaRoles.FirstOrDefault(r => r.Id == p.IdRol)?.Nombre ?? p.IdRol.ToString();
+                                    var rolClass = p.IdRol switch {
+                                        1 => "bg-primary-subtle text-primary border border-primary-subtle",
+                                        2 => "bg-info-subtle text-info-emphasis border border-info-subtle",
+                                        3 => "bg-success-subtle text-success border border-success-subtle",
+                                        4 => "bg-secondary-subtle text-secondary border border-secondary-subtle",
+                                        5 => "bg-warning-subtle text-warning-emphasis border border-warning-subtle",
+                                        6 => "bg-dark-subtle text-dark border border-dark-subtle",
+                                        _ => "bg-light text-dark border"
+                                    };
+                                }
+                                <span class="badge @rolClass px-2 py-1" style="font-size: 0.78rem;">@rolNombre</span>
                             </td>
 
-                            <!-- Columna Estatus: Busca el nombre basado en el Estatus -->
-                            <td class="text-start text-secondary small" style="width: 10%;">
-                                @(ListaEstatus.FirstOrDefault(e => e.Id == p.Estatus)?.Nombre ?? p.Estatus.ToString())
+                            <!-- Columna Estatus -->
+                            <td class="text-center" style="width: 10%;">
+                                @if (p.Estatus == 1)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Inactivo
+                                    </span>
+                                }
                             </td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3" style="width: 10%;">
                                 @if (idRol == 1 || idRol == 2)
                                 {
-                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
+                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar Usuario">
                                         <i class="bi bi-pencil-square fs-6"></i>
                                     </button>
                                     <button class="btn btn-link btn-sm text-danger p-0"
-                                    @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                            @onclick="() => VerificarEliminar(p)" title="Eliminar Usuario">
                                         <i class="bi bi-trash3 fs-6"></i>
                                     </button>
                                 }
@@ -89,30 +117,32 @@
     <ModalCargando />
 }
 
-
 @if (mostrarModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header text-white" style="background-color: #00338D;">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi @(entidadEditando.Id == 0 ? "bi-person-plus" : "bi-pencil-square") me-2"></i>
                         @(entidadEditando.Id == 0 ? "Agregar Usuario" : "Modificar Usuario")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
-                <div class="modal-body py-4">
+                <div class="modal-body py-4 px-4">
                     <!-- Campo Correo Electrónico -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Correo Electrónico</label>
-                        <input type="email" class="form-control" @bind="entidadEditando.Email"
-                               placeholder="Ingrese el correo electrónico aquí..." />
+                        <label class="form-label fw-bold text-secondary small text-uppercase">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" @bind="entidadEditando.Email"
+                                   placeholder="ejemplo@empresas-polar.com" />
+                        </div>
                     </div>
 
                     <!-- Campo Rol (Lista desplegable) -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Rol asignado</label>
+                        <label class="form-label fw-bold text-secondary small text-uppercase">Rol Corporativo Asignado</label>
                         <select class="form-select" @bind="entidadEditando.IdRol">
                             <option value="" disabled selected>Seleccione un rol...</option>
                             @if (ListaRoles != null)
@@ -127,7 +157,7 @@
 
                     <!-- Campo Estatus (Lista desplegable) -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-secondary">Estatus</label>
+                        <label class="form-label fw-bold text-secondary small text-uppercase">Estatus</label>
                         <select class="form-select" @bind="entidadEditando.Estatus">
                             <option value="" disabled selected>Seleccione un estatus...</option>
                             @if (ListaEstatus != null)
@@ -140,9 +170,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer bg-light border-top">
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios">
+                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios" style="background-color: #00338D !important;">
                         <i class="bi bi-save me-1"></i> Guardar
                     </button>
                 </div>
@@ -151,28 +181,28 @@
     </div>
 }
 
-
 @if (mostrarModalEliminar)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
         <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
-                    <h5 class="fw-bold">¿Estás seguro?</h5>
-                    <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.Email</strong>. Esta acción no se puede deshacer.
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-body text-center py-4 px-4">
+                    <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex p-3 mb-3">
+                        <i class="bi bi-exclamation-octagon fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">¿Estás seguro?</h5>
+                    <p class="text-secondary small mb-0">
+                        Vas a eliminar el usuario <strong>@entidadParaEliminar?.Email</strong>. Esta acción no se puede deshacer.
                     </p>
                 </div>
-                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
+                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4 gap-2">
+                    <button class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModalEliminar">Cancelar</button>
                     <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
                 </div>
             </div>
         </div>
     </div>
 }
-
 
 @code {
     private List<Usuario> Listgral = new();
@@ -328,7 +358,7 @@
 
                     mostrarModal = false;
                     await LoadGenericDataAsync();
-                    await MostrarNotificacion($"Usuario guardada correctamente");
+                    await MostrarNotificacion($"Usuario guardado correctamente");
                 }
                 else
                 {
@@ -344,7 +374,6 @@
         {
             cargando = false;
             StateHasChanged();
-            // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
@@ -397,13 +426,8 @@
         mostrarAlerta = true;
         StateHasChanged();
 
-        await Task.Delay(4000); // 4 segundos para errores es mejor
+        await Task.Delay(4000);
         mostrarAlerta = false;
         StateHasChanged();
-    }
-
-    private void Regresar()
-    {
-        navManager.NavigateTo("/administrar/regiones");
     }
 }

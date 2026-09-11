@@ -149,7 +149,10 @@ namespace SociePolar.Infrastructure.Repositories
                 AnoPublicacion = entity.AnoPublicacion,
                 NumeroPublicacion = entity.NumeroPublicacion,
                 FechaPublicacion = entity.FechaPublicacion,
-                NombreDiario = nombre
+                NombreDiario = nombre,
+                VencimientoDocumento1 = entity.VencimientoDocumento1,
+                VencimientoDocumento2 = entity.VencimientoDocumento2,
+                VencimientoDocumento3 = entity.VencimientoDocumento3
             };
 
             await context.Set<Sociedad>().AddAsync(newsociedad);
@@ -293,6 +296,9 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.NumeroPublicacion = entity.NumeroPublicacion;
             editsociedad.FechaPublicacion = entity.FechaPublicacion;
             editsociedad.NombreDiario = nombre;
+            editsociedad.VencimientoDocumento1 = entity.VencimientoDocumento1;
+            editsociedad.VencimientoDocumento2 = entity.VencimientoDocumento2;
+            editsociedad.VencimientoDocumento3 = entity.VencimientoDocumento3;
 
             context.Set<Sociedad>().Update(editsociedad);
             context.SaveChanges();

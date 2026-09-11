@@ -1,257 +1,258 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
-            <DataAnnotationsValidator />
+@if (cargando)
+{
+    <ModalCargando />
+}
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
 
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Asamblea" : "Modificar Asamblea")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Asamblea" : "Agregar Asamblea")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
 
-                <div class="modal-body py-4">
-                    <!-- Iniciamos la grilla de filas y columnas -->
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
-                            <div class="dropdown">
-                                <!-- Removido -sm para igualar el tamaño estándar del label -->
-                                <button class="form-select text-start d-flex justify-content-between align-items-center"
-                                        type="button"
-                                        style="font-size: 0.8rem;"
-                                        @onclick="ToggleDropdown">
-                                    <span>@(ObtenerNombreSeleccionado())</span>
-                                </button>
-
-                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
-                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
-                                    <li class="mb-2">
-                                        <!-- Cambiado a form-control normal para que la fuente de "Buscar..." coincida en tamaño -->
-                                        <input type="text"
-                                               class="form-control"
-                                               placeholder="Buscar..."
-                                               style="font-size: 0.8rem;"
-                                               @bind="textoBusqueda"
-                                               @bind:event="oninput"
-                                               @ref="searchInputRef" />
-                                    </li>
-
-                                    <li>
-                                        <button type="button"
-                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
-                                                style="font-size: 0.8rem;"
-                                                @onclick="() => SeleccionarOpcion(0)">
-                                            Seleccione ...
-                                        </button>
-                                    </li>
-
-                                    <!-- Opciones filtradas dinámicamente -->
-                                    @if (listSociedad != null)
-                                    {
-                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
-                                        {
-                                            <li>
-                                                <!-- Se reemplazó 'small' por 'style="font-size: 0.8rem;"' para forzar la letra más pequeña -->
-                                                <button type="button"
-                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
-                                                        style="font-size: 0.8rem;"
-                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
-                                                    @sociedad.Empresa.Nombre
-                                                </button>
-                                            </li>
-                                        }
-                                    }
-
-                                </ul>
-                            </div>
-
-                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tipo de Asamblea</label>
-                            <select class="form-select form-select-sm" value="@entidadEditando.TipoAsambleaId" @onchange="OnTipoAsambleaChanged">
-                                <option value="0">Seleccione ...</option>
-                                @if (listTipoAsamblea != null)
-                                {
-                                    @foreach (var tipoAsamblea in listTipoAsamblea)
-                                    {
-                                        <option value="@tipoAsamblea.Id">@tipoAsamblea.Nombre</option>
-                                    }
-                                }
-                            </select>
-                            <ValidationMessage For="@(() => entidadEditando.TipoAsambleaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Fecha de Celebración</label>
-                            <input type="date" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.FechaCelebracion" @bind:format="yyyy-MM-dd" />
-
-                            <ValidationMessage For="@(() => entidadEditando.FechaCelebracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Número de Acta</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.NumeroActa"
-                                   placeholder="Ingrese el número de acta..."
-                                   maxlength="15" />
-                            <ValidationMessage For="@(() => entidadEditando.NumeroActa)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-12 mb-0">
-                            <hr />
-                            <label class="form-label fw-bold text-primary small">Datos del Registro</label>
-                            <hr />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Registro</label>
-                            <select class="form-select form-select-sm" value="@entidadEditando.RegistroId" @onchange="OnRegistroChanged">
-                                <option value="0">Seleccione ...</option>
-                                @if (listRegistro != null)
-                                {
-                                    @foreach (var registro in listRegistro)
-                                    {
-                                        <option value="@registro.Id">@registro.Nombre</option>
-                                    }
-                                }
-                            </select>
-                            <ValidationMessage For="@(() => entidadEditando.RegistroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Fecha de Registro</label>
-                            <input type="date" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.FechaRegistro" @bind:format="yyyy-MM-dd" />
-
-                            <ValidationMessage For="@(() => entidadEditando.FechaRegistro)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Número de Registro</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.NumeroRegistro"
-                                   placeholder="Ingrese el número de registro..."
-                                   maxlength="15" />
-                            <ValidationMessage For="@(() => entidadEditando.NumeroRegistro)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tomo</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.Tomo"
-                                   placeholder="Ingrese el número de tomo..."
-                                   maxlength="15" />
-                            <ValidationMessage For="@(() => entidadEditando.Tomo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-12 mb-0">
-                            <hr />
-                            <label class="form-label fw-bold text-primary small">Datos de Publicación</label>
-                            <hr />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Año de Publicación</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.AnoPublicacion"
-                                   placeholder="Ingrese el año de publicación..."
-                                   maxlength="4"
-                                   inputmode="numeric"
-                                   oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
-                            <ValidationMessage For="@(() => entidadEditando.AnoPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Fecha de Publicación</label>
-                            <input type="date" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.FechaPublicacion" @bind:format="yyyy-MM-dd" />
-
-                            <ValidationMessage For="@(() => entidadEditando.FechaPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Número de Publicación</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.NumeroPublicacion"
-                                   placeholder="Ingrese el número de publicación..."
-                                   maxlength="15" />
-                            <ValidationMessage For="@(() => entidadEditando.NumeroPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Nombre del Diario</label>
-                            <select class="form-select form-select-sm" value="@entidadEditando.NombreDiarioId" @onchange="OnNombreDiarioChanged">
-                                <option value="0">Seleccione ...</option>
-                                @if (listNombreDiario != null)
-                                {
-                                    @foreach (var nombreDiario in listNombreDiario)
-                                    {
-                                        <option value="@nombreDiario.Id">@nombreDiario.Nombre</option>
-                                    }
-                                }
-                            </select>
-                            <ValidationMessage For="@(() => entidadEditando.NombreDiarioId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold text-secondary small d-block">¿Aplica Reforma?</label>
-
-                            <div class="form-check form-check-inline">
-                                <input type="radio"
-                                       name="aplicaReformaGroup"
-                                       id="reformaSi"
-                                       class="form-check-input"
-                                       value="1"
-                                       checked="@(entidadEditando.AplicaReforma == 1)"
-                                       @onchange="() => ActualizarReforma(1)" />
-                                <label class="form-check-label small text-secondary" for="reformaSi">Sí</label>
-                            </div>
-
-                            <div class="form-check form-check-inline">
-                                <input type="radio"
-                                       name="aplicaReformaGroup"
-                                       id="reformaNo"
-                                       class="form-check-input"
-                                       value="0"
-                                       checked="@(entidadEditando.AplicaReforma == 0)"
-                                       @onchange="() => ActualizarReforma(0)" />
-                                <label class="form-check-label small text-secondary" for="reformaNo">No</label>
-                            </div>
-
-
-                            <ValidationMessage For="@(() => entidadEditando.AplicaReforma)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-
-                        @if (entidadEditando.AplicaReforma == 1)
-                        {
+                    <div class="modal-body py-4">
+                        <!-- Iniciamos la grilla de filas y columnas -->
+                        <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Tipo Reforma</label>
-                                <select class="form-select form-select-sm" value="@entidadEditando.TipoReformaId" @onchange="OnTipoReformaChanged">
-                                    <option value="0">Seleccione ...</option>
-                                    @if (listTipoReforma != null)
-                                    {
-                                        @foreach (var tipoReforma in listTipoReforma)
+                                <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                                <div class="dropdown">
+                                    <!-- Removido -sm para igualar el tamaño estándar del label -->
+                                    <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                            type="button"
+                                            style="font-size: 0.8rem;"
+                                            @onclick="ToggleDropdown">
+                                        <span>@(ObtenerNombreSeleccionado())</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                        style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                        <li class="mb-2">
+                                            <!-- Cambiado a form-control normal para que la fuente de "Buscar..." coincida en tamaño -->
+                                            <input type="text"
+                                                   class="form-control"
+                                                   placeholder="Buscar..."
+                                                   style="font-size: 0.8rem;"
+                                                   @bind="textoBusqueda"
+                                                   @bind:event="oninput"
+                                                   @ref="searchInputRef" />
+                                        </li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarOpcion(0)">
+                                                Seleccione ...
+                                            </button>
+                                        </li>
+
+                                        <!-- Opciones filtradas dinámicamente -->
+                                        @if (listSociedad != null)
                                         {
-                                            <option value="@tipoReforma.Id">@tipoReforma.Nombre</option>
+                                            @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                            {
+                                                <li>
+                                                    <!-- Se reemplazó 'small' por 'style="font-size: 0.8rem;"' para forzar la letra más pequeña -->
+                                                    <button type="button"
+                                                            class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                            style="font-size: 0.8rem;"
+                                                            @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                        @sociedad.Empresa.Nombre
+                                                    </button>
+                                                </li>
+                                            }
+                                        }
+
+                                    </ul>
+                                </div>
+
+                                <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tipo de Asamblea</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.TipoAsambleaId" @onchange="OnTipoAsambleaChanged">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listTipoAsamblea != null)
+                                    {
+                                        @foreach (var tipoAsamblea in listTipoAsamblea)
+                                        {
+                                            <option value="@tipoAsamblea.Id">@tipoAsamblea.Nombre</option>
                                         }
                                     }
                                 </select>
-                                <ValidationMessage For="@(() => entidadEditando.TipoReformaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                <ValidationMessage For="@(() => entidadEditando.TipoAsambleaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
-                        }
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Observaciones</label>
-                            <textarea class="form-control form-control-sm small"
-                                      @bind="entidadEditando.Observacion"
-                                      @bind:event="oninput"
-                                      rows="4"
-                                      maxlength="2000"
-                                      placeholder="Ingrese las observaciones (máximo 2,000 caracteres)...">
-                                        </textarea>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Celebración</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaCelebracion" @bind:format="yyyy-MM-dd" />
+
+                                <ValidationMessage For="@(() => entidadEditando.FechaCelebracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Número de Acta</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.NumeroActa"
+                                       placeholder="Ingrese el número de acta..."
+                                       maxlength="20"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+
+                                <ValidationMessage For="@(() => entidadEditando.NumeroActa)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Registro</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.RegistroId" @onchange="OnRegistroChanged">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listRegistro != null)
+                                    {
+                                        @foreach (var registro in listRegistro)
+                                        {
+                                            <option value="@registro.Id">@registro.Nombre</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => entidadEditando.RegistroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Registro</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaRegistro" @bind:format="yyyy-MM-dd" />
+
+                                <ValidationMessage For="@(() => entidadEditando.FechaRegistro)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Número de Registro</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.NumeroRegistro"
+                                       placeholder="Ingrese el número de registro..."
+                                       maxlength="20"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+
+                                <ValidationMessage For="@(() => entidadEditando.NumeroRegistro)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tomo</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.Tomo"
+                                       placeholder="Ingrese el tomo..."
+                                       maxlength="20"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+
+                                <ValidationMessage For="@(() => entidadEditando.Tomo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Año de Publicación</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.AnoPublicacion"
+                                       placeholder="Ingrese el año de publicación..."
+                                       maxlength="4"
+                                       inputmode="numeric"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" />
+
+                                <ValidationMessage For="@(() => entidadEditando.AnoPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Publicación</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaPublicacion" @bind:format="yyyy-MM-dd" />
+
+                                <ValidationMessage For="@(() => entidadEditando.FechaPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Nombre del Diario</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.NombreDiarioId" @onchange="OnNombreDiarioChanged">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listNombreDiario != null)
+                                    {
+                                        @foreach (var diario in listNombreDiario)
+                                        {
+                                            <option value="@diario.Id">@diario.Nombre</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => entidadEditando.NombreDiarioId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Número de Publicación</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.NumeroPublicacion"
+                                       placeholder="Ingrese el número de publicación..."
+                                       maxlength="20"
+                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+
+                                <ValidationMessage For="@(() => entidadEditando.NumeroPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">¿Aplica Reforma de Estatutos?</label>
+                                <div class="mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               name="reforma"
+                                               id="reformaSi"
+                                               value="1"
+                                               checked="@(entidadEditando.AplicaReforma == 1)"
+                                               @onchange="@(() => ActualizarReforma(1))">
+                                        <label class="form-check-label small" for="reformaSi">Sí</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               name="reforma"
+                                               id="reformaNo"
+                                               value="0"
+                                               checked="@(entidadEditando.AplicaReforma == 0)"
+                                               @onchange="@(() => ActualizarReforma(0))">
+                                        <label class="form-check-label small" for="reformaNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (entidadEditando.AplicaReforma == 1)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Tipo de Reforma</label>
+                                    <select class="form-select form-select-sm" value="@entidadEditando.TipoReformaId" @onchange="OnTipoReformaChanged">
+                                        <option value="0">Seleccione ...</option>
+                                        @if (listTipoReforma != null)
+                                        {
+                                            @foreach (var tipoReforma in listTipoReforma)
+                                            {
+                                                <option value="@tipoReforma.Id">@tipoReforma.Nombre</option>
+                                            }
+                                        }
+                                    </select>
+                                    <ValidationMessage For="@(() => entidadEditando.TipoReformaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                                </div>
+                            }
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Observaciones</label>
+                                <textarea class="form-control form-control-sm small"
+                                          @bind="entidadEditando.Observacion"
+                                          @bind:event="oninput"
+                                          rows="4"
+                                          maxlength="2000"
+                                          placeholder="Ingrese las observaciones (máximo 2,000 caracteres)...">
+                                            </textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
                         <i class="bi bi-save me-1"></i> Guardar
                     </button>
                 </div>
@@ -259,10 +260,6 @@
         </EditForm>
     </div>
 </div>
-
-@if (cargando)
-{
-    <ModalCargando />
 }
 
 @code {
@@ -275,7 +272,8 @@
     private bool mostrarAlerta = false;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    private bool cargando = false;
+    private bool cargando = true;
+    private bool guardando = false;
 
     private AsambleaDto entidadEditando = new();
     private AsambleaDto entidadEditandoAux = new();
@@ -288,7 +286,7 @@
     private List<IBaseEntity> listNombreDiario = new();
     private List<IBaseEntity> listTipoReforma = new();
 
-    private EditContext? editContext;
+    private EditContext editContext = new(new AsambleaDto());
     private ValidationMessageStore? mensajeStore;
 
     [Inject] private ISociedad reposociedad { get; set; } = null!;
@@ -303,75 +301,68 @@
         cargando = true;
         try
         {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new()
+                {
+                    SociedadId = 0,
+                    TipoAsambleaId = 0,
+                    RegistroId = 0,
+                    NombreDiarioId = 0,
+                    TipoReformaId = 0,
+                    IndicadorAsamblea = 1,
+                    AplicaReforma = 0,
+                    CreateDate = DateTime.Now,
+                    UpdateDate = DateTime.Now
+                };
+            }
+            else
+            {
+                var item = await repository.GetByIdAsync(int.Parse(id));
+                if (item != null)
+                {
+                    entidadEditando = new()
+                    {
+                        Id = item.Id,
+                        SociedadId = item.Sociedad?.Id ?? 0,
+                        TipoAsambleaId = item.TipoAsamblea?.Id ?? 0,
+                        FechaCelebracion = item.FechaCelebracion,
+                        NumeroActa = item.NumeroActa,
+                        RegistroId = item.Registro?.Id ?? 0,
+                        FechaRegistro = item.FechaRegistro,
+                        NumeroRegistro = item.NumeroRegistro,
+                        Tomo = item.Tomo,
+                        AnoPublicacion = item.AnoPublicacion,
+                        FechaPublicacion = item.FechaPublicacion,
+                        NombreDiarioId = item.NombreDiario?.Id ?? 0,
+                        NumeroPublicacion = item.NumeroPublicacion,
+                        AplicaReforma = item.AplicaReforma,
+                        TipoReformaId = item.TipoReforma != null ? item.TipoReforma.Id : 0,                    
+                        CreateDate = item.CreateDate,
+                        CreateUserId = item.CreateUserId,
+                        UpdateDate = item.UpdateDate,
+                        UpdateUserId = item.UpdateUserId,
+                        IndicadorAsamblea = item.IndicadorAsamblea,
+                        Observacion = item.Observacion
+                    };
+                    entidadEditandoAux = JsonSerializer.Deserialize<AsambleaDto>(JsonSerializer.Serialize(entidadEditando)) ?? new();
+                }
+            }
+
             editContext = new EditContext(entidadEditando);
             mensajeStore = new ValidationMessageStore(editContext);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error al inicializar formulario de asamblea: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
             cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
         }
-
-        await LoadGenericDataAsync();
-
-        if (id == "0")
-        {
-            entidadEditando = new();
-            entidadEditando.SociedadId = 0;
-            entidadEditando.TipoAsambleaId = 0;
-            entidadEditando.RegistroId = 0;
-            entidadEditando.NombreDiarioId = 0;
-            entidadEditando.TipoReformaId = 0;
-            entidadEditando.IndicadorAsamblea = 1;
-            entidadEditando.AplicaReforma = 0;
-            entidadEditando.CreateDate = DateTime.Now;
-            entidadEditando.UpdateDate = DateTime.Now;
-            editContext = new EditContext(entidadEditando);
-        }
-        else
-        {
-            try
-            {
-                var item = await repository.GetByIdAsync(int.Parse(id));
-                AsambleaDto dto = new()
-                {
-                    Id = item.Id,
-                    SociedadId = item.Sociedad.Id,
-                    TipoAsambleaId = item.TipoAsamblea.Id,
-                    FechaCelebracion = item.FechaCelebracion,
-                    NumeroActa = item.NumeroActa,
-                    RegistroId = item.Registro.Id,
-                    FechaRegistro = item.FechaRegistro,
-                    NumeroRegistro = item.NumeroRegistro,
-                    Tomo = item.Tomo,
-                    AnoPublicacion = item.AnoPublicacion,
-                    FechaPublicacion = item.FechaPublicacion,
-                    NombreDiarioId = item.NombreDiario.Id,
-                    NumeroPublicacion = item.NumeroPublicacion,
-                    AplicaReforma = item.AplicaReforma,
-                    TipoReformaId = item.TipoReforma != null ? item.TipoReforma.Id : 0,                    
-                    CreateDate = item.CreateDate,
-                    CreateUserId = item.CreateUserId,
-                    UpdateDate = item.UpdateDate,
-                    UpdateUserId = item.UpdateUserId,
-                    IndicadorAsamblea = item.IndicadorAsamblea,
-                    Observacion = item.Observacion
-                };
-
-                entidadEditando = dto;
-                editContext = new EditContext(entidadEditando);
-                entidadEditandoAux = JsonSerializer.Deserialize<AsambleaDto>(JsonSerializer.Serialize(entidadEditando));
-            }
-            catch (Exception ex)
-            {
-                cargando = false;
-                StateHasChanged();
-                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-            }
-        }
-        cargando = false;
     }
 
     public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
@@ -381,11 +372,9 @@
 
         if (method == null) return new List<IBaseEntity>();
 
-        // Invocamos el método asíncrono
         var task = (Task)method.Invoke(repo, null)!;
         await task;
 
-        // Obtenemos el resultado de la Task dinámica
         var resultProperty = task.GetType().GetProperty("Result");
         var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
 
@@ -394,24 +383,13 @@
 
     private async Task LoadGenericDataAsync()
     {
-        try
-        {
-            listTipoAsamblea = await GetEntityListAsync("tipoasambleas");
-            listRegistro = await GetEntityListAsync("registros");
-            listNombreDiario = await GetEntityListAsync("nombrediarios");
-            listTipoReforma = await GetEntityListAsync("tiporeformas");
+        listTipoAsamblea = await GetEntityListAsync("tipoasambleas");
+        listRegistro = await GetEntityListAsync("registros");
+        listNombreDiario = await GetEntityListAsync("nombrediarios");
+        listTipoReforma = await GetEntityListAsync("tiporeformas");
 
-            var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.OrderBy(x=> x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
-
-            listAsamblea = await repository.GetAllAsync();
-        }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-        }
+        var listSociedades = await reposociedad.GetAllAsync();
+        listSociedad = listSociedades.OrderBy(x => x.Empresa?.Nombre).Where(x => x.EstatusSociedad?.Id == 1).ToList();
     }
 
     private async Task CerrarModal()
@@ -429,6 +407,21 @@
         {
             StateHasChanged();
             cargando = false;
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 

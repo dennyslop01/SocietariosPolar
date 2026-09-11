@@ -95,6 +95,9 @@ namespace SociePolar.Infrastructure.DataContext
             modelBuilder.Entity<Titulo>()
                 .ToTable(tb => tb.HasTrigger("trg_Titulos_Delete"));
 
+            modelBuilder.Entity<AccionistaSociedad>()
+                .ToTable(tb => tb.HasTrigger("TR_AccionistasSociedades_HistoricoAcciones"));
+
 
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorAccion)

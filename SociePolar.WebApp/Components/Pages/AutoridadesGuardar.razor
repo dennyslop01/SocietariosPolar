@@ -1,172 +1,188 @@
-﻿@rendermode InteractiveServer
-
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
-            <DataAnnotationsValidator />
-
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Autoridad" : "Modificar Autoridad")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
-
-                <div class="modal-body py-4">
-                    <!-- Iniciamos la grilla de filas y columnas -->
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
-                            <div class="dropdown">
-                                <!-- Removido -sm para igualar el tamaño estándar del label -->
-                                <button class="form-select text-start d-flex justify-content-between align-items-center"
-                                        type="button"
-                                        style="font-size: 0.8rem;"
-                                        @onclick="ToggleDropdown">
-                                    <span>@(ObtenerNombreSeleccionado())</span>
-                                </button>
-
-                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
-                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
-                                    <li class="mb-2">
-                                        <!-- Cambiado a form-control normal para que la fuente de "Buscar..." coincida en tamaño -->
-                                        <input type="text"
-                                               class="form-control"
-                                               placeholder="Buscar..."
-                                               style="font-size: 0.8rem;"
-                                               @bind="textoBusqueda"
-                                               @bind:event="oninput"
-                                               @ref="searchInputRef" />
-                                    </li>
-
-                                    <li>
-                                        <button type="button"
-                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
-                                                style="font-size: 0.8rem;"
-                                                @onclick="() => SeleccionarOpcion(0)">
-                                            Seleccione ...
-                                        </button>
-                                    </li>
-
-                                    <!-- Opciones filtradas dinámicamente -->
-                                    @if (listSociedad != null)
-                                    {
-                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
-                                        {
-                                            <li>
-                                                <!-- Se reemplazó 'small' por 'style="font-size: 0.8rem;"' para forzar la letra más pequeña -->
-                                                <button type="button"
-                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
-                                                        style="font-size: 0.8rem;"
-                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
-                                                    @sociedad.Empresa.Nombre
-                                                </button>
-                                            </li>
-                                        }
-                                    }
-
-                                </ul>
-                            </div>
-
-                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Cargo</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.CargoId">
-                                <option value="0" selected>Seleccione ...</option>
-                                @if (listCargos != null)
-                                {
-                                    @foreach (var cargo in listCargos)
-                                    {
-                                        <option value="@cargo.Id">@cargo.Nombre</option>
-                                    }
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => entidadEditando.CargoId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Duración</label>
-                            <InputText class="form-control form-control-sm small"
-                                         @bind-Value="entidadEditando.Duracion"
-                                         placeholder="Ingrese la duración..."
-                                         maxlength="15" />
-                            <ValidationMessage For="@(() => entidadEditando.Duracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Nombre</label>
-                            <InputText type="text" class="form-control form-control-sm small"
-                                   @bind-Value="entidadEditando.Nombre"
-                                   placeholder="Ingrese nombre..."
-                                   maxlength="150" />
-                            <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento1Id">
-                                <option value="0">Seleccione ...</option>
-                                @if (listTipoDoc != null)
-                                {
-                                    @foreach (var tipo in listTipoDoc)
-                                    {
-                                        <option value="@tipo.Id">@tipo.Nombre</option>
-                                    }
-                                }
-                            </InputSelect>
-                            @* <ValidationMessage For="@(() => entidadEditando.TipoDocumento1Id)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" /> *@
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
-                            <InputText type="text" class="form-control form-control-sm small"
-                                       @bind-Value="entidadEditando.Documento1"
-                                       placeholder="Ingrese número de documento..."
-                                       maxlength="20"
-                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                          @*   <ValidationMessage For="@(() => entidadEditando.Documento1)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" /> *@
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento2Id">
-                                <option value="0">Seleccione ...</option>
-                                @if (listTipoDoc != null)
-                                {
-                                    @foreach (var tipo in listTipoDoc)
-                                    {
-                                        <option value="@tipo.Id">@tipo.Nombre</option>
-                                    }
-                                }
-                            </InputSelect>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 2</label>
-                            <InputText type="text" class="form-control form-control-sm small"
-                                       @bind-Value="entidadEditando.Documento2"
-                                       placeholder="Ingrese número de documento..."
-                                       maxlength="20"
-                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
-                        <i class="bi bi-save me-1"></i> Guardar
-                    </button>
-                </div>
-            </div>
-        </EditForm>
-    </div>
-</div>
+@rendermode InteractiveServer
 
 @if (cargando)
 {
     <ModalCargando />
 }
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
+
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Autoridad" : "Agregar Autoridad")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
+
+                    <div class="modal-body py-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                                <div class="dropdown">
+                                    <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                            type="button"
+                                            style="font-size: 0.8rem;"
+                                            @onclick="ToggleDropdown">
+                                        <span>@(ObtenerNombreSeleccionado())</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                        style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                        <li class="mb-2">
+                                            <input type="text"
+                                                   class="form-control"
+                                                   placeholder="Buscar..."
+                                                   style="font-size: 0.8rem;"
+                                                   @bind="textoBusqueda"
+                                                   @bind:event="oninput"
+                                                   @ref="searchInputRef" />
+                                        </li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarOpcion(0)">
+                                                Seleccione ...
+                                            </button>
+                                        </li>
+
+                                        @if (listSociedad != null)
+                                        {
+                                            @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                            {
+                                                <li>
+                                                    <button type="button"
+                                                            class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                            style="font-size: 0.8rem;"
+                                                            @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                        @sociedad.Empresa.Nombre
+                                                    </button>
+                                                </li>
+                                            }
+                                        }
+
+                                    </ul>
+                                </div>
+
+                                <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Cargo</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.CargoId" @onchange="OnCargoChanged">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listCargos != null)
+                                    {
+                                        @foreach (var cargo in listCargos)
+                                        {
+                                            <option value="@cargo.Id">@cargo.Nombre</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => entidadEditando.CargoId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Nombre</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.Nombre"
+                                       placeholder="Ingrese el nombre de la autoridad..."
+                                       maxlength="100" />
+                                <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Duración</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.Duracion"
+                                       placeholder="Ingrese la duración..."
+                                       maxlength="20" />
+                                <ValidationMessage For="@(() => entidadEditando.Duracion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Duración</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaDuracion" @bind:format="yyyy-MM-dd" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tipo de Documento</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.TipoDocumento1Id" @onchange="OnTipoDocumento1Changed">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listTipoDoc != null)
+                                    {
+                                        @foreach (var tipoDoc in listTipoDoc)
+                                        {
+                                            <option value="@tipoDoc.Id">@tipoDoc.Nombre</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => entidadEditando.TipoDocumento1Id)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Número de Documento</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.Documento1"
+                                       placeholder="Ingrese el número de documento..."
+                                       maxlength="20" />
+                                <ValidationMessage For="@(() => entidadEditando.Documento1)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 1</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.VencimientoDocumento1" @bind:format="yyyy-MM-dd" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tipo de Documento</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.TipoDocumento2Id" @onchange="OnTipoDocumento2Changed">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listTipoDoc != null)
+                                    {
+                                        @foreach (var tipoDoc in listTipoDoc)
+                                        {
+                                            <option value="@tipoDoc.Id">@tipoDoc.Nombre</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => entidadEditando.TipoDocumento2Id)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Número de Documento</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.Documento2"
+                                       placeholder="Ingrese el número de documento..."
+                                       maxlength="20" />
+                                <ValidationMessage For="@(() => entidadEditando.Documento2)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 2</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.VencimientoDocumento2" @bind:format="yyyy-MM-dd" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                            <i class="bi bi-save me-1"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public string id { get; set; } = "";
 
@@ -175,9 +191,10 @@
 
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
-    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string claseAlerta = "alert-success"; 
     private string iconoAlerta = "bi-check-circle-fill";
-    private bool cargando = false;
+    private bool cargando = true;
+    private bool guardando = false;
 
     private AutoridadDto entidadEditando = new();
     private AutoridadDto entidadEditandoAux = new();
@@ -186,10 +203,9 @@
     private List<Autoridad> listAutoridad = new();
 
     private List<IBaseEntity> listCargos = new();
-    private List<IBaseEntity> listCargosFiltrado = new();
     private List<IBaseEntity> listTipoDoc = new();
 
-    private EditContext? editContext;
+    private EditContext editContext = new(new AutoridadDto());
     private ValidationMessageStore? mensajeStore;
 
     [Inject] private ISociedad reposociedad { get; set; } = null!;
@@ -205,62 +221,58 @@
         cargando = true;
         try
         {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new()
+                {
+                    SociedadId = 0,
+                    CargoId = 0,
+                    CreateDate = DateTime.Now,
+                    UpdateDate = DateTime.Now
+                };
+            }
+            else
+            {
+                var item = await repository.GetByIdAsync(int.Parse(id));
+                if (item != null)
+                {
+                    entidadEditando = new()
+                    {
+                        Id = item.Id,
+                        SociedadId = item.Sociedad?.Id ?? 0,
+                        CargoId = item.Cargo?.Id ?? 0,
+                        Nombre = item.Nombre,
+                        TipoDocumento1Id = item.TipoDocumento1?.Id,
+                        TipoDocumento2Id = item.TipoDocumento2?.Id,
+                        Documento1 = item.Documento1,
+                        Documento2 = item.Documento2,
+                        Duracion = item.Duracion,
+                        CreateDate = item.CreateDate,
+                        CreateUserId = item.CreateUserId,
+                        UpdateDate = item.UpdateDate,
+                        UpdateUserId = item.UpdateUserId,
+                        FechaDuracion = item.FechaDuracion,
+                        VencimientoDocumento1 = item.VencimientoDocumento1,
+                        VencimientoDocumento2 = item.VencimientoDocumento2
+                    };
+                    entidadEditandoAux = JsonSerializer.Deserialize<AutoridadDto>(JsonSerializer.Serialize(entidadEditando)) ?? new();
+                }
+            }
+
             editContext = new EditContext(entidadEditando);
             mensajeStore = new ValidationMessageStore(editContext);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error al inicializar autoridad: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
             cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
         }
-
-        await LoadGenericDataAsync();
-
-        if (id == "0")
-        {
-            entidadEditando = new();
-            entidadEditando.SociedadId = 0;
-            entidadEditando.CargoId = 0;
-            entidadEditando.CreateDate = DateTime.Now;
-            entidadEditando.UpdateDate = DateTime.Now;
-            editContext = new EditContext(entidadEditando);
-        }
-        else
-        {
-            try
-            {
-                var item = await repository.GetByIdAsync(int.Parse(id));
-                AutoridadDto dto = new()
-                {
-                    Id = item.Id,
-                    SociedadId = item.Sociedad.Id,
-                    CargoId = item.Cargo.Id,
-                    Nombre = item.Nombre,
-                    TipoDocumento1Id = item.TipoDocumento1?.Id,
-                    TipoDocumento2Id = item.TipoDocumento2?.Id,
-                    Documento1 = item.Documento1,
-                    Documento2 = item.Documento2,
-                    Duracion = item.Duracion,
-                    CreateDate = item.CreateDate,
-                    CreateUserId = item.CreateUserId,
-                    UpdateDate = item.UpdateDate,
-                    UpdateUserId = item.UpdateUserId
-                };
-
-                entidadEditando = dto;
-                editContext = new EditContext(entidadEditando);
-                entidadEditandoAux = JsonSerializer.Deserialize<AutoridadDto>(JsonSerializer.Serialize(entidadEditando));
-            }
-            catch (Exception ex)
-            {
-                cargando = false;
-                StateHasChanged();
-                await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-            }
-        }
-        cargando = false;
     }
 
     public async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
@@ -270,11 +282,9 @@
 
         if (method == null) return new List<IBaseEntity>();
 
-        // Invocamos el método asíncrono
         var task = (Task)method.Invoke(repo, null)!;
         await task;
 
-        // Obtenemos el resultado de la Task dinámica
         var resultProperty = task.GetType().GetProperty("Result");
         var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
 
@@ -283,22 +293,11 @@
 
     private async Task LoadGenericDataAsync()
     {
-        try
-        {
-            listCargos = await GetEntityListAsync("cargos");
-            listTipoDoc = await GetEntityListAsync("tipodocumento");
+        listCargos = await GetEntityListAsync("cargos");
+        listTipoDoc = await GetEntityListAsync("tipodocumento");
 
-            var listSociedades = await reposociedad.GetAllAsync();
-            listSociedad = listSociedades.OrderBy(x=> x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == 1).ToList();
-
-            listAutoridad = await repository.GetAllAsync();
-        }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-        }
+        var listSociedades = await reposociedad.GetAllAsync();
+        listSociedad = listSociedades.OrderBy(x => x.Empresa?.Nombre).Where(x => x.EstatusSociedad?.Id == 1).ToList();
     }
 
     private async Task CerrarModal()
@@ -316,6 +315,21 @@
         {
             StateHasChanged();
             cargando = false;
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -387,6 +401,30 @@
         await Task.Delay(4000); // 4 segundos para errores es mejor
         mostrarAlerta = false;
         StateHasChanged();
+    }
+
+    private void OnCargoChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.CargoId = idSeleccionado;
+        }
+    }
+
+    private void OnTipoDocumento1Changed(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.TipoDocumento1Id = idSeleccionado;
+        }
+    }
+
+    private void OnTipoDocumento2Changed(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.TipoDocumento2Id = idSeleccionado;
+        }
     }
 
     // Alternar la apertura del menú desplegable

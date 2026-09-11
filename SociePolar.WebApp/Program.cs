@@ -10,19 +10,61 @@ using SociePolar.WebApp.Services;
 using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseStaticWebAssets();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.Configure<IGoogleDrive>(builder.Configuration.GetSection("GoogleDrive"));
+builder.Services.Configure<SociePolar.WebApp.Configuration.Saml2Settings>(builder.Configuration.GetSection("Saml2"));
 
+// =========================================================================
+// CONFIGURACIÓN SAML 2.0 AZURE AD / ENTRA ID (PREPARADA Y LISTA PARA ACTIVAR)
+// =========================================================================
+// Para activar SAML 2.0 en producción:
+// 1. Establecer "Saml2:Enabled": true en appsettings.json con el Certificado X.509 de Azure y URLs.
+// 2. Descomentar el bloque AddCookie() + AddSaml2() o usar el condicional.
+/*
+var samlSettings = builder.Configuration.GetSection("Saml2").Get<SociePolar.WebApp.Configuration.Saml2Settings>();
+if (samlSettings != null && samlSettings.Enabled)
+{
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = "Saml2";
+    })
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "SocietariosPolar.AuthCookie";
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    });
+    // .AddSaml2(options => {
+    //     options.SPOptions.EntityId = new Sustainsys.Saml2.Metadata.EntityId(samlSettings.EntityId);
+    //     options.SPOptions.ReturnUrl = new Uri("/authsessionuser", UriKind.Relative);
+    //     var idp = new Sustainsys.Saml2.IdentityProvider(new Sustainsys.Saml2.Metadata.EntityId(samlSettings.SingleSignOnDestination!), options.SPOptions)
+    //     {
+    //         SingleSignOnServiceUrl = new Uri(samlSettings.SingleSignOnDestination!),
+    //         Binding = Sustainsys.Saml2.WebSso.Saml2BindingType.HttpRedirect
+    //     };
+    //     if (!string.IsNullOrEmpty(samlSettings.SigningCertificate))
+    //     {
+    //         var certBytes = Convert.FromBase64String(samlSettings.SigningCertificate.Replace("-----BEGIN CERTIFICATE-----", "").Replace("-----END CERTIFICATE-----", "").Trim());
+    //         idp.SigningKeys.AddConfiguredKey(new System.Security.Cryptography.X509Certificates.X509Certificate2(certBytes));
+    //     }
+    //     options.IdentityProviders.Add(idp);
+    // });
+}
+*/
+
+// AUTENTICACIÓN ACTIVA ACTUAL (Windows Negotiate / Local Dev Fallback)
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();
 
 builder.Services.AddAuthorization(options =>
 {
-    options.FallbackPolicy = options.DefaultPolicy;
+    // options.FallbackPolicy = options.DefaultPolicy; // DEV BYPASS
 });
 
 builder.Services.AddServerSideBlazor()
@@ -33,10 +75,10 @@ builder.Services.AddDbContextFactory<SociedadDbContext>(options =>
            .EnableSensitiveDataLogging()
            .EnableDetailedErrors());
 
-builder.Services.AddDistributedMemoryCache(); // Requerido para almacenar la sesi�n en memoria
+builder.Services.AddDistributedMemoryCache(); // Requerido para almacenar la sesión en memoria
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Tiempo de expiraci�n
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Tiempo de expiración
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
@@ -101,3 +143,5 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+

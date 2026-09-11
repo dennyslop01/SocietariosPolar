@@ -2,7 +2,7 @@
 @using SociePolar.Domain.Models
 @rendermode InteractiveServer
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
         <EditForm EditContext="editContext" OnSubmit="GuardarEntidad">
             <DataAnnotationsValidator />
@@ -10,50 +10,49 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="bi bi-filetype-csv me-2"></i> Descargar Datos                        
+                        <i class="bi bi-filetype-csv me-2"></i> Descargar Datos
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
 
                 <div class="modal-body py-4">
-                    <!-- Iniciamos la grilla de filas y columnas -->
-                    <div class="row">
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Separador</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadActual.TipoSeparador">
-                                <option value="-1">-- Seleccione uno --</option>
-                                <option value="1">Coma</option>
-                                <option value="2">Punto y Coma</option>
-                                @* <option value="3">Tabulador</option> *@
-                            </InputSelect>
-                            <ValidationMessage For="@(() => entidadActual.TipoSeparador)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                    @if (cargando)
+                    {
+                        <div class="d-flex flex-column justify-content-center align-items-center py-5">
+                            <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <span class="text-secondary fw-semibold">Generando archivo de descarga...</span>
                         </div>
-                        <div class="col-md-6 mb-3">
+                    }
+                    else
+                    {
+                        <!-- Iniciamos la grilla de filas y columnas -->
+                        <div class="row">
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Separador</label>
+                                <InputSelect class="form-select form-select-sm" @bind-Value="entidadActual.TipoSeparador">
+                                    <option value="-1">-- Seleccione uno --</option>
+                                    <option value="1">Coma</option>
+                                    <option value="2">Punto y Coma</option>
+                                    @* <option value="3">Tabulador</option> *@
+                                </InputSelect>
+                                <ValidationMessage For="@(() => entidadActual.TipoSeparador)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-12 mb-0">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                    </div>
+                    }
                 </div>
 
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
-                        <i class="bi bi-save me-1"></i> Guardar
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@cargando">
+                        <i class="bi bi-download me-1"></i> Descargar
                     </button>
                 </div>
             </div>
         </EditForm>
     </div>
 </div>
-
-@if (cargando)
-{
-    <ModalCargando />
-}
 
 @code
 {
@@ -129,6 +128,21 @@
         {
             StateHasChanged();
             cargando = false;
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -245,7 +259,7 @@
                 linea = $"{item.Id}{separador}{item.Region.Nombre}{separador}{item.UnidadNegocio.Nombre}{separador}{item.Empresa.Nombre}{separador}{item.NumeroSap}{separador}{item.EstatusSociedad.Nombre}{separador}{item.TipoSociedadActiva.Nombre}{separador}{item.Objeto}{separador}{item.Domicilio}{separador}{item.DireccionFiscal}{separador}{item.DatosConstitucion}{separador}{item.FechaConstitucion}{separador}{item.FechaVencimiento}{separador}{item.Duracion}{separador}";
                 linea += $"{item.NumeroAcciones}{separador}{item.AplicaCapital}{separador}{item.Moneda.Nombre}{separador}{item.CapitalSuscrito}{separador}{item.CapitalPagado}{separador}{item.ClaseAcciones}{separador}{item.FormaAdministracion}{separador}{item.EjercicioEconomico}{separador}{item.NumeroExpediente}{separador}{item.Observaciones}{separador}{item.Documento1}{separador}{item.Nit}{separador}{item.CreateDate}{separador}";
                 linea += $"{item.UpdateDate}{separador}{item.ValorAccion}{separador}{item.AnoPublicacion}{separador}{item.NumeroPublicacion}{separador}{item.FechaPublicacion}{separador}{item.NombreDiario}{separador}{item.ValorPatrimonial}{separador}{item.Documento2}{separador}{item.Documento3}{separador}{item.TipoDocumento1}{separador}{item.TipoDocumento2}{separador}{item.TipoDocumento3}";
-                
+
                 sb.AppendLine(linea);
             }
             return sb.ToString();
@@ -307,7 +321,7 @@
             string encabezado = string.Empty;
 
             var listaGral = await repoasamblea.GetAllAsync();
-            List<Asamblea> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Id).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado) && (x.IndicadorAsamblea == 0 || 
+            List<Asamblea> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Id).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado) && (x.IndicadorAsamblea == 0 ||
                             ((reforma == 1 && x.TipoReforma != null) || (reforma != 1 && x.TipoReforma == null)))).ToList();
 
             encabezado += $"Id{separador}Sociedad{separador}TipoAsamblea{separador}FechaCelebracion{separador}NumeroActa{separador}FechaRegistro{separador}Registro{separador}NumeroRegistro{separador}Tomo{separador}";

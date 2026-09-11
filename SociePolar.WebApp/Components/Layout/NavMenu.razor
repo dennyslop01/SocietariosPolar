@@ -1,378 +1,96 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 
-<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Style="width: 100%;">
+<MudNavMenu Class="polar-nav-menu" Rounded="true" Margin="Margin.Dense" Color="Color.Primary">
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Dashboard">
+        Inicio
+    </MudNavLink>
 
-    @* Botón Simple (Sin hijos) *@
-    <MudButton href="/"
-               Variant="Variant.Text"
-               Style="color: white; text-transform: none;">
-        <i class="bi bi-house-fill m-2"></i> Inicio
-    </MudButton>
-
-    @if (userrol == 1)
+    @if (userrol == 1 || userrol == 2 || userrol == 3 || userrol == 4 || userrol == 6)
     {
-        <MudMenu Label="Administración"
-                 Variant="Variant.Text"
-                 Dense="true"
-                 Padding="false"
-             Style="color: white; text-transform: none;"
-             StartIcon="@Icons.Material.Filled.Settings"
-             EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-             AnchorOrigin="Origin.BottomLeft"
-             TransformOrigin="Origin.TopLeft">
-            <ChildContent>
-                <!-- Nuevo Nivel: Tablas -->
-                <MudMenu Label="Tablas"
-                         Variant="Variant.Text"
-                         Dense="true"
-                         Padding="false"
-                         Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
-                         EndIcon="@Icons.Material.Filled.ChevronRight"
-                         AnchorOrigin="Origin.TopRight"
-                         TransformOrigin="Origin.TopLeft">
-                    <ChildContent>
-                        <MudMenuItem href="/administrar/cargos">
-                            <div style="font-size: 0.85rem;">
-                                Cargos
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/claselibros">
-                            <div style="font-size: 0.85rem;">
-                                Clase Libros
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/empresas">
-                            <div style="font-size: 0.85rem;">
-                                Empresas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/estatussociedad">
-                            <div style="font-size: 0.85rem;">
-                                Estatus Sociedad
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/nombrediarios">
-                            <div style="font-size: 0.85rem;">
-                                Nombre Diarios
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/regiones">
-                            <div style="font-size: 0.85rem;">
-                                Regiones
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/registros">
-                            <div style="font-size: 0.85rem;">
-                                Registros
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tipoasambleas">
-                            <div style="font-size: 0.85rem;">
-                                Tipos de Asambleas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tiporeformas">
-                            <div style="font-size: 0.85rem;">
-                                Tipos de Reformas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tiposociedadactiva">
-                            <div style="font-size: 0.85rem;">
-                                Tipo de Sociedad Activa
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tipolibros">
-                            <div style="font-size: 0.85rem;">
-                                Tipo de Libros
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tipoaccionistas">
-                            <div style="font-size: 0.85rem;">
-                                Tipo de Accionistas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/estatusaccionistas">
-                            <div style="font-size: 0.85rem;">
-                                Estatus de Accionistas
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/modalidadpago">
-                            <div style="font-size: 0.85rem;">
-                                Modalidad de Pago
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tipocuenta">
-                            <div style="font-size: 0.85rem;">
-                                Tipo de Cuenta
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/banco">
-                            <div style="font-size: 0.85rem;">
-                                Bancos
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/dirigidosa">
-                            <div style="font-size: 0.85rem;">
-                                Dirigidos A
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/estadosciviles">
-                            <div style="font-size: 0.85rem;">
-                                Estados Civiles
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/condicionesespeciales">
-                            <div style="font-size: 0.85rem;">
-                                Condiciones Especiales
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/administrar/tipodocumento">
-                            <div style="font-size: 0.85rem;">
-                                Tipos de Documentos
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/monedas">
-                            <div style="font-size: 0.85rem;">
-                                Monedas
-                            </div>
-                        </MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-                <MudDivider />
-
-                <MudMenuItem href="/tipodocumentosoporte">
-                    <div style="font-size: 0.85rem;">
-                        Tipos Documentos Soporte
-                    </div>
-                </MudMenuItem>
-                <MudDivider />
-                <MudMenuItem href="/accionistas">
-                    <div style="font-size: 0.85rem;">
-                        Accionistas
-                    </div>
-                </MudMenuItem>
-                <MudDivider />
-
-                <MudMenuItem href="/usuarios">
-                    <div style="font-size: 0.85rem;">
-                        Usuarios
-                    </div>
-                </MudMenuItem>
-                <MudDivider />
-                <MudMenuItem href="/auditorias">
-                    <div style="font-size: 0.85rem;">
-                        Auditorías
-                    </div>
-                </MudMenuItem>
-                <MudDivider />
-            </ChildContent>
-        </MudMenu>
+        <MudNavGroup Title="Sociedades Activas" Icon="@Icons.Material.Outlined.CorporateFare" Expanded="true" Class="polar-nav-group">
+            <MudNavLink Href="/sociedades" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Business">Ficha Sociedad</MudNavLink>
+            <MudNavLink Href="/asambleas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Groups">Asambleas</MudNavLink>
+            <MudNavLink Href="/reformas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AutoStories">Reformas Estatutarias</MudNavLink>
+            <MudNavLink Href="/autoridades" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Badge">Autoridades</MudNavLink>
+            <MudNavLink Href="/certificaciones" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Verified">Certificaciones</MudNavLink>
+            <MudNavLink Href="/librosocietarios" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.MenuBook">Libros Societarios</MudNavLink>
+        </MudNavGroup>
     }
 
-    @if (userrol != 0)
+    @if (userrol == 1 || userrol == 2 || userrol == 4 || userrol == 6)
     {
-        switch(userrol)
-        {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 6:
-                <MudMenu Label="Sociedades"
-                         Variant="Variant.Text"
-                         Dense="true"
-                         Padding="false"
-                         Style="color: white; text-transform: none;"
-                         StartIcon="@Icons.Material.Filled.DeviceHub"
-                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                         AnchorOrigin="Origin.BottomLeft"
-                         TransformOrigin="Origin.TopLeft">
-                    <ChildContent>
-                        <MudMenu Label="Activas"
-                                 Variant="Variant.Text"
-                                 Dense="true"
-                                 Padding="false"
-                                 Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
-                                 EndIcon="@Icons.Material.Filled.ChevronRight"
-                                 AnchorOrigin="Origin.TopRight"
-                                 TransformOrigin="Origin.TopLeft">
-                            <ChildContent>
-                                <MudMenuItem href="/sociedades">
-                                    <div style="font-size: 0.85rem;">
-                                        Ficha Sociedad
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/autoridades">
-                                    <div style="font-size: 0.85rem;">
-                                        Autoridades
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/asambleas">
-                                    <div style="font-size: 0.85rem;">
-                                        Asambleas
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/reformas">
-                                    <div style="font-size: 0.85rem;">
-                                        Reformas
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/certificaciones">
-                                    <div style="font-size: 0.85rem;">
-                                        Certificaciones
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/librosocietarios">
-                                    <div style="font-size: 0.85rem;">
-                                        Libros Societarios
-                                    </div>
-                                </MudMenuItem>
-                                <MudDivider />
-
-                            </ChildContent>
-                        </MudMenu>
-                        <MudDivider />
-
-                        <MudMenu Label="Inactivas"
-                                 Variant="Variant.Text"
-                                 Dense="true"
-                                 Padding="false"
-                                 Style="width: 100%; justify-content: start; font-size: 0.85rem; color: #444; font-weight: 500; padding-left: 12px;"
-                                 EndIcon="@Icons.Material.Filled.ChevronRight"
-                                 AnchorOrigin="Origin.TopRight"
-                                 TransformOrigin="Origin.TopLeft">
-                            <ChildContent>
-                                <MudMenuItem href="/sociedadesinactivas">
-                                    <div style="font-size: 0.85rem;">
-                                        Ficha Sociedad
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/asambleasinactivas">
-                                    <div style="font-size: 0.85rem;">
-                                        Asambleas
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/reformasinactivas">
-                                    <div style="font-size: 0.85rem;">
-                                        Reformas
-                                    </div>
-                                </MudMenuItem>
-                                <MudMenuItem href="/autoridadesinactivas">
-                                    <div style="font-size: 0.85rem;">
-                                        Autoridades
-                                    </div>
-                                </MudMenuItem>
-                            </ChildContent>
-                        </MudMenu>
-                    </ChildContent>
-                </MudMenu>
-
-                break;
-        }
-
-        <MudMenu Label="Accionistas"
-                 Variant="Variant.Text"
-                 Dense="true"
-                 Padding="false"
-                 Style="color: white; text-transform: none;"
-                 StartIcon="@Icons.Material.Filled.DeviceHub"
-                 EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                 AnchorOrigin="Origin.BottomLeft"
-                 TransformOrigin="Origin.TopLeft">
-            <ChildContent>
-                @switch (userrol)
-                {
-                    case 1:
-                    case 3:
-                    case 6:
-                        <MudMenuItem href="/accionistassociedad">
-                            <div style="font-size: 0.85rem;">
-                                Accionistas Activos
-                            </div>
-                        </MudMenuItem>
-                        break;
-                }
-                @switch (userrol)
-                {
-                    case 1:
-                    case 6:
-                        <MudMenuItem href="/accionistassociedadinactivas">
-                            <div style="font-size: 0.85rem;">
-                                Accionistas Inactivos
-                            </div>
-                        </MudMenuItem>
-                        break;
-                }
-                
-            </ChildContent>
-        </MudMenu>
-
-        switch (userrol)
-        {
-            case 1:
-            case 5:
-            case 6:
-                <MudMenu Label="Dividendos"
-                         Variant="Variant.Text"
-                         Dense="true"
-                         Padding="false"
-                         Style="color: white; text-transform: none;"
-                         StartIcon="@Icons.Material.Filled.DeviceHub"
-                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                         AnchorOrigin="Origin.BottomLeft"
-                         TransformOrigin="Origin.TopLeft">
-                    <ChildContent>
-                        <MudMenuItem href="/dividendospreliminares">
-                            <div style="font-size: 0.85rem;">
-                                Dividendos Preliminares
-                            </div>
-                        </MudMenuItem>
-                        <MudMenuItem href="/dividendosdefinitivos">
-                            <div style="font-size: 0.85rem;">
-                                Dividendos Definitivos
-                            </div>
-                        </MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-                break;
-        }
-
-        switch (userrol)
-        {
-            case 1:
-            case 6:
-                <MudMenu Label="Conciliaciones"
-                Variant="Variant.Text"
-                Dense="true"
-                Padding="false"
-                Style="color: white; text-transform: none;"
-                StartIcon="@Icons.Material.Filled.DeviceHub"
-                EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                AnchorOrigin="Origin.BottomLeft"
-                TransformOrigin="Origin.TopLeft">
-                    <ChildContent>
-                        <MudMenuItem href="/conciliaciones">
-                            <div style="font-size: 0.85rem;">
-                                Conciliaciones Subir Archivos
-                            </div>
-                        </MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
-                break;
-        }
+        <MudNavGroup Title="Sociedades Inactivas" Icon="@Icons.Material.Outlined.DomainDisabled" Expanded="false" Class="polar-nav-group">
+            <MudNavLink Href="/sociedadesinactivas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.BusinessCenter">Ficha Inactivas</MudNavLink>
+            <MudNavLink Href="/asambleasinactivas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.GroupOff">Asambleas</MudNavLink>
+            <MudNavLink Href="/reformasinactivas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.HistoryEdu">Reformas</MudNavLink>
+            <MudNavLink Href="/autoridadesinactivas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.PersonOff">Autoridades</MudNavLink>
+            <MudNavLink Href="/certificacionesinactivas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Verified">Certificaciones</MudNavLink>
+        </MudNavGroup>
     }
-    <MudSpacer />
-    @* Botón alineado a la derecha con el valor de la variable *@
-    <MudButton Variant="Variant.Text"
-               Style="color: white; text-transform: none;"
-               StartIcon="@Icons.Material.Filled.Person">
-        @userEmail
-    </MudButton>
-</MudStack>
+
+    @if (userrol == 1 || userrol == 3 || userrol == 6)
+    {
+        <MudNavGroup Title="Accionistas" Icon="@Icons.Material.Outlined.AccountTree" Expanded="false" Class="polar-nav-group">
+            <MudNavLink Href="/accionistassociedad" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Group">Accionistas Activos</MudNavLink>
+            @if (userrol == 1 || userrol == 6)
+            {
+                <MudNavLink Href="/accionistassociedadinactivas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.GroupRemove">Accionistas Inactivos</MudNavLink>
+            }
+        </MudNavGroup>
+    }
+
+    @if (userrol == 1 || userrol == 5 || userrol == 6)
+    {
+        <MudNavGroup Title="Dividendos" Icon="@Icons.Material.Outlined.MonetizationOn" Expanded="false" Class="polar-nav-group">
+            <MudNavLink Href="/dividendospreliminares" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.HourglassTop">Dividendos Preliminares</MudNavLink>
+            <MudNavLink Href="/dividendosdefinitivos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.CheckCircleOutline">Dividendos Definitivos</MudNavLink>
+        </MudNavGroup>
+    }
+
+    @if (userrol == 1 || userrol == 6)
+    {
+        <MudNavGroup Title="Conciliaciones" Icon="@Icons.Material.Outlined.FactCheck" Expanded="false" Class="polar-nav-group">
+            <MudNavLink Href="/conciliaciones" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.CloudUpload">Subir Archivos</MudNavLink>
+        </MudNavGroup>
+    }
+
+    @if (userrol == 1 || userrol == 2)
+    {
+        <MudNavGroup Title="Administración" Icon="@Icons.Material.Outlined.AdminPanelSettings" Expanded="false" Class="polar-nav-group">
+            <MudNavGroup Title="Tablas Maestras" Icon="@Icons.Material.Outlined.TableChart" Expanded="false" Class="polar-nav-subgroup">
+                <MudNavLink Href="/administrar/cargos">Cargos</MudNavLink>
+                <MudNavLink Href="/administrar/claselibros">Clase Libros</MudNavLink>
+                <MudNavLink Href="/administrar/empresas">Empresas</MudNavLink>
+                <MudNavLink Href="/administrar/estatussociedad">Estatus Sociedad</MudNavLink>
+                <MudNavLink Href="/administrar/nombrediarios">Nombre Diarios</MudNavLink>
+                <MudNavLink Href="/administrar/regiones">Regiones</MudNavLink>
+                <MudNavLink Href="/administrar/registros">Registros</MudNavLink>
+                <MudNavLink Href="/administrar/tipoasambleas">Tipos de Asambleas</MudNavLink>
+                <MudNavLink Href="/administrar/tiporeformas">Tipos de Reformas</MudNavLink>
+                <MudNavLink Href="/administrar/tiposociedadactiva">Tipo de Sociedad Activa</MudNavLink>
+                <MudNavLink Href="/administrar/tipolibros">Tipo de Libros</MudNavLink>
+                <MudNavLink Href="/administrar/tipoaccionistas">Tipo de Accionistas</MudNavLink>
+                <MudNavLink Href="/administrar/estatusaccionistas">Estatus Accionistas</MudNavLink>
+                <MudNavLink Href="/administrar/modalidadpago">Modalidad de Pago</MudNavLink>
+                <MudNavLink Href="/administrar/tipocuenta">Tipo de Cuenta</MudNavLink>
+                <MudNavLink Href="/administrar/banco">Bancos</MudNavLink>
+                <MudNavLink Href="/administrar/dirigidosa">Dirigidos A</MudNavLink>
+                <MudNavLink Href="/administrar/estadosciviles">Estados Civiles</MudNavLink>
+                <MudNavLink Href="/administrar/condicionesespeciales">Condiciones Especiales</MudNavLink>
+                <MudNavLink Href="/administrar/tipodocumento">Tipos de Documentos</MudNavLink>
+                <MudNavLink Href="/monedas">Monedas</MudNavLink>
+            </MudNavGroup>
+            
+            <MudNavLink Href="/tipodocumentosoporte" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.FolderCopy">Tipos Doc. Soporte</MudNavLink>
+            <MudNavLink Href="/accionistas" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.ContactPage">Maestro Accionistas</MudNavLink>
+            <MudNavLink Href="/usuarios" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.ManageAccounts">Usuarios</MudNavLink>
+            <MudNavLink Href="/auditorias" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.HistoryEdu">Auditorías</MudNavLink>
+        </MudNavGroup>
+    }
+</MudNavMenu>
 
 @code {
-    int userrol = 0;
-    string userEmail = string.Empty;
+    private int userrol = 0;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -383,47 +101,7 @@
             {
                 userrol = int.Parse(userrolaux.Value);
             }
-
-            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
-            if (!string.IsNullOrEmpty(useremailaux.Value))
-            {
-                userEmail = useremailaux.Value;
-            }
             StateHasChanged();
         }
     }
 }
-
-<style>
-
-    /* Esto asegura que los iconos de Bootstrap dentro del botón también sean blancos */
-    .mud-button-root {
-        color: white !important;
-    }
-    /* Si el icono EndIcon de MudBlazor no se pone blanco, esto lo fuerza */
-    .mud-icon-root.mud-svg-icon {
-        fill: white !important;
-    }
-
-    /* Forzamos que el texto del botón de administración sea igual al de los items */
-    .mud-button-root {
-        font-size: 0.875rem !important; /* Esto es Typo.body2 (14px) */
-        letter-spacing: normal !important;
-    }
-
-    .mud-menu .mud-button-root {
-        text-transform: none !important;
-    }
-    
-    /* Ajustamos los items del menú desplegable */
-    .item-menu-igual .mud-typography {
-        font-size: 0.875rem !important;
-        font-weight: 500;
-    }
-
-    /* Opcional: Si quieres que el logo también se vea más integrado */
-    .navbar-top img {
-        height: 30px;
-        vertical-align: middle;
-    }
-</style>

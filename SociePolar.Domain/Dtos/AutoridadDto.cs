@@ -24,6 +24,9 @@ namespace SociePolar.Domain.Dtos
 
         [Required(ErrorMessage = "La Duración es requerida.")]
         public string? Duracion { get; set; }
+        public DateTime? FechaDuracion { get; set; }
+        public DateTime? VencimientoDocumento1 { get; set; }
+        public DateTime? VencimientoDocumento2 { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

@@ -1,109 +1,94 @@
-﻿@rendermode InteractiveServer
-
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
-            <DataAnnotationsValidator />
-
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
-                        @(entidadEditando.Id == 0 ? "Agregar Documento Soporte" : "Modificar Documento Soporte")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
-
-                <div class="modal-body py-4">
-                    <!-- Iniciamos la grilla de filas y columnas -->
-                    <div class="row">
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="@entidadEditando.TipoDocumentoSoporteId">
-                                <option value="0">Seleccione ...</option>
-                                @if (listTipoDocs != null)
-                                {
-                                    @foreach (var tipo in listTipoDocs)
-                                    {
-                                        <option value="@tipo.Id">@tipo.Nombre</option>
-                                    }
-                                }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => entidadEditando.TipoDocumentoSoporteId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-10 mb-3">
-                            <label for="fileInput"
-                                   class="form-label fw-bold btn btn-primary btn-sm"
-                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
-                                Seleccionar archivo PDF
-                            </label>
-
-                            <InputFile id="fileInput"
-                                       class="small"
-                                       OnChange="UploadFile"
-                                       accept=".pdf"
-                                       capture="camera"
-                                       style="display:none;"
-                                       disabled="@esInvalido" />
-
-                            <label class="form-label fw-bold text-secondary small">@fileName</label>
-                            <ValidationMessage For="@(() => entidadEditando.RutaGoogle)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Nombre Documento</label>
-                            <input type="text" class="form-control form-control-sm small"
-                                   @bind="entidadEditando.NombreDocumento"
-                                   placeholder="Ingrese nombre del documento..."
-                                   maxlength="100" />
-                            <ValidationMessage For="@(() => entidadEditando.NombreDocumento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-10 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Comentarios</label>
-                            <textarea class="form-control form-control-sm small"
-                                      @bind="entidadEditando.Comentarios"
-                                      rows="4"
-                                      maxlength="2000"
-                                      placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
-                            </textarea>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
-                        <i class="bi bi-save me-1"></i> Guardar
-                    </button>
-                </div>
-            </div>
-        </EditForm>
-    </div>
-</div>
-
 @if (cargando)
 {
     <ModalCargando />
+}
+else
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+            <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
+                <DataAnnotationsValidator />
+
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Documento Soporte" : "Agregar Documento Soporte")
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
+
+                    <div class="modal-body py-4">
+                        <!-- Iniciamos la grilla de filas y columnas -->
+                        <div class="row">
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                                <InputSelect class="form-select form-select-sm" @bind-Value="@entidadEditando.TipoDocumentoSoporteId">
+                                    <option value="0">Seleccione ...</option>
+                                    @if (listTipoDocs != null)
+                                    {
+                                        @foreach (var tipo in listTipoDocs)
+                                        {
+                                            <option value="@tipo.Id">@tipo.Nombre</option>
+                                        }
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => entidadEditando.TipoDocumentoSoporteId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label for="fileInput"
+                                       class="form-label fw-bold btn btn-primary btn-sm"
+                                       style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                    Seleccionar archivo PDF
+                                </label>
+
+                                <InputFile id="fileInput"
+                                           class="small"
+                                           OnChange="UploadFile"
+                                           accept=".pdf"
+                                           capture="camera"
+                                           style="display:none;"
+                                           disabled="@esInvalido" />
+
+                                <label class="form-label fw-bold text-secondary small">@fileName</label>
+                                <ValidationMessage For="@(() => entidadEditando.RutaGoogle)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Nombre Documento</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.NombreDocumento"
+                                       placeholder="Ingrese nombre del documento..."
+                                       maxlength="100" />
+                                <ValidationMessage For="@(() => entidadEditando.NombreDocumento)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Comentarios</label>
+                                <textarea class="form-control form-control-sm small"
+                                          @bind="entidadEditando.Comentarios"
+                                          rows="4"
+                                          maxlength="2000"
+                                          placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
+                                </textarea>
+                            </div>
+                            @if (!string.IsNullOrEmpty(mensajeAlerta))
+                            {
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                            <i class="bi bi-save me-1"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </div>
 }
 
 @code {
@@ -118,7 +103,8 @@
     private bool mostrarAlerta = false;
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
-    private bool cargando = false;
+    private bool cargando = true;
+    private bool guardando = false;
     bool esInvalido = false;
     private string? fileName = null;
 
@@ -126,7 +112,7 @@
     private List<TipoDocumentoSoporte> listTipoDocs = new();
     private List<DocumentoModulo> Listgral = new();
 
-    private EditContext? editContext;
+    private EditContext editContext = new(new DocumentoModuloDto());
     private ValidationMessageStore? mensajeStore;
     Stream streamToUpload;
 
@@ -156,47 +142,43 @@
         cargando = true;
         try
         {
+            await LoadGenericDataAsync();
+
+            if (id == "0" || string.IsNullOrEmpty(id))
+            {
+                entidadEditando = new()
+                {
+                    ReferenciaId = int.TryParse(ReferenciaId, out var refId) ? refId : 0,
+                    TipoDocumentoSoporteId = 0,
+                    CreateDate = DateTime.Now
+                };
+            }
+
             editContext = new EditContext(entidadEditando);
             mensajeStore = new ValidationMessageStore(editContext);
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
+            Console.WriteLine($"Error al inicializar documento soporte: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
         }
-
-        await LoadGenericDataAsync();
-
-        if (id == "0")
+        finally
         {
-            entidadEditando = new();
-            entidadEditando.ReferenciaId = int.Parse(ReferenciaId);
-            entidadEditando.TipoDocumentoSoporteId = 0;
-            entidadEditando.CreateDate = DateTime.Now;
-            editContext = new EditContext(entidadEditando);
+            cargando = false;
         }
-        cargando = false;
     }
 
     private async Task LoadGenericDataAsync()
     {
-        try
-        {
-            Listgral = await repository.GetByModuloIdAsync(int.Parse(ModuloId), int.Parse(id));
+        int modId = int.TryParse(ModuloId, out var mId) ? mId : 0;
+        int entityId = int.TryParse(id, out var eId) ? eId : 0;
 
-            listTipoDocs = await repositoryTipoDocs.GetAllAsync();
-            listTipoDocs = listTipoDocs.Where(x => x.ModuloId == int.Parse(ModuloId)).OrderBy(x => x.Nombre).ToList();
-            listTipoDocs = listTipoDocs.Where(x => !Listgral.Any(d => d.TipoDocumentoSoporte.Id == x.Id)).ToList();
-            listTipoDocs = listTipoDocs.OrderBy(x => x.Nombre).ToList();
-        }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
-        }
+        Listgral = await repository.GetByModuloIdAsync(modId, entityId);
+
+        listTipoDocs = await repositoryTipoDocs.GetAllAsync();
+        listTipoDocs = listTipoDocs.Where(x => x.ModuloId == modId).OrderBy(x => x.Nombre).ToList();
+        listTipoDocs = listTipoDocs.Where(x => !Listgral.Any(d => d.TipoDocumentoSoporte?.Id == x.Id)).ToList();
+        listTipoDocs = listTipoDocs.OrderBy(x => x.Nombre).ToList();
     }
 
     private string ObtenerModulo(int idmodulo)
@@ -258,14 +240,29 @@
     private async Task GuardarCambios()
     {
         mensajeAlerta = string.Empty;
-        cargando = true;
+        guardando = true;
         StateHasChanged();
 
         bool formularioValido = editContext.Validate();
         if (!formularioValido)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
+            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+            await jsRuntime.InvokeVoidAsync("eval", @"
+                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                if (m) {
+                    m.scrollTop = 0;
+                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                }
+                var firstInput = document.querySelector('.modal select, .modal input');
+                if (firstInput) {
+                    try { firstInput.focus(); } catch(e) {}
+                    firstInput.classList.remove('pulse-invalid-field');
+                    void firstInput.offsetWidth;
+                    firstInput.classList.add('pulse-invalid-field');
+                }
+            ");
             return;
         }
 
@@ -273,7 +270,7 @@
         if (streamToUpload == null)
         {
             await MostrarNotificacion("Debe seleccionar un archivo PDF válido antes de guardar.", true);
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             return;
         }
@@ -303,7 +300,7 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             await MostrarNotificacion("Error al subir a Google Drive: " + ex.Message, true);
             return;
@@ -312,7 +309,7 @@
         if (string.IsNullOrEmpty(entidadEditando.RutaGoogle))
         {
             await MostrarNotificacion("No se pudo obtener la ruta de Google Drive.", true);
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             return;
         }
@@ -341,20 +338,20 @@
             {
                 // Corrección: Si no encuentra el usuario, debe apagar el cargando para no congelar la pantalla
                 await MostrarNotificacion("Error: No se pudo identificar la sesión del usuario.", true);
-                cargando = false;
+                guardando = false;
                 StateHasChanged();
                 return;
             }
         }
         catch (Exception ex)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
             Console.WriteLine($"Error en Base de Datos: {ex.Message}");
             await MostrarNotificacion("Error al guardar en la base de datos: " + ex.Message, true);
         }
 
-        cargando = false;
+        guardando = false;
         StateHasChanged();
     }
 

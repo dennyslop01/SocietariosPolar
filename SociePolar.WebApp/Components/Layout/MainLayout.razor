@@ -1,30 +1,121 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@rendermode InteractiveServer
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@_customTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
-@* El PopoverProvider debe estar en un lugar que alcance el NavMenu interactivo *@
 <MudPopoverProvider />
 
-<MudLayout>
-    <MudAppBar Elevation="1" Style="background: #00338D;">
-        <MudImage Src="LogoPolar.png" Alt="Logo" Class="mr-4" />
+<MudLayout Class="polar-app-layout">
+    <!-- Barra Superior Azul Corporativo Estilo Quorum / Angular Material -->
+    <MudAppBar Elevation="2" Class="polar-topbar">
+        <MudIconButton Icon="@Icons.Material.Rounded.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@ToggleDrawer"
+                       Class="mr-2 polar-menu-toggle"
+                       title="Alternar menú lateral" />
 
-        @* Aquí insertamos el menú horizontal *@
-        <NavMenu />
+        <div class="d-flex align-items-center gap-3 h-100">
+            <img src="LogoPolar.png" alt="Empresas Polar" class="polar-topbar-logo" />
+            <span class="polar-topbar-title">Societarios Polar</span>
+        </div>
 
         <MudSpacer />
 
-        @* <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" /> *@
+        <!-- Info de Usuario y Perfil en Topbar Azul -->
+        <div class="d-flex align-items-center gap-3">
+            @if (!string.IsNullOrEmpty(userEmail))
+            {
+                <div class="d-none d-md-flex flex-column align-items-end">
+                    <span class="polar-user-name">@userName</span>
+                    <span class="polar-user-email">@userEmail</span>
+                </div>
+                <MudAvatar Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Medium" Class="polar-avatar">
+                    @(string.IsNullOrEmpty(userInitial) ? "P" : userInitial)
+                </MudAvatar>
+            }
+        </div>
     </MudAppBar>
 
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6">
+    <!-- Sidebar Lateral Retráctil Moderno -->
+    <MudDrawer @bind-Open="_drawerOpen"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="0"
+               Variant="DrawerVariant.Responsive"
+               Class="polar-sidebar">
+        <div class="polar-drawer-content">
+            <NavMenu />
+        </div>
+    </MudDrawer>
+
+    <!-- Área de Contenido Principal -->
+    <MudMainContent Class="polar-main-content">
+        <div class="polar-container">
             @Body
-        </MudContainer>
+        </div>
     </MudMainContent>
 </MudLayout>
 
 @code {
-    
- }
+    private bool _drawerOpen = true;
+    private string userEmail = string.Empty;
+    private string userName = string.Empty;
+    private string userInitial = "P";
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+            if (!string.IsNullOrEmpty(useremailaux.Value))
+            {
+                userEmail = useremailaux.Value;
+                if (userEmail.Contains("@"))
+                {
+                    var prefix = userEmail.Split('@')[0].Replace(".", " ");
+                    userName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(prefix);
+                }
+                else
+                {
+                    userName = userEmail;
+                }
+                userInitial = !string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "P";
+                StateHasChanged();
+            }
+        }
+    }
+
+    private readonly MudTheme _customTheme = new()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#00338D",             // Azul Corporativo Profundo Quorum
+            PrimaryContrastText = "#FFFFFF",
+            Secondary = "#0284C7",           // Acento Cyan/Sky tecnológico
+            SecondaryContrastText = "#FFFFFF",
+            AppbarBackground = "#00338D",    // Barra Azul Quorum
+            AppbarText = "#FFFFFF",          // Texto Blanco
+            Background = "#F8FAFC",          // Slate-50 fondo neutro moderno
+            Surface = "#FFFFFF",             // Cards blancas
+            DrawerBackground = "#FFFFFF",    // Sidebar blanco limpio
+            DrawerText = "#334155",          // Texto de navegación suave
+            DrawerIcon = "#00338D",          // Iconos en azul Polar
+            TextPrimary = "#0F172A",
+            TextSecondary = "#64748B",
+            ActionDefault = "#64748B",
+            HoverOpacity = 0.04,
+            TableLines = "#F1F5F9",
+            Divider = "#E2E8F0"
+        },
+        LayoutProperties = new LayoutProperties()
+        {
+            DefaultBorderRadius = "8px"
+        }
+    };
+}

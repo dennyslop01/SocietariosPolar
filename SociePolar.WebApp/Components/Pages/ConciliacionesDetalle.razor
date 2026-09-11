@@ -1,168 +1,183 @@
-﻿@page "/conciliacionesdetalle/{id:int}"
+@page "/conciliacionesdetalle/{id:int}"
 @rendermode InteractiveServer
+@inject IJSRuntime jsRuntime
 
 <div class="container-fluid mt-4">
-    <div class="card shadow-sm border-0 h-auto">
-        <div class="card-header bg-white py-3">
-            <div class="d-flex align-items-center justify-content-between">
+    <div class="card shadow-sm border-0 h-auto" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <!-- Parte Izquierda: Icono y Título -->
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm" style="background-color: #00338D !important;">
                         <i class="bi bi-calculator text-white fs-5"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-dark">
-                        Conciliaciones Detalles
-                    </h5>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            Detalle de Conciliación
+                        </h5>
+                        <small class="text-muted">Resumen comparativo de acciones y estado de accionistas</small>
+                    </div>
                 </div>
 
-                <!-- Contenedor flex para alinear los botones en línea -->
-                <div class="d-flex gap-2 align-items-center">
-
-                    <!-- Botón Regresar -->
-                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                            @onclick="Regresar"
-                            style="height: 32px; font-weight: 500;">
-                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
-                    </button>
-
-                </div>
+                <!-- Botón Regresar -->
+                <button class="btn btn-outline-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                        @onclick="Regresar"
+                        style="height: 36px; font-weight: 500; border-radius: 8px;">
+                    <i class="bi bi-arrow-left me-2"></i> Regresar
+                </button>
             </div>
         </div>
 
-        <div class="card-body">
-            <!-- Buscador Global por Nombre -->
-            <div class="row mb-3">
-                <div class="col-md-4 ms-auto">
-                    <div class="input-group input-group-sm shadow-sm">
-                        <span class="input-group-text bg-white border-end-0 text-secondary">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
-                               @* @oninput="FiltrarBusqueda" *@ />
+        <div class="card-body p-4 bg-light-subtle">
+            <!-- KPIs de Resumen -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm p-3 bg-white h-100" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle p-3 bg-primary-subtle text-primary">
+                                <i class="bi bi-pie-chart fs-4" style="color: #00338D;"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">Cantidad Total de Acciones</small>
+                                <h4 class="mb-0 fw-bold text-primary" style="color: #00338D !important;">
+                                    @UtilClass.FormatearMiles(CantidadAcciones)
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm p-3 bg-white h-100" style="border-radius: 10px;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle p-3 bg-info-subtle text-info-emphasis">
+                                <i class="bi bi-people fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem;">Total de Accionistas Conciliados</small>
+                                <h4 class="mb-0 fw-bold text-dark">
+                                    @UtilClass.FormatearMiles(TotalAccionista)
+                                </h4>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        Cantidad Total de Acciones:
-                    </h7>
+
+            <!-- Pestañas de Secciones -->
+            <ul class="nav nav-pills mb-3 gap-2 border-bottom pb-3" id="conciliacionTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active px-3 py-2 fw-medium shadow-sm d-flex align-items-center gap-2" id="nuevos-tab" data-bs-toggle="pill" data-bs-target="#nuevos" type="button" role="tab">
+                        <i class="bi bi-person-plus text-success"></i> Accionistas Nuevos <span class="badge bg-success rounded-pill">@ListgralNuevos.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-3 py-2 fw-medium shadow-sm d-flex align-items-center gap-2" id="actualizados-tab" data-bs-toggle="pill" data-bs-target="#actualizados" type="button" role="tab">
+                        <i class="bi bi-person-gear text-primary"></i> Accionistas Actualizados <span class="badge bg-primary rounded-pill">@ListgralActualizados.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-3 py-2 fw-medium shadow-sm d-flex align-items-center gap-2" id="inactivos-tab" data-bs-toggle="pill" data-bs-target="#inactivos" type="button" role="tab">
+                        <i class="bi bi-person-x text-danger"></i> Accionistas Inhabilitados <span class="badge bg-danger rounded-pill">@ListgralInactivos.Count</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="conciliacionTabContent">
+                <!-- 1. Nuevos -->
+                <div class="tab-pane fade show active" id="nuevos" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralNuevos" DefaultPageSize="10">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acción</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Documento</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 35%; font-size: 0.85rem;">Nombre Accionista</th>
+                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Total Acciones</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="text-start" style="width: 15%;">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                <i class="bi bi-plus-circle me-1"></i> @p.Accion
+                                            </span>
+                                        </td>
+                                        <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
+                                        <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
+                                        <td class="text-start fw-medium text-dark" style="width: 35%;">@p.Nombre</td>
+                                        <td class="text-end fw-bold text-primary" style="width: 20%; color: #00338D !important;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        @UtilClass.FormatearMiles(CantidadAcciones)
-                    </h7>
+
+                <!-- 2. Actualizados -->
+                <div class="tab-pane fade" id="actualizados" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralActualizados" DefaultPageSize="10">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acción</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Documento</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 35%; font-size: 0.85rem;">Nombre Accionista</th>
+                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Total Acciones</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="text-start" style="width: 15%;">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                                                <i class="bi bi-arrow-repeat me-1"></i> @p.Accion
+                                            </span>
+                                        </td>
+                                        <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
+                                        <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
+                                        <td class="text-start fw-medium text-dark" style="width: 35%;">@p.Nombre</td>
+                                        <td class="text-end fw-bold text-primary" style="width: 20%; color: #00338D !important;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
+
+                <!-- 3. Inhabilitados -->
+                <div class="tab-pane fade" id="inactivos" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralInactivos" DefaultPageSize="10">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acción</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Documento</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 35%; font-size: 0.85rem;">Nombre Accionista</th>
+                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Total Acciones</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="text-start" style="width: 15%;">
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                                <i class="bi bi-x-circle me-1"></i> @p.Accion
+                                            </span>
+                                        </td>
+                                        <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
+                                        <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
+                                        <td class="text-start fw-medium text-dark" style="width: 35%;">@p.Nombre</td>
+                                        <td class="text-end fw-bold text-secondary" style="width: 20%;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        Total de Accionistas:
-                    </h7>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        @UtilClass.FormatearMiles(TotalAccionista)
-                    </h7>
-                </div>
-                <hr />
-                <div class="col-md-10 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        Accionistas nuevos
-                    </h7>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralNuevos" DefaultPageSize="10">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nombre Accionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Total Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroDocumento</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.TotalAcciones</td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                </div>
-            </div>
-            <hr />
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        Accionistas Actualizados
-                    </h7>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralActualizados" DefaultPageSize="10">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nombre Accionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Total Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroDocumento</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.TotalAcciones</td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                </div>
-            </div>
-            <hr />
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <h7 class="mb-0 fw-bold text-dark">
-                        Accionistas inhabilitados
-                    </h7>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <PaginationComponent TItem="ConciliacionDetalleDto" Items="ListgralInactivos" DefaultPageSize="10">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nombre Accionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Total Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.NroDocumento</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.TotalAcciones</td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
             </div>
         </div>
     </div>
@@ -178,14 +193,12 @@
             </div>
         </div>
     }
-
 </div>
 
 @if (cargando)
 {
     <ModalCargando />
 }
-
 
 @code {
     [Parameter] public Int32 id { get; set; } = 0;
@@ -205,7 +218,6 @@
     private List<ConciliacionDetalleDto> ListgralNuevos = new();
     private List<ConciliacionDetalleDto> ListgralActualizados = new();
     private List<ConciliacionDetalleDto> ListgralInactivos = new();
-
 
     [Inject] private IConciliacion repository { get; set; } = null!;
     [Inject] private IAccionista repoaccionista { get; set; } = null!;
@@ -313,7 +325,7 @@
         mostrarAlerta = true;
         StateHasChanged();
 
-        await Task.Delay(4000); // 4 segundos para errores es mejor
+        await Task.Delay(4000);
         mostrarAlerta = false;
         StateHasChanged();
     }

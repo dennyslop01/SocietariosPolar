@@ -165,9 +165,12 @@ else
                                 <input type="date" class="form-control form-control-sm small"
                                        @bind="entidadEditando.VencimientoDocumento2" @bind:format="yyyy-MM-dd" />
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                            </div>
+                            @if (!string.IsNullOrEmpty(mensajeAlerta))
+                            {
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -191,7 +194,7 @@ else
 
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
-    private string claseAlerta = "alert-success"; 
+    private string claseAlerta = "alert-success";
     private string iconoAlerta = "bi-check-circle-fill";
     private bool cargando = true;
     private bool guardando = false;

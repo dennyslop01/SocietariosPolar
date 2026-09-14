@@ -12,10 +12,37 @@ namespace SociePolar.WebApp.Utilities
 
         public static string FormatearStringMiles(string? valor)
         {
-            if (valor == null || valor == "0")
+            if (string.IsNullOrWhiteSpace(valor) || valor == "0")
                 return string.Empty;
 
-            return long.TryParse(valor, out long resultado) ? resultado.ToString("N0", System.Globalization.CultureInfo.CurrentCulture) : valor;
+            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(valor, @"[^\d]", "");
+            return long.TryParse(soloDigitos, out long resultado) && resultado != 0
+                ? resultado.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)
+                : (valor == "0" ? string.Empty : valor);
+        }
+
+        public static long? LimpiarYConvertirLong(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+
+            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
+            if (long.TryParse(soloDigitos, out long resultado))
+            {
+                return resultado;
+            }
+            return null;
+        }
+
+        public static string? LimpiarYConvertirStringMiles(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+
+            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
+            if (long.TryParse(soloDigitos, out long resultado))
+            {
+                return resultado == 0 ? null : resultado.ToString();
+            }
+            return null;
         }
 
         public static string FormatearNumero(decimal? valor, int decimales = 2)
@@ -23,7 +50,6 @@ namespace SociePolar.WebApp.Utilities
             if (valor == null || valor == 0) return "";
             return valor.Value.ToString($"N{decimales}", System.Globalization.CultureInfo.CurrentCulture);
         }
-
         // Toma el texto ingresado, remueve símbolos y normaliza separadores decimales/miles de forma inteligente
         public static decimal LimpiarYConvertir(string? input)
         {
@@ -173,18 +199,6 @@ namespace SociePolar.WebApp.Utilities
             }
 
             return 0;
-        }
-
-        public static string? LimpiarYConvertirStringMiles(string? input)
-        {
-            if (string.IsNullOrWhiteSpace(input)) return null;
-
-            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(input, @"[^\d]", "");
-            if (long.TryParse(soloDigitos, out long resultado))
-            {
-                return resultado == 0 ? null : resultado.ToString();
-            }
-            return null;
         }
     }
 }

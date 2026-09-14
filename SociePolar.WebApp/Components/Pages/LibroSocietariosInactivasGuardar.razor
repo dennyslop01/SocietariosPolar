@@ -393,7 +393,6 @@ else
 
                     await repository.AddAsync(entidadEditando);
 
-                    await MostrarNotificacion($"Libro societario inactivo guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
                 else

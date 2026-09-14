@@ -1,137 +1,135 @@
 @using ExcelDataReader
 @rendermode InteractiveServer
 
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                        @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Conciliación" : "Agregar Conciliación")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                            <div class="dropdown">
+                                <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                        type="button"
+                                        style="font-size: 0.8rem;"
+                                        @onclick="ToggleDropdown">
+                                    <span>@(ObtenerNombreSeleccionado())</span>
+                                </button>
+
+                                <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                    <li class="mb-2">
+                                        <input type="text"
+                                               class="form-control"
+                                               placeholder="Buscar..."
+                                               style="font-size: 0.8rem;"
+                                               @bind="textoBusqueda"
+                                               @bind:event="oninput"
+                                               @ref="searchInputRef" />
+                                    </li>
+
+                                    <li>
+                                        <button type="button"
+                                                class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                style="font-size: 0.8rem;"
+                                                @onclick="() => SeleccionarOpcion(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+
+                                    @if (listSociedad != null)
+                                    {
+                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                    @sociedad.Empresa.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Tipo Archivo</label>
+                            <input type="text" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.TipoArchivo"
+                                   placeholder="Ingrese tipo de archivo..."
+                                   maxlength="200" />
+                            <ValidationMessage For="@(() => entidadEditando.TipoArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Fecha del Archivo</label>
+                            <input type="date" class="form-control form-control-sm small"
+                                   @bind="entidadEditando.FechaArchivo" @bind:format="yyyy-MM-dd" />
+                            <ValidationMessage For="@(() => entidadEditando.FechaArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label for="fileInputExcel"
+                                   class="form-label fw-bold btn btn-primary btn-sm"
+                                   style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
+                                Seleccionar archivo Conciliaciones
+                            </label>
+
+                            <InputFile id="fileInputExcel"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args))"
+                                       accept=".xlsx,.xls"
+                                       capture="camera"
+                                       style="display:none;" />
+
+                            <label class="form-label fw-bold text-secondary small">@fileNameConciliacion</label>
+                            <ValidationMessage For="@(() => entidadEditando.RutaConciliaciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+                        <div class="col-md-10 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Comentarios</label>
+                            <textarea class="form-control form-control-sm small"
+                                      @bind="entidadEditando.Observaciones"
+                                      rows="4"
+                                      maxlength="2000"
+                                      placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
+                                </textarea>
+                        </div>
+                        @if (!string.IsNullOrEmpty(mensajeAlerta))
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                        <i class="bi bi-save me-1"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
 @if (cargando)
 {
     <ModalCargando />
-}
-else
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-            <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
-                <DataAnnotationsValidator />
-
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
-                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Conciliación" : "Agregar Conciliación")
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                    </div>
-
-                    <div class="modal-body py-4">
-                        <!-- Iniciamos la grilla de filas y columnas -->
-                        <div class="row">
-                            <div class="col-md-10 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Sociedad</label>
-                                <div class="dropdown">
-                                    <button class="form-select text-start d-flex justify-content-between align-items-center"
-                                            type="button"
-                                            style="font-size: 0.8rem;"
-                                            @onclick="ToggleDropdown">
-                                        <span>@(ObtenerNombreSeleccionado())</span>
-                                    </button>
-
-                                    <ul class="dropdown-menu w-100 p-2 @(isDropdownOpen ? "show" : "")"
-                                        style="max-height: 300px; overflow-y: auto; z-index: 1050;">
-                                        <li class="mb-2">
-                                            <input type="text"
-                                                   class="form-control"
-                                                   placeholder="Buscar..."
-                                                   style="font-size: 0.8rem;"
-                                                   @bind="textoBusqueda"
-                                                   @bind:event="oninput"
-                                                   @ref="searchInputRef" />
-                                        </li>
-
-                                        <li>
-                                            <button type="button"
-                                                    class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
-                                                    style="font-size: 0.8rem;"
-                                                    @onclick="() => SeleccionarOpcion(0)">
-                                                Seleccione ...
-                                            </button>
-                                        </li>
-
-                                        @if (listSociedad != null)
-                                        {
-                                            @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
-                                            {
-                                                <li>
-                                                    <button type="button"
-                                                            class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
-                                                            style="font-size: 0.8rem;"
-                                                            @onclick="() => SeleccionarOpcion(sociedad.Id)">
-                                                        @sociedad.Empresa.Nombre
-                                                    </button>
-                                                </li>
-                                            }
-                                        }
-                                    </ul>
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Tipo Archivo</label>
-                                <input type="text" class="form-control form-control-sm small"
-                                       @bind="entidadEditando.TipoArchivo"
-                                       placeholder="Ingrese tipo de archivo..."
-                                       maxlength="200" />
-                                <ValidationMessage For="@(() => entidadEditando.TipoArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Fecha del Archivo</label>
-                                <input type="date" class="form-control form-control-sm small"
-                                       @bind="entidadEditando.FechaArchivo" @bind:format="yyyy-MM-dd" />
-                                <ValidationMessage For="@(() => entidadEditando.FechaArchivo)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-                            <div class="col-md-10 mb-3">
-                                <label for="fileInputExcel"
-                                       class="form-label fw-bold btn btn-primary btn-sm"
-                                       style="font-size: 12px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto");">
-                                    Seleccionar archivo Conciliaciones
-                                </label>
-
-                                <InputFile id="fileInputExcel"
-                                           class="small"
-                                           OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args))"
-                                           accept=".xlsx,.xls"
-                                           capture="camera"
-                                           style="display:none;" />
-
-                                <label class="form-label fw-bold text-secondary small">@fileNameConciliacion</label>
-                                <ValidationMessage For="@(() => entidadEditando.RutaConciliaciones)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-                            <div class="col-md-10 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Comentarios</label>
-                                <textarea class="form-control form-control-sm small"
-                                          @bind="entidadEditando.Observaciones"
-                                          rows="4"
-                                          maxlength="2000"
-                                          placeholder="Ingrese los comentarios (máximo 2,000 caracteres)...">
-                                </textarea>
-                            </div>
-                            @if (!string.IsNullOrEmpty(mensajeAlerta))
-                            {
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
-                            <i class="bi bi-save me-1"></i> Guardar
-                        </button>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
 }
 
 @code {
@@ -238,8 +236,6 @@ else
     {
         mensajeAlerta = string.Empty;
         mostrarAlerta = false;
-        cargando = true;
-        StateHasChanged();
 
         fileNameConciliacion = string.Empty;
         entidadEditando.NombreConciliaciones = null;
@@ -247,7 +243,6 @@ else
 
         var file = e.File;
         if (file == null) return;
-
 
         try
         {
@@ -257,18 +252,24 @@ else
             {
                 var memoryStream = new MemoryStream();
                 await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+                var fileBytes = memoryStream.ToArray();
                 memoryStream.Position = 0;
                 streamToUploadConciliacion = memoryStream;
 
-                var memoryStreamRead = new MemoryStream();
-                await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStreamRead);
-                memoryStreamRead.Position = 0;
+                var memoryStreamRead = new MemoryStream(fileBytes);
                 streamExcelread = memoryStreamRead;
 
                 fileNameConciliacion = e.File.Name;
                 entidadEditando.RutaConciliaciones = e.File.Name;
                 entidadEditando.NombreConciliaciones = e.File.Name;
+
+                cargando = true;
+                StateHasChanged();
+
                 await CargarExcelConciliaciones();
+
+                cargando = false;
+                StateHasChanged();
             }
             else
             {
@@ -279,9 +280,6 @@ else
                 await Task.Delay(1); // Pequeña espera para asegurar que el DOM esté listo
                 return;
             }
-
-            cargando = false;
-            StateHasChanged();
 
             if (listaArchivo.Count == 0)
             {
@@ -413,7 +411,7 @@ else
 
                         if (accionista != null)
                         {
-                            AccionistaSociedad? accionistaSociedad = await repoaccionistasocie.GetBySociedadIdAccionistaIdAsync((int) entidadEditando.SociedadId, accionista.Id);
+                            AccionistaSociedad? accionistaSociedad = await repoaccionistasocie.GetBySociedadIdAccionistaIdAsync((int)entidadEditando.SociedadId, accionista.Id);
                             if (accionistaSociedad == null)
                             {
                                 AccionistaSociedadDto accionistaSociedadDto = new()
@@ -445,7 +443,7 @@ else
                             }
                         }
                     }
-                    
+
                     await repository.AddDetalleAsync(listaConciliaciones);
 
                     foreach (var item in listaConciliaciones.Where(x => x.Accion == "Actualizado"))
@@ -458,7 +456,6 @@ else
                     // Liberar el stream de forma segura ahora que el proceso completo terminó bien
                     await streamToUploadConciliacion.DisposeAsync();
                     await streamExcelread.DisposeAsync();
-                    await MostrarNotificacion($"Conciliación guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
             }
@@ -531,7 +528,7 @@ else
                             vacios++;
                             continue;
                         }
-                        
+
                         var nuevo = new ConciliacionArchivo()
                         {
                             ConciliacionId = 0,

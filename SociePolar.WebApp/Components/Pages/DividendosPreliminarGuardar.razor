@@ -2,235 +2,233 @@
 @using ExcelDataReader
 @inject GoogleDriveService DriveService
 
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
+
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <!-- Header Polar Blue -->
+                <div class="modal-header text-white" style="background-color: #00338D;">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                        @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Dividendo Preliminar" : "Agregar Dividendo Preliminar")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <div class="modal-body py-4 px-4 bg-light-subtle">
+                    <div class="row g-3">
+                        <!-- Sociedad -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Sociedad</label>
+                            <div class="dropdown">
+                                <button class="form-select text-start d-flex justify-content-between align-items-center bg-white shadow-sm"
+                                        type="button"
+                                        style="font-size: 0.85rem;"
+                                        @onclick="ToggleDropdown">
+                                    <span>@(ObtenerNombreSeleccionado())</span>
+                                    <i class="bi bi-chevron-down text-muted small"></i>
+                                </button>
+
+                                <ul class="dropdown-menu w-100 p-2 shadow-lg border-0 @(isDropdownOpen ? "show" : "")"
+                                    style="max-height: 300px; overflow-y: auto; z-index: 1050; border-radius: 8px;">
+                                    <li class="mb-2">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   placeholder="Buscar sociedad..."
+                                                   style="font-size: 0.85rem;"
+                                                   @bind="textoBusqueda"
+                                                   @bind:event="oninput"
+                                                   @ref="searchInputRef" />
+                                        </div>
+                                    </li>
+
+                                    <li>
+                                        <button type="button"
+                                                class="dropdown-item rounded-2 @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
+                                                style="font-size: 0.85rem;"
+                                                @onclick="() => SeleccionarOpcion(0)">
+                                            Seleccione ...
+                                        </button>
+                                    </li>
+
+                                    @if (listSociedad != null)
+                                    {
+                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item rounded-2 @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.85rem;"
+                                                        @onclick="() => SeleccionarOpcion(sociedad.Id)">
+                                                    @sociedad.Empresa.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <!-- Explicación -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Explicación</label>
+                            <input type="text" class="form-control shadow-sm"
+                                   @bind="entidadEditando.Explicacion"
+                                   placeholder="Ingrese explicación..."
+                                   maxlength="200" />
+                            <ValidationMessage For="@(() => entidadEditando.Explicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <!-- Archivos Soportes -->
+                        <div class="col-12"><hr class="my-2 text-secondary opacity-25" /></div>
+
+                        <!-- Archivo Excel Dividendos -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase d-block mb-1">Archivo Excel Dividendos</label>
+                            <label for="fileInputExcel"
+                                   class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center shadow-sm"
+                                   style="height: 38px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto"); border-radius: 8px;">
+                                <i class="bi bi-file-earmark-excel me-2 fs-6"></i> Subir Excel
+                            </label>
+
+                            <InputFile id="fileInputExcel"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 1))"
+                                       accept=".xlsx,.xls"
+                                       style="display:none;" />
+
+                            <div class="mt-1 text-truncate text-secondary small fw-medium">
+                                @(string.IsNullOrEmpty(fileNameDividendo) ? "Ningún archivo seleccionado" : fileNameDividendo)
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.RutaDividendos)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <!-- Archivo Acta PDF -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase d-block mb-1">Archivo Acta</label>
+                            <label for="fileInputActa"
+                                   class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center shadow-sm"
+                                   style="height: 38px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto"); border-radius: 8px;">
+                                <i class="bi bi-file-earmark-pdf me-2 fs-6"></i> Subir Acta (PDF)
+                            </label>
+
+                            <InputFile id="fileInputActa"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 2))"
+                                       accept=".pdf"
+                                       style="display:none;" />
+
+                            <div class="mt-1 text-truncate text-secondary small fw-medium">
+                                @(string.IsNullOrEmpty(fileNameActa) ? "Ningún archivo seleccionado" : fileNameActa)
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.RutaActa)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <!-- Documento Secundario PDF -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary small text-uppercase d-block mb-1">Doc. Secundario (Opcional)</label>
+                            <label for="fileInputDoc"
+                                   class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center shadow-sm"
+                                   style="height: 38px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto"); border-radius: 8px;">
+                                <i class="bi bi-file-earmark me-2 fs-6"></i> Subir Soporte (PDF)
+                            </label>
+
+                            <InputFile id="fileInputDoc"
+                                       class="small"
+                                       OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 3))"
+                                       accept=".pdf"
+                                       style="display:none;" />
+
+                            <div class="mt-1 text-truncate text-secondary small fw-medium">
+                                @(string.IsNullOrEmpty(fileNameDoc) ? "Ningún archivo seleccionado" : fileNameDoc)
+                            </div>
+                        </div>
+
+                        <!-- Comentarios -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Comentarios</label>
+                            <textarea class="form-control shadow-sm"
+                                      @bind="entidadEditando.Observaciones"
+                                      rows="3"
+                                      maxlength="2000"
+                                      placeholder="Ingrese comentarios u observaciones adicionales...">
+                                </textarea>
+                        </div>
+
+                        <!-- Montos y Totales -->
+                        <div class="col-12"><hr class="my-2 text-secondary opacity-25" /></div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Total pagado según Tesorería</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <input type="text" class="form-control"
+                                       @bind="MontoPagadoTesoreriaTexto" placeholder="0,00" />
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.MontoPagadoTesoreria)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Total pagado según Accionistas</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <input type="text" class="form-control"
+                                       @bind="MontoPagadoAccionistasTexto" placeholder="0,00" />
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.MontoPagadoAccionistas)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Diferencia Tesorería - Accionistas</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <input type="text" class="form-control bg-light fw-semibold"
+                                       value="@MontoPagadoDiferenciaTexto" placeholder="0,00" readonly />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">Monto Total a Repartir</label>
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <input type="text" class="form-control fw-bold text-primary" style="color: #00338D !important;"
+                                       @bind="MontoTotalRepartirTexto" placeholder="0,00" />
+                            </div>
+                            <ValidationMessage For="@(() => entidadEditando.MontoTotalRepartir)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(mensajeAlerta))
+                        {
+                            <div class="col-12">
+                                <div class="alert @claseAlerta py-2 px-3 mb-0 border-0 shadow-sm d-flex align-items-center">
+                                    <i class="bi @iconoAlerta me-2 fs-6"></i>
+                                    <span class="small fw-semibold">@mensajeAlerta</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Footer Flotante Polar -->
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando" style="background-color: #00338D !important;">
+                        <i class="bi bi-save me-1"></i> Guardar Dividendo
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
 @if (cargando)
 {
     <ModalCargando />
-}
-else
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-            <EditForm EditContext="editContext" OnValidSubmit="GuardarCambios">
-                <DataAnnotationsValidator />
-
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
-                    <!-- Header Polar Blue -->
-                    <div class="modal-header text-white" style="background-color: #00338D;">
-                        <h5 class="modal-title fw-bold">
-                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
-                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Dividendo Preliminar" : "Agregar Dividendo Preliminar")
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                    </div>
-
-                    <div class="modal-body py-4 px-4 bg-light-subtle">
-                        <div class="row g-3">
-                            <!-- Sociedad -->
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Sociedad</label>
-                                <div class="dropdown">
-                                    <button class="form-select text-start d-flex justify-content-between align-items-center bg-white shadow-sm"
-                                            type="button"
-                                            style="font-size: 0.85rem;"
-                                            @onclick="ToggleDropdown">
-                                        <span>@(ObtenerNombreSeleccionado())</span>
-                                        <i class="bi bi-chevron-down text-muted small"></i>
-                                    </button>
-
-                                    <ul class="dropdown-menu w-100 p-2 shadow-lg border-0 @(isDropdownOpen ? "show" : "")"
-                                        style="max-height: 300px; overflow-y: auto; z-index: 1050; border-radius: 8px;">
-                                        <li class="mb-2">
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                                                <input type="text"
-                                                       class="form-control"
-                                                       placeholder="Buscar sociedad..."
-                                                       style="font-size: 0.85rem;"
-                                                       @bind="textoBusqueda"
-                                                       @bind:event="oninput"
-                                                       @ref="searchInputRef" />
-                                            </div>
-                                        </li>
-
-                                        <li>
-                                            <button type="button"
-                                                    class="dropdown-item rounded-2 @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")"
-                                                    style="font-size: 0.85rem;"
-                                                    @onclick="() => SeleccionarOpcion(0)">
-                                                Seleccione ...
-                                            </button>
-                                        </li>
-
-                                        @if (listSociedad != null)
-                                        {
-                                            @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusqueda) || s.Empresa.Nombre.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
-                                            {
-                                                <li>
-                                                    <button type="button"
-                                                            class="dropdown-item rounded-2 @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")"
-                                                            style="font-size: 0.85rem;"
-                                                            @onclick="() => SeleccionarOpcion(sociedad.Id)">
-                                                        @sociedad.Empresa.Nombre
-                                                    </button>
-                                                </li>
-                                            }
-                                        }
-                                    </ul>
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            <!-- Explicación -->
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Explicación</label>
-                                <input type="text" class="form-control shadow-sm"
-                                       @bind="entidadEditando.Explicacion"
-                                       placeholder="Ingrese explicación..."
-                                       maxlength="200" />
-                                <ValidationMessage For="@(() => entidadEditando.Explicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            <!-- Archivos Soportes -->
-                            <div class="col-12"><hr class="my-2 text-secondary opacity-25" /></div>
-
-                            <!-- Archivo Excel Dividendos -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-secondary small text-uppercase d-block mb-1">Archivo Excel Dividendos</label>
-                                <label for="fileInputExcel"
-                                       class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center shadow-sm"
-                                       style="height: 38px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto"); border-radius: 8px;">
-                                    <i class="bi bi-file-earmark-excel me-2 fs-6"></i> Subir Excel
-                                </label>
-
-                                <InputFile id="fileInputExcel"
-                                           class="small"
-                                           OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 1))"
-                                           accept=".xlsx,.xls"
-                                           style="display:none;" />
-
-                                <div class="mt-1 text-truncate text-secondary small fw-medium">
-                                    @(string.IsNullOrEmpty(fileNameDividendo) ? "Ningún archivo seleccionado" : fileNameDividendo)
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.RutaDividendos)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            <!-- Archivo Acta PDF -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-secondary small text-uppercase d-block mb-1">Archivo Acta</label>
-                                <label for="fileInputActa"
-                                       class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center shadow-sm"
-                                       style="height: 38px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto"); border-radius: 8px;">
-                                    <i class="bi bi-file-earmark-pdf me-2 fs-6"></i> Subir Acta (PDF)
-                                </label>
-
-                                <InputFile id="fileInputActa"
-                                           class="small"
-                                           OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 2))"
-                                           accept=".pdf"
-                                           style="display:none;" />
-
-                                <div class="mt-1 text-truncate text-secondary small fw-medium">
-                                    @(string.IsNullOrEmpty(fileNameActa) ? "Ningún archivo seleccionado" : fileNameActa)
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.RutaActa)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            <!-- Documento Secundario PDF -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold text-secondary small text-uppercase d-block mb-1">Doc. Secundario (Opcional)</label>
-                                <label for="fileInputDoc"
-                                       class="btn btn-outline-secondary btn-sm w-100 d-flex align-items-center justify-content-center shadow-sm"
-                                       style="height: 38px; cursor: @(esInvalido ? "not-allowed" : "pointer"); pointer-events: @(esInvalido ? "none" : "auto"); border-radius: 8px;">
-                                    <i class="bi bi-file-earmark me-2 fs-6"></i> Subir Soporte (PDF)
-                                </label>
-
-                                <InputFile id="fileInputDoc"
-                                           class="small"
-                                           OnChange="@(async (InputFileChangeEventArgs args) => await UploadFile(args, 3))"
-                                           accept=".pdf"
-                                           style="display:none;" />
-
-                                <div class="mt-1 text-truncate text-secondary small fw-medium">
-                                    @(string.IsNullOrEmpty(fileNameDoc) ? "Ningún archivo seleccionado" : fileNameDoc)
-                                </div>
-                            </div>
-
-                            <!-- Comentarios -->
-                            <div class="col-12">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Comentarios</label>
-                                <textarea class="form-control shadow-sm"
-                                          @bind="entidadEditando.Observaciones"
-                                          rows="3"
-                                          maxlength="2000"
-                                          placeholder="Ingrese comentarios u observaciones adicionales...">
-                                </textarea>
-                            </div>
-
-                            <!-- Montos y Totales -->
-                            <div class="col-12"><hr class="my-2 text-secondary opacity-25" /></div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Total pagado según Tesorería</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-light fw-bold">$</span>
-                                    <input type="text" class="form-control"
-                                           @bind="MontoPagadoTesoreriaTexto" placeholder="0,00" />
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.MontoPagadoTesoreria)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Total pagado según Accionistas</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-light fw-bold">$</span>
-                                    <input type="text" class="form-control"
-                                           @bind="MontoPagadoAccionistasTexto" placeholder="0,00" />
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.MontoPagadoAccionistas)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Diferencia Tesorería - Accionistas</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-light fw-bold">$</span>
-                                    <input type="text" class="form-control bg-light fw-semibold"
-                                           value="@MontoPagadoDiferenciaTexto" placeholder="0,00" readonly />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary small text-uppercase">Monto Total a Repartir</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-light fw-bold">$</span>
-                                    <input type="text" class="form-control fw-bold text-primary" style="color: #00338D !important;"
-                                           @bind="MontoTotalRepartirTexto" placeholder="0,00" />
-                                </div>
-                                <ValidationMessage For="@(() => entidadEditando.MontoTotalRepartir)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
-
-                            @if (!string.IsNullOrEmpty(mensajeAlerta))
-                            {
-                                <div class="col-12">
-                                    <div class="alert @claseAlerta py-2 px-3 mb-0 border-0 shadow-sm d-flex align-items-center">
-                                        <i class="bi @iconoAlerta me-2 fs-6"></i>
-                                        <span class="small fw-semibold">@mensajeAlerta</span>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Footer Flotante Polar -->
-                    <div class="modal-footer bg-light border-top">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando" style="background-color: #00338D !important;">
-                            <i class="bi bi-save me-1"></i> Guardar Dividendo
-                        </button>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
-    </div>
 }
 
 @code {
@@ -271,7 +269,7 @@ else
     private bool isDropdownOpen = false;
     private string textoBusqueda = "";
     private ElementReference searchInputRef;
-    private List<DividendoPreliminarDetalle> listaDividendos = new ();
+    private List<DividendoPreliminarDetalle> listaDividendos = new();
 
     private string MontoPagadoTesoreriaTexto
     {
@@ -353,10 +351,8 @@ else
     {
         mensajeAlerta = string.Empty;
         mostrarAlerta = false;
-        cargando = true;
-        StateHasChanged();
 
-        switch(tipo)
+        switch (tipo)
         {
             case 1:
                 fileNameDividendo = string.Empty;
@@ -377,8 +373,6 @@ else
             var file = e.File;
             if (file == null)
             {
-                cargando = false;
-                StateHasChanged();
                 return;
             }
 
@@ -390,11 +384,10 @@ else
                     {
                         var memoryStream = new MemoryStream();
                         await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStream);
+                        var fileBytes = memoryStream.ToArray();
                         memoryStream.Position = 0;
 
-                        var memoryStreamExcel = new MemoryStream();
-                        await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(memoryStreamExcel);
-                        memoryStreamExcel.Position = 0;
+                        var memoryStreamExcel = new MemoryStream(fileBytes);
 
                         contentTypeDividendo = file.ContentType;
                         streamToUploadDividendo = memoryStream;
@@ -402,15 +395,20 @@ else
                         fileNameDividendo = e.File.Name;
                         entidadEditando.RutaDividendos = e.File.Name;
                         entidadEditando.NombreDividendos = e.File.Name;
+
+                        cargando = true;
+                        StateHasChanged();
+
                         await CargarExcelDividendos();
+
+                        cargando = false;
+                        StateHasChanged();
                     }
                     else
                     {
                         mensajeAlerta = "Formato no soportado. Solo Excel (.xlsx, .xls).";
                         mostrarAlerta = true;
-                        cargando = false;
                         StateHasChanged();
-                        await Task.Delay(1);
                         return;
                     }
                     break;
@@ -439,20 +437,17 @@ else
                                 entidadEditando.NombreDocumento = e.File.Name;
                                 break;
                         }
+                        StateHasChanged();
                     }
                     else
                     {
                         mensajeAlerta = "Formato no soportado. Solo PDF (.pdf).";
                         mostrarAlerta = true;
-                        cargando = false;
                         StateHasChanged();
-                        await Task.Delay(1);
                         return;
                     }
                     break;
             }
-            cargando = false;
-            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -561,7 +556,6 @@ else
                     if (streamToUploadDoc != null)
                         await streamToUploadDoc.DisposeAsync();
 
-                    await MostrarNotificacion($"Documento Soporte guardado correctamente");
                     await OnFinalizado.InvokeAsync(true);
                 }
             }
@@ -714,7 +708,7 @@ else
                     }
                     entidadEditando.NombreDocumento = nombreLimpio;
                     break;
-            }            
+            }
 
             if (!string.IsNullOrEmpty(folderName))
             {
@@ -742,7 +736,7 @@ else
             return false;
         }
 
-        switch(opcion)
+        switch (opcion)
         {
             case 1:
                 if (string.IsNullOrEmpty(entidadEditando.RutaDividendos))
@@ -772,7 +766,7 @@ else
                 }
                 break;
         }
-        
+
         return true;
     }
 

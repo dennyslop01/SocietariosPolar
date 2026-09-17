@@ -109,7 +109,7 @@
     }
 </div>
 
-@if (cargando)
+@if (cargando || guardando)
 {
     <ModalCargando />
 }
@@ -153,25 +153,22 @@
                                        maxlength="150" />
                                 <ValidationMessage For="@(() => entidadEditando.Nombre)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
-                            <div class="col-md-12 mb-3">
-                            </div>
-                            <div class="col-md-12 mb-3">
-                            </div>
-                            <div class="col-md-12 mb-3">
-                            </div>
-                            <div class="col-md-12 mb-3">
-                            </div>
-                            <div class="col-md-12 mb-3">
-                            </div>
-                            <div class="col-md-12 mb-3">
-                            </div>
                         </div>
                     </div>
 
                     <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
-                            <i class="bi bi-save me-1"></i> Guardar
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                            @if (guardando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Guardando...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-save me-1"></i>
+                                <span>Guardar</span>
+                            }
                         </button>
                     </div>
                 </div>
@@ -195,8 +192,18 @@
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar" disabled="@guardando">Cancelar</button>
+                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar" disabled="@guardando">
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Eliminando...</span>
+                        }
+                        else
+                        {
+                            <span>Eliminar</span>
+                        }
+                    </button>
                 </div>
             </div>
         </div>
@@ -211,6 +218,7 @@
     private List<TipoDocumentoSoporte> ListgralBuscar = new();
     private string searchTerm = "";
     private bool cargando = false;
+    private bool guardando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
@@ -345,12 +353,16 @@
 
     private async Task GuardarCambios()
     {
-        bool formularioValido = editContext.Validate();
+        if (guardando) return;
+        guardando = true;
+        StateHasChanged();
+
+        bool formularioValido = editContext?.Validate() ?? false;
 
         if (!formularioValido)
         {
+            guardando = false;
             StateHasChanged();
-            cargando = false;
             await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
             await jsRuntime.InvokeVoidAsync("eval", @"
                 var m = document.querySelector('.modal-body') || document.querySelector('.modal');
@@ -369,7 +381,6 @@
             return;
         }
 
-        cargando = true;
         try
         {
             var useridaux = await SessionStorage.GetAsync<string>("UserId");
@@ -403,16 +414,13 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
         finally
         {
+            guardando = false;
             StateHasChanged();
-            cargando = false;
         }
     }
 
@@ -441,9 +449,10 @@
 
     private async Task ConfirmarEliminar()
     {
-        if (entidadParaEliminar == null) return;
+        if (entidadParaEliminar == null || guardando) return;
 
-        cargando = true;
+        guardando = true;
+        StateHasChanged();
         try
         {
             repository.Delete(entidadParaEliminar.Id);
@@ -453,15 +462,14 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
         }
         finally
         {
-            cargando = false;
+            guardando = false;
             entidadParaEliminar = null;
+            StateHasChanged();
         }
     }
 

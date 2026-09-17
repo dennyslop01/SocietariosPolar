@@ -1,13 +1,7 @@
 @rendermode InteractiveServer
 
-@if (cargando)
-{
-    <ModalCargando />
-}
-else
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
             <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
                 <DataAnnotationsValidator />
 
@@ -103,15 +97,28 @@ else
                     </div>
 
                     <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
                         <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
-                            <i class="bi bi-save me-1"></i> Guardar
+                            @if (guardando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Guardando...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-save me-1"></i>
+                                <span>Guardar</span>
+                            }
                         </button>
                     </div>
                 </div>
             </EditForm>
         </div>
     </div>
+
+@if (cargando || guardando)
+{
+    <ModalCargando />
 }
 
 @code {
@@ -223,15 +230,17 @@ else
 
     private async Task GuardarCambios()
     {
-        mensajeAlerta = string.Empty;
+        if (guardando) return;
         guardando = true;
+        mensajeAlerta = string.Empty;
+        StateHasChanged();
 
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
         {
-            StateHasChanged();
             guardando = false;
+            StateHasChanged();
             await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
             await jsRuntime.InvokeVoidAsync("eval", @"
                 var m = document.querySelector('.modal-body') || document.querySelector('.modal');
@@ -286,7 +295,11 @@ else
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
-        guardando = false;
+        finally
+        {
+            guardando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

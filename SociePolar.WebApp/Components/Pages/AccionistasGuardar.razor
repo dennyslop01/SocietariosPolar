@@ -220,13 +220,13 @@ else
                                                 }
                                             </InputSelect>
                                         </div>
-                                        @* <div class="col-md-6 mb-3">
+                                        <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Nacionalidad</label>
                                             <InputText type="text" class="form-control form-control-sm small"
                                                        @bind-Value="entidadEditando.Nacionalidad"
                                                        placeholder="Ingrese la nacionalidad..."
                                                        maxlength="200" />
-                                        </div> *@
+                                        </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Fecha de Nacimiento</label>
                                             <input type="date" class="form-control form-control-sm small"
@@ -277,20 +277,20 @@ else
                                                       placeholder="Ingrese donde esta registrada la junta (máximo 2,000 caracteres)...">
                                             </textarea>
                                         </div> *@
-                                        @* <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-bold text-secondary small">Dirigido A</label>
-                                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.DirigidoAId">
-                                                <option value="0">Seleccione ...</option>
-                                                @if (listDirigidoA != null)
-                                                {
-                                                    @foreach (var item in listDirigidoA)
-                                                    {
-                                                        <option value="@item.Id">@item.Nombre</option>
-                                                    }
-                                                }
-                                            </InputSelect>
-                                        </div> *@
                                     }
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small">Dirigido A</label>
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.DirigidoAId">
+                                            <option value="0">Seleccione ...</option>
+                                            @if (listDirigidoA != null)
+                                            {
+                                                @foreach (var item in listDirigidoA)
+                                                {
+                                                    <option value="@item.Id">@item.Nombre</option>
+                                                }
+                                            }
+                                        </InputSelect>
+                                    </div>
 
                                     @if (entidadEditando.TipoAccionistaId == 3)
                                     {

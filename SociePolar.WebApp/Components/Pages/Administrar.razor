@@ -1,4 +1,4 @@
-﻿@page "/administrar/{tipo}"
+@page "/administrar/{tipo}"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -53,31 +53,36 @@
                             <th class="py-3 text-secondary fw-bold" style="width: 45%; font-size: 0.85rem;">Descripción</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Fecha de creación</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Última modificación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom">
                             <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
                             <td class="text-start text-secondary small" style="width: 45%;">@p.Nombre</td>
-                            @* Añadimos text-start para que coincida con el título de arriba *@
                             <td class="text-center text-secondary small" style="width: 15%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-center text-secondary small" style="width: 15%;">@p.UpdateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-danger p-0"
-                                        @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                    <i class="bi bi-trash3 fs-6"></i>
-                                </button>
-                                @if(tipo.Equals("regiones", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    <button class="btn btn-link btn-sm text-secondary p-0 ms-2 small" 
-                                            @onclick="() => VerUnidadNegocio(p)" title="Unidades de Negocio">
-                                        @* <i class="bi bi-file-earmark-text fs-6"></i> *@ Unidades Negocio
+                            <td class="text-end pe-3" style="width: 20%;">
+                                <div class="d-inline-flex align-items-center justify-content-end gap-3">
+                                    @if(tipo.Equals("regiones", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <button class="btn btn-link btn-sm text-info p-0" 
+                                                @onclick="() => VerUnidadNegocio(p)" 
+                                                title="Unidades de Negocio">
+                                            <i class="bi bi-diagram-3 fs-6"></i>
+                                        </button>
+                                    }
+                                    <button class="btn btn-link btn-sm text-primary p-0" 
+                                            @onclick="() => Editar(p)" 
+                                            title="Editar">
+                                        <i class="bi bi-pencil-square fs-6"></i>
                                     </button>
-                                }
+                                    <button class="btn btn-link btn-sm text-danger p-0"
+                                            @onclick="() => VerificarEliminar(p)" 
+                                            title="Eliminar">
+                                        <i class="bi bi-trash3 fs-6"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </ChildContentRow>
@@ -98,7 +103,7 @@
     }
 </div>
 
-@if (cargando)
+@if (cargando || guardando)
 {
     <ModalCargando />
 }
@@ -113,19 +118,28 @@
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-plus-circle" : "bi-pencil-square") me-2"></i>
                         @(entidadEditando.Id == 0 ? "Agregar" : "Modificar") @tituloSingular
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal" disabled="@guardando"></button>
                 </div>
                 <div class="modal-body py-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold text-secondary">Nombre @tituloSingular</label>
                         <input type="text" class="form-control" @bind="entidadEditando.Nombre"
-                               placeholder="Ingrese el nombre aquí..." />
+                               placeholder="Ingrese el nombre aquí..." disabled="@guardando" />
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios">
-                        <i class="bi bi-save me-1"></i> Guardar
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios" disabled="@guardando">
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-save me-1"></i>
+                            <span>Guardar</span>
+                        }
                     </button>
                 </div>
             </div>
@@ -147,8 +161,18 @@
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar" disabled="@guardando">Cancelar</button>
+                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar" disabled="@guardando">
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Eliminando...</span>
+                        }
+                        else
+                        {
+                            <span>Eliminar</span>
+                        }
+                    </button>
                 </div>
             </div>
         </div>
@@ -163,6 +187,7 @@
     private List<IBaseEntity> ListgralBuscar = new();
     private string searchTerm = "";
     private bool cargando = false;
+    private bool guardando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
@@ -282,15 +307,18 @@
 
     private async Task GuardarCambios()
     {
-        if (string.IsNullOrWhiteSpace(entidadEditando.Nombre))
-        {
-            await MostrarNotificacion("El nombre es obligatorio", true);
-            return;
-        }
+        if (guardando) return;
+        guardando = true;
+        StateHasChanged();
 
-        cargando = true;
         try
         {
+            if (string.IsNullOrWhiteSpace(entidadEditando.Nombre))
+            {
+                await MostrarNotificacion("El nombre es obligatorio", true);
+                return;
+            }
+
             var useridaux = await SessionStorage.GetAsync<string>("UserId");
             if (!string.IsNullOrEmpty(useridaux.Value))
             {
@@ -325,15 +353,13 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
         finally
         {
-            cargando = false;
+            guardando = false;
+            StateHasChanged();
         }
     }
 
@@ -362,9 +388,10 @@
 
     private async Task ConfirmarEliminar()
     {
-        if (entidadParaEliminar == null) return;
+        if (entidadParaEliminar == null || guardando) return;
+        guardando = true;
+        StateHasChanged();
 
-        cargando = true;
         try
         {
             // 1. Obtener repositorio
@@ -381,15 +408,14 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
         }
         finally
         {
-            cargando = false;
+            guardando = false;
             entidadParaEliminar = null;
+            StateHasChanged();
         }
     }
 

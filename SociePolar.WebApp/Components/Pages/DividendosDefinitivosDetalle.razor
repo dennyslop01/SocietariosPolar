@@ -1,65 +1,70 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 
-<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header text-white" style="background-color: #00338D;">
+                <h5 class="modal-title fw-bold">
                     <i class="bi bi-calculator me-2"></i>Detalle Dividendo Definitivo
                 </h5>
                 <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
             </div>
 
             <div class="modal-body py-4">
-                <PaginationComponent TItem="DividendoDefinitivoDetalle" Items="Listgral" DefaultPageSize="10">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">NombreAccionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Rif</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">TipoPago</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">MonedaPago</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Notificado</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">FechaNotificacion</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">MontoDecretado</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">FechaDecreto</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">MontoRetenido</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">EjercicioFiscal</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion1Monto</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion1Porcentaje</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion1FechaPago</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion2Monto</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion2Porcentaje</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion2FechaPago</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3Monto</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3Porcentaje</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Porcion3FechaPago</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 5%;">@(p.Accionista?.TipoAccionista?.Id != 3) ? @p.Accionista?.Nombre : (@p.Accionista?.NombreSusesion?.Length > 50) ? @p.Accionista?.NombreSusesion.Substring(0, 50) : @p.Accionista?.NombreSusesion</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Accionista?.Documento1</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.TipoPago</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Moneda?.Id</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Notificado</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaNotificacion?.ToString("dd/MM/yyyy")</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.MontoDecretado</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.FechaDecreto?.ToString("dd/MM/yyyy")</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.MontoRetenido</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.EjercicioFiscal</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1Monto</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion1FechaPago?.ToString("dd/MM/yyyy")</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2Monto</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion2FechaPago?.ToString("dd/MM/yyyy")</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3Monto</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3Porcentaje</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Porcion3FechaPago?.ToString("dd/MM/yyyy")</td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
+                <div class="table-responsive">
+                    <PaginationComponent TItem="DividendoDefinitivoDetalle" Items="Listgral" DefaultPageSize="10">
+                        <ChildContentHeader>
+                            <tr class="table-light border-bottom text-nowrap">
+                                <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Nombre Accionista</th>
+                                <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">RIF</th>
+                                <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Tipo de Pago</th>
+                                <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Moneda</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Notificado</th>
+                                <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Fecha Notificación</th>
+                                <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Monto Decretado</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Fecha Decreto</th>
+                                <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Monto Retenido</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Ejercicio Fiscal</th>
+                                <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Porción 1 Monto</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 1 %</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 1 Fecha Pago</th>
+                                <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Porción 2 Monto</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 2 %</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 2 Fecha Pago</th>
+                                <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Porción 3 Monto</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 3 %</th>
+                                <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 3 Fecha Pago</th>
+                            </tr>
+                        </ChildContentHeader>
+                        <ChildContentRow Context="p">
+                            <tr class="align-middle border-bottom text-nowrap">
+                                <td class="text-start text-dark fw-medium small">@ObtenerNombreAccionista(p)</td>
+                                <td class="text-start text-secondary small">@(p.Accionista?.Documento1 ?? "-")</td>
+                                <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.TipoPago) ? "-" : p.TipoPago)</td>
+                                <td class="text-start text-secondary small">@(p.Moneda?.Nombre ?? p.Moneda?.Simbolo ?? "-")</td>
+                                <td class="text-center small">
+                                    <span class="badge @(p.Notificado ? "bg-success" : "bg-light text-secondary border")">
+                                        @(p.Notificado ? "Sí" : "No")
+                                    </span>
+                                </td>
+                                <td class="text-center text-secondary small">@(p.FechaNotificacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-end text-secondary small fw-semibold">@p.MontoDecretado.ToString("N2")</td>
+                                <td class="text-center text-secondary small">@(p.FechaDecreto?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-end text-secondary small">@p.MontoRetenido.ToString("N2")</td>
+                                <td class="text-center text-secondary small">@(string.IsNullOrEmpty(p.EjercicioFiscal) ? "-" : p.EjercicioFiscal)</td>
+                                <td class="text-end text-secondary small">@p.Porcion1Monto.ToString("N2")</td>
+                                <td class="text-center text-secondary small">@p.Porcion1Porcentaje.ToString("N2")%</td>
+                                <td class="text-center text-secondary small">@(p.Porcion1FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-end text-secondary small">@p.Porcion2Monto.ToString("N2")</td>
+                                <td class="text-center text-secondary small">@p.Porcion2Porcentaje.ToString("N2")%</td>
+                                <td class="text-center text-secondary small">@(p.Porcion2FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-end text-secondary small">@p.Porcion3Monto.ToString("N2")</td>
+                                <td class="text-center text-secondary small">@p.Porcion3Porcentaje.ToString("N2")%</td>
+                                <td class="text-center text-secondary small">@(p.Porcion3FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            </tr>
+                        </ChildContentRow>
+                    </PaginationComponent>
+                </div>
             </div>
         </div>
     </div>
@@ -127,6 +132,17 @@
         await Task.Delay(4000); // 4 segundos para errores es mejor
         mostrarAlerta = false;
         StateHasChanged();
+    }
+
+    private string ObtenerNombreAccionista(DividendoDefinitivoDetalle p)
+    {
+        if (p.Accionista == null) return "-";
+        if (p.Accionista.TipoAccionista?.Id != 3)
+        {
+            return p.Accionista.Nombre ?? "-";
+        }
+        var sucesion = p.Accionista.NombreSusesion ?? "";
+        return sucesion.Length > 50 ? sucesion.Substring(0, 50) + "..." : (string.IsNullOrEmpty(sucesion) ? (p.Accionista.Nombre ?? "-") : sucesion);
     }
 }
 

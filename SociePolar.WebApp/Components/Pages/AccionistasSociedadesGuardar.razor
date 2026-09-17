@@ -1,158 +1,129 @@
-@if (cargando)
-{
-    <ModalCargando />
-}
-else
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
-            <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
-                <DataAnnotationsValidator />
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+        <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
+            <DataAnnotationsValidator />
 
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
-                            @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Accionista - Sociedad" : "Agregar Accionista - Sociedad")
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                    </div>
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi @( (int.TryParse(id, out var parsedId) && parsedId > 0) ? "bi-pencil-square" : "bi-plus-circle") me-2"></i>
+                        @( (int.TryParse(id, out var pId) && pId > 0) ? "Modificar Accionista - Sociedad" : "Agregar Accionista - Sociedad")
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
 
-                    <div class="modal-body py-4">
-                        <!-- Iniciamos la grilla de filas y columnas -->
-                        <div class="row">
-                        <!-- COMBO SOCIEDAD -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Sociedad</label>
-                            <div class="dropdown">
-                                <button class="form-select text-start d-flex justify-content-between align-items-center" type="button" style="font-size: 0.8rem;" @onclick="ToggleSociedadDropdown">
-                                    <span>@(ObtenerSociedadSeleccionada())</span>
-                                </button>
-                                <ul class="dropdown-menu w-100 p-2 @(isSociedadDropdownOpen ? "show" : "")" style="max-height: 300px; overflow-y: auto; z-index: 1050;">
-                                    <li class="mb-2">
-                                        <input type="text" class="form-control" placeholder="Buscar..." style="font-size: 0.8rem;" @bind="textoBusquedaSociedad" @bind:event="oninput" />
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarSociedad(0)">
-                                            Seleccione ...
-                                        </button>
-                                    </li>
-                                    @if (listSociedad != null)
-                                    {
-                                        @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusquedaSociedad) || s.Empresa.Nombre.Contains(textoBusquedaSociedad, StringComparison.OrdinalIgnoreCase)))
-                                        {
-                                            <li>
-                                                <button type="button" class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarSociedad(sociedad.Id)">
-                                                    @sociedad.Empresa.Nombre
-                                                </button>
-                                            </li>
-                                        }
-                                    }
-                                </ul>
-                            </div>
-                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-
-                        <!-- COMBO ACCIONISTA -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Accionista</label>
-                            <div class="dropdown">
-                                <button class="form-select text-start d-flex justify-content-between align-items-center" type="button" style="font-size: 0.8rem;" @onclick="ToggleAccionistaDropdown">
-                                    <span>@(ObtenerAccionistaSeleccionado())</span>
-                                </button>
-                                <ul class="dropdown-menu w-100 p-2 @(isAccionistaDropdownOpen ? "show" : "")" style="max-height: 300px; overflow-y: auto; z-index: 1050;">
-                                    <li class="mb-2">
-                                        <input type="text" class="form-control" placeholder="Buscar..." style="font-size: 0.8rem;" @bind="textoBusquedaAccionista" @bind:event="oninput" />
-                                    </li>
-                                    <li>
-                                        <button type="button" class="dropdown-item @(entidadEditando.AccionistaId == 0 ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarAccionista(0)">
-                                            Seleccione ...
-                                        </button>
-                                    </li>
-                                    @if (listAccionista != null)
-                                    {
-                                        @foreach (var accionista in listAccionista.Where(a => string.IsNullOrEmpty(textoBusquedaAccionista) || a.Nombre.Contains(textoBusquedaAccionista, StringComparison.OrdinalIgnoreCase)))
-                                        {
-                                            <li>
-                                                <button type="button" class="dropdown-item @(entidadEditando.AccionistaId == accionista.Id ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarAccionista(accionista.Id)">
-                                                    @accionista.Nombre
-                                                </button>
-                                            </li>
-                                        }
-                                    }
-                                </ul>
-                            </div>
-                            <ValidationMessage For="@(() => entidadEditando.AccionistaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-secondary small">Estatus</label>
-                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.EstatusAccionistaId">
-                                <option value="0" selected>Seleccione ...</option>
-                                @if (listEstatus != null)
+                <div class="modal-body py-4">
+                    <!-- Iniciamos la grilla de filas y columnas -->
+                    <div class="row">
+                    <!-- COMBO SOCIEDAD -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-secondary small">Sociedad</label>
+                        <div class="dropdown">
+                            <button class="form-select text-start d-flex justify-content-between align-items-center" type="button" style="font-size: 0.8rem;" @onclick="ToggleSociedadDropdown">
+                                <span>@(ObtenerSociedadSeleccionada())</span>
+                            </button>
+                            <ul class="dropdown-menu w-100 p-2 @(isSociedadDropdownOpen ? "show" : "")" style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                <li class="mb-2">
+                                    <input type="text" class="form-control" placeholder="Buscar..." style="font-size: 0.8rem;" @bind="textoBusquedaSociedad" @bind:event="oninput" />
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item @(entidadEditando.SociedadId == 0 ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarSociedad(0)">
+                                        Seleccione ...
+                                    </button>
+                                </li>
+                                @if (listSociedad != null)
                                 {
-                                    @foreach (var estatus in listEstatus)
+                                    @foreach (var sociedad in listSociedad.Where(s => string.IsNullOrEmpty(textoBusquedaSociedad) || s.Empresa.Nombre.Contains(textoBusquedaSociedad, StringComparison.OrdinalIgnoreCase)))
                                     {
-                                        <option value="@estatus.Id">@estatus.Nombre</option>
+                                        <li>
+                                            <button type="button" class="dropdown-item @(entidadEditando.SociedadId == sociedad.Id ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarSociedad(sociedad.Id)">
+                                                @sociedad.Empresa.Nombre
+                                            </button>
+                                        </li>
                                     }
                                 }
-                            </InputSelect>
-                            <ValidationMessage For="@(() => entidadEditando.EstatusAccionistaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </ul>
                         </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                        </div>
+                        <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                    </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
+                    <!-- COMBO ACCIONISTA -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-secondary small">Accionista</label>
+                        <div class="dropdown">
+                            <button class="form-select text-start d-flex justify-content-between align-items-center" type="button" style="font-size: 0.8rem;" @onclick="ToggleAccionistaDropdown">
+                                <span>@(ObtenerAccionistaSeleccionado())</span>
+                            </button>
+                            <ul class="dropdown-menu w-100 p-2 @(isAccionistaDropdownOpen ? "show" : "")" style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                <li class="mb-2">
+                                    <input type="text" class="form-control" placeholder="Buscar..." style="font-size: 0.8rem;" @bind="textoBusquedaAccionista" @bind:event="oninput" />
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item @(entidadEditando.AccionistaId == 0 ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarAccionista(0)">
+                                        Seleccione ...
+                                    </button>
+                                </li>
+                                @if (listAccionista != null)
+                                {
+                                    @foreach (var accionista in listAccionista.Where(a => string.IsNullOrEmpty(textoBusquedaAccionista) || a.Nombre.Contains(textoBusquedaAccionista, StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <li>
+                                            <button type="button" class="dropdown-item @(entidadEditando.AccionistaId == accionista.Id ? "active bg-primary text-white" : "")" style="font-size: 0.8rem;" @onclick="() => SeleccionarAccionista(accionista.Id)">
+                                                @accionista.Nombre
+                                            </button>
+                                        </li>
+                                    }
+                                }
+                            </ul>
                         </div>
+                        <ValidationMessage For="@(() => entidadEditando.AccionistaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-secondary small">Estatus</label>
+                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.EstatusAccionistaId">
+                            <option value="0" selected>Seleccione ...</option>
+                            @if (listEstatus != null)
+                            {
+                                @foreach (var estatus in listEstatus)
+                                {
+                                    <option value="@estatus.Id">@estatus.Nombre</option>
+                                }
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => entidadEditando.EstatusAccionistaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
                     </div>
                 </div>
-
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
-                        <i class="bi bi-save me-1"></i> Guardar
-                    </button>
-                </div>
             </div>
-        </EditForm>
-    </div>
+
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span>Guardando...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-save me-1"></i>
+                        <span>Guardar</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </EditForm>
 </div>
+</div>
+
+@if (cargando || guardando)
+{
+    <ModalCargando />
 }
 
 @code {
@@ -299,15 +270,17 @@ else
 
     private async Task GuardarCambios()
     {
+        if (guardando) return;
         mensajeAlerta = string.Empty;
         guardando = true;
+        StateHasChanged();
 
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
         {
-            StateHasChanged();
             guardando = false;
+            StateHasChanged();
             await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
             await jsRuntime.InvokeVoidAsync("eval", @"
                 var m = document.querySelector('.modal-body') || document.querySelector('.modal');
@@ -341,7 +314,6 @@ else
                     var existeAutoSociedad = listEntidades.Any(x => x.Sociedad.Id == entidadEditando.SociedadId && x.Accionista.Id == entidadEditando.AccionistaId);
                     if (existeAutoSociedad)
                     {
-                        guardando = false;
                         mensajeAlerta = "Ya existe esta combinacion de Accionista - Sociedad";
                         await MostrarNotificacion("Ya existe esta autoridad para esta sociedad", true);
                         return;
@@ -366,13 +338,14 @@ else
         }
         catch (Exception ex)
         {
-            guardando = false;
-            StateHasChanged();
-            // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
-        guardando = false;
+        finally
+        {
+            guardando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

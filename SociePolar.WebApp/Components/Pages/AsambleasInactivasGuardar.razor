@@ -1,13 +1,7 @@
 @rendermode InteractiveServer
 
-@if (cargando)
-{
-    <ModalCargando />
-}
-else
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+<div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
             <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
                 <DataAnnotationsValidator />
 
@@ -154,7 +148,7 @@ else
                                 <label class="form-label fw-bold text-primary small">Datos de Publicación</label>
                                 <hr />
                             </div>
-                            <div class="col-md-6 mb-3">
+                            @* <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold text-secondary small">Año de Publicación</label>
                                 <input type="text" class="form-control form-control-sm small"
                                        @bind="entidadEditando.AnoPublicacion"
@@ -163,7 +157,7 @@ else
                                        inputmode="numeric"
                                        oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
                                 <ValidationMessage For="@(() => entidadEditando.AnoPublicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
+                            </div> *@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold text-secondary small">Fecha de Publicación</label>
                                 <input type="date" class="form-control form-control-sm small"
@@ -256,15 +250,28 @@ else
                 </div>
 
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando">
-                        <i class="bi bi-save me-1"></i> Guardar
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-save me-1"></i>
+                            <span>Guardar</span>
+                        }
                     </button>
                 </div>
             </div>
         </EditForm>
     </div>
 </div>
+
+@if (cargando || guardando)
+{
+    <ModalCargando />
 }
 
 @code {
@@ -406,14 +413,17 @@ else
 
     private async Task GuardarCambios()
     {
+        if (guardando) return;
+        guardando = true;
         mensajeAlerta = string.Empty;
+        StateHasChanged();
 
         bool formularioValido = editContext.Validate();
 
         if (!formularioValido)
         {
+            guardando = false;
             StateHasChanged();
-            cargando = false;
             await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
             await jsRuntime.InvokeVoidAsync("eval", @"
                 var m = document.querySelector('.modal-body') || document.querySelector('.modal');
@@ -451,7 +461,6 @@ else
 
                 if (entidadEditando.Id == 0)
                 {
-                    cargando = true;
                     entidadEditando.CreateDate = DateTime.Now;
                     entidadEditando.CreateUserId = userid;
                     entidadEditando.UpdateDate = DateTime.Now;
@@ -464,7 +473,6 @@ else
                 }
                 else
                 {
-                    cargando = true;
                     string jsonOriginal = JsonSerializer.Serialize(entidadEditandoAux);
                     string jsonModificado = JsonSerializer.Serialize(entidadEditando);
 
@@ -483,13 +491,16 @@ else
         }
         catch (Exception ex)
         {
-            cargando = false;
+            guardando = false;
             StateHasChanged();
-            // Si hay error en base de datos (ej. nombre duplicado)
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
-        cargando = false;
+        finally
+        {
+            guardando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

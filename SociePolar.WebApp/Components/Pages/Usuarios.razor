@@ -112,7 +112,7 @@
     }
 </div>
 
-@if (cargando)
+@if (cargando || guardando)
 {
     <ModalCargando />
 }
@@ -127,7 +127,7 @@
                         <i class="bi @(entidadEditando.Id == 0 ? "bi-person-plus" : "bi-pencil-square") me-2"></i>
                         @(entidadEditando.Id == 0 ? "Agregar Usuario" : "Modificar Usuario")
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal" disabled="@guardando"></button>
                 </div>
                 <div class="modal-body py-4 px-4">
                     <!-- Campo Correo Electrónico -->
@@ -136,14 +136,14 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
                             <input type="email" class="form-control" @bind="entidadEditando.Email"
-                                   placeholder="ejemplo@empresas-polar.com" />
+                                   placeholder="ejemplo@empresas-polar.com" disabled="@guardando" />
                         </div>
                     </div>
 
                     <!-- Campo Rol (Lista desplegable) -->
                     <div class="mb-3">
                         <label class="form-label fw-bold text-secondary small text-uppercase">Rol Corporativo Asignado</label>
-                        <select class="form-select" @bind="entidadEditando.IdRol">
+                        <select class="form-select" @bind="entidadEditando.IdRol" disabled="@guardando">
                             <option value="" disabled selected>Seleccione un rol...</option>
                             @if (ListaRoles != null)
                             {
@@ -158,7 +158,7 @@
                     <!-- Campo Estatus (Lista desplegable) -->
                     <div class="mb-3">
                         <label class="form-label fw-bold text-secondary small text-uppercase">Estatus</label>
-                        <select class="form-select" @bind="entidadEditando.Estatus">
+                        <select class="form-select" @bind="entidadEditando.Estatus" disabled="@guardando">
                             <option value="" disabled selected>Seleccione un estatus...</option>
                             @if (ListaEstatus != null)
                             {
@@ -171,9 +171,18 @@
                     </div>
                 </div>
                 <div class="modal-footer bg-light border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios" style="background-color: #00338D !important;">
-                        <i class="bi bi-save me-1"></i> Guardar
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GuardarCambios" disabled="@guardando" style="background-color: #00338D !important;">
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-save me-1"></i>
+                            <span>Guardar</span>
+                        }
                     </button>
                 </div>
             </div>
@@ -196,8 +205,18 @@
                     </p>
                 </div>
                 <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4 gap-2">
-                    <button class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                    <button class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModalEliminar" disabled="@guardando">Cancelar</button>
+                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar" disabled="@guardando">
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Eliminando...</span>
+                        }
+                        else
+                        {
+                            <span>Eliminar</span>
+                        }
+                    </button>
                 </div>
             </div>
         </div>
@@ -209,6 +228,7 @@
     private List<Usuario> ListgralBuscar = new();
     private string searchTerm = "";
     private bool cargando = false;
+    private bool guardando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
@@ -309,38 +329,41 @@
 
     private async Task GuardarCambios()
     {
-        // 1. Validación de Correo Electrónico (Presencia)
-        if (string.IsNullOrWhiteSpace(entidadEditando.Email))
-        {
-            await MostrarNotificacion("El correo electrónico es obligatorio.", true);
-            return;
-        }
+        if (guardando) return;
+        guardando = true;
+        StateHasChanged();
 
-        // 2. Validación de Correo Electrónico (Formato)
-        var emailRegex = new System.Text.RegularExpressions.Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-        if (!emailRegex.IsMatch(entidadEditando.Email))
-        {
-            await MostrarNotificacion("El formato del correo electrónico no es válido.", true);
-            return;
-        }
-
-        // 3. Validación de Rol
-        if (string.IsNullOrWhiteSpace(entidadEditando.IdRol.ToString()))
-        {
-            await MostrarNotificacion("Debe seleccionar un rol para el usuario.", true);
-            return;
-        }
-
-        // 4. Validación de Estatus
-        if (string.IsNullOrWhiteSpace(entidadEditando.Estatus.ToString()))
-        {
-            await MostrarNotificacion("Debe seleccionar un estatus para el usuario.", true);
-            return;
-        }
-
-        cargando = true;
         try
         {
+            // 1. Validación de Correo Electrónico (Presencia)
+            if (string.IsNullOrWhiteSpace(entidadEditando.Email))
+            {
+                await MostrarNotificacion("El correo electrónico es obligatorio.", true);
+                return;
+            }
+
+            // 2. Validación de Correo Electrónico (Formato)
+            var emailRegex = new System.Text.RegularExpressions.Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            if (!emailRegex.IsMatch(entidadEditando.Email))
+            {
+                await MostrarNotificacion("El formato del correo electrónico no es válido.", true);
+                return;
+            }
+
+            // 3. Validación de Rol
+            if (string.IsNullOrWhiteSpace(entidadEditando.IdRol.ToString()))
+            {
+                await MostrarNotificacion("Debe seleccionar un rol para el usuario.", true);
+                return;
+            }
+
+            // 4. Validación de Estatus
+            if (string.IsNullOrWhiteSpace(entidadEditando.Estatus.ToString()))
+            {
+                await MostrarNotificacion("Debe seleccionar un estatus para el usuario.", true);
+                return;
+            }
+
             var useridaux = await SessionStorage.GetAsync<string>("UserId");
             if (!string.IsNullOrEmpty(useridaux.Value))
             {
@@ -372,14 +395,13 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
             Console.WriteLine($"Error: {ex.Message}");
             await MostrarNotificacion("Error al procesar la solicitud: " + ex.Message, true);
         }
         finally
         {
-            cargando = false;
+            guardando = false;
+            StateHasChanged();
         }
     }
 
@@ -393,9 +415,10 @@
 
     private async Task ConfirmarEliminar()
     {
-        if (entidadParaEliminar == null) return;
+        if (entidadParaEliminar == null || guardando) return;
+        guardando = true;
+        StateHasChanged();
 
-        cargando = true;
         try
         {
             repository.Delete(entidadParaEliminar.Id);
@@ -405,15 +428,14 @@
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
         }
         finally
         {
-            cargando = false;
+            guardando = false;
             entidadParaEliminar = null;
+            StateHasChanged();
         }
     }
 

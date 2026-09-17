@@ -166,7 +166,7 @@
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary small text-uppercase">Total pagado según Tesorería</label>
                             <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <!-- <span class="input-group-text">$</span> -->
                                 <input type="text" class="form-control"
                                        @bind="MontoPagadoTesoreriaTexto" placeholder="0,00" />
                             </div>
@@ -176,7 +176,7 @@
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary small text-uppercase">Total pagado según Accionistas</label>
                             <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <!-- <span class="input-group-text">$</span> -->
                                 <input type="text" class="form-control"
                                        @bind="MontoPagadoAccionistasTexto" placeholder="0,00" />
                             </div>
@@ -186,7 +186,7 @@
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary small text-uppercase">Diferencia Tesorería - Accionistas</label>
                             <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <!-- <span class="input-group-text">$</span> -->
                                 <input type="text" class="form-control bg-light fw-semibold"
                                        value="@MontoPagadoDiferenciaTexto" placeholder="0,00" readonly />
                             </div>
@@ -195,7 +195,7 @@
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary small text-uppercase">Monto Total a Repartir</label>
                             <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-light fw-bold">$</span>
+                                <!-- <span class="input-group-text">$</span> -->
                                 <input type="text" class="form-control fw-bold text-primary" style="color: #00338D !important;"
                                        @bind="MontoTotalRepartirTexto" placeholder="0,00" />
                             </div>
@@ -216,9 +216,18 @@
 
                 <!-- Footer Flotante Polar -->
                 <div class="modal-footer bg-light border-top">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@guardando">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@guardando" style="background-color: #00338D !important;">
-                        <i class="bi bi-save me-1"></i> Guardar Dividendo
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span>Guardando Dividendo...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-save me-1"></i>
+                            <span>Guardar Dividendo</span>
+                        }
                     </button>
                 </div>
             </div>
@@ -226,7 +235,7 @@
     </div>
 </div>
 
-@if (cargando)
+@if (cargando || guardando)
 {
     <ModalCargando />
 }
@@ -460,6 +469,7 @@
 
     private async Task GuardarCambios()
     {
+        if (guardando) return;
         mensajeAlerta = string.Empty;
         guardando = true;
         StateHasChanged();

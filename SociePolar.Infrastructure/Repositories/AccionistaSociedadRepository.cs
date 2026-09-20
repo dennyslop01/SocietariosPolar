@@ -25,6 +25,21 @@ namespace SociePolar.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<AccionistaSociedad>> GetAllEstatusIdAsync(int estatusId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.EstatusAccionista!.Id == estatusId)
+                .ToListAsync();
+        }
+
         public async Task<AccionistaSociedad?> GetByIdAsync(int id)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
@@ -226,29 +241,32 @@ namespace SociePolar.Infrastructure.Repositories
 
             var estatus = await context.Set<EstatusAccionista>().FindAsync(1);
 
-            editentidad.NroAcciones = nroacciones;
-            editentidad.EstatusAccionista = estatus;
-            editentidad.UpdateDate = DateTime.UtcNow;
-            editentidad.UpdateUserId = updateUserId;
-
-            context.Set<AccionistaSociedad>().Update(editentidad);
-            context.SaveChanges();
-
-            if(opcioaudi == 1)
+            if (editentidad.NroAcciones != nroacciones)
             {
-                AuditoriaNroAccion auditoria = new()
+                editentidad.NroAcciones = nroacciones;
+                editentidad.EstatusAccionista = estatus;
+                editentidad.UpdateDate = DateTime.UtcNow;
+                editentidad.UpdateUserId = updateUserId;
+
+                context.Set<AccionistaSociedad>().Update(editentidad);
+                context.SaveChanges();
+
+                if (opcioaudi == 1)
                 {
-                    SociedadId = sociedadid,
-                    AccionistaId = accionistaid,
-                    NroAcciones = nroacciones,
-                    Accion = "Update",
-                    Descripcion = $"Se actualizó el número de acciones del accionista con ID {accionistaid} en la sociedad con ID {sociedadid} a {nroacciones}.",
-                    CreateUserId = updateUserId,
-                    CreateDate = DateTime.UtcNow
-                };
-                await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
-                await context.SaveChangesAsync();
-            }            
+                    AuditoriaNroAccion auditoria = new()
+                    {
+                        SociedadId = sociedadid,
+                        AccionistaId = accionistaid,
+                        NroAcciones = nroacciones,
+                        Accion = "Update",
+                        Descripcion = $"Se actualizó el número de acciones del accionista con ID {accionistaid} en la sociedad con ID {sociedadid} a {nroacciones}.",
+                        CreateUserId = updateUserId,
+                        CreateDate = DateTime.UtcNow
+                    };
+                    await context.Set<AuditoriaNroAccion>().AddAsync(auditoria);
+                    await context.SaveChangesAsync();
+                }
+            }
         }
 
         public async Task<List<AuditoriaNroAccion>> GetAuditoriaBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId)
@@ -267,5 +285,27 @@ namespace SociePolar.Infrastructure.Repositories
 
             await context.Database.ExecuteSqlRawAsync("EXEC SP_AccionistasSociedadInactivar @ProcesoId", paramProcesoId);
         }
+
+        public async Task<List<AccionistaSociedadHistorico>> GetHistoricoBySociedadIdRangeDateAsync(int sociedadId, DateTime endDate)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            // 1. Filtramos y agrupamos directamente en la tabla historico para obtener solo los IDs ganadores
+            var registrosGanadoresIds = await context.Set<AccionistaSociedadHistorico>()
+                .Where(h => h.Sociedad.Id == sociedadId && h.CreateDate <= endDate)
+                .GroupBy(h => h.Accionista.Id)
+                .Select(grupo => grupo.OrderByDescending(g => g.CreateDate).Select(g => g.Id).FirstOrDefault())
+                .ToListAsync();
+
+            // 2. Ahora cargamos los registros completos con todos sus Includes correspondientes
+            return await context.Set<AccionistaSociedadHistorico>()
+                .Include(b => b.Sociedad)
+                    .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Accionista)
+                    .ThenInclude(a => a!.TipoAccionista)
+                .Where(h => registrosGanadoresIds.Contains(h.Id))
+                .ToListAsync();
+        }
+
     }
 }

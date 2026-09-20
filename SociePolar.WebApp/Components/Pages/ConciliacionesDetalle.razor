@@ -250,6 +250,7 @@
             var conciliacion = await repository.GetByIdAsync(id);
             var listaDetalle = await repository.GetDetalleByIdAsync(id);
             var listaAccionistas = await repoaccionistasocie.GetBySociedadIdAsync((int)conciliacion?.Sociedad?.Id);
+            var listaHistorico = await repoaccionistasocie.GetHistoricoBySociedadIdRangeDateAsync((int)conciliacion?.Sociedad?.Id, conciliacion.CreateDate);
 
             foreach (var item in listaDetalle)
             {

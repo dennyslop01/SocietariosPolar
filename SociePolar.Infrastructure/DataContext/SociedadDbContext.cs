@@ -47,6 +47,7 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<Conciliacion> Conciliaciones { get; set; }
         public DbSet<ConciliacionDetalle> ConciliacionesDetalles { get; set; }
         public DbSet<AuditoriaNroAccion> AuditoriasNroAcciones { get; set; }
+        public DbSet<AccionistaSociedadHistorico> AccionistasSociedadesHistoricoNroAcciones { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

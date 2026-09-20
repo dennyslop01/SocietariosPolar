@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
@@ -55,7 +56,13 @@ namespace SociePolar.Infrastructure.Repositories
 
             context.Entry(newConciliacion.Sociedad).State = EntityState.Detached;
 
-            return newConciliacion.Id;
+            int conciliacionId = newConciliacion.Id;
+
+            var paramSociedadId = new SqlParameter("@SociedadId", entity.SociedadId);
+            var paramUserId = new SqlParameter("@UserId", entity.CreateUserId);
+            await context.Database.ExecuteSqlRawAsync("EXEC SP_AccionistasSociedadHistorico @SociedadId, @UserId", paramSociedadId, paramUserId);
+
+            return conciliacionId;
         }
 
         public async Task AddDetalleAsync(List<ConciliacionDetalle> entity)

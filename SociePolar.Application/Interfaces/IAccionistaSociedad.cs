@@ -6,6 +6,7 @@ namespace SociePolar.Application.Interfaces
     public interface IAccionistaSociedad
     {
         Task<List<AccionistaSociedad>> GetAllAsync();
+        Task<List<AccionistaSociedad>> GetAllEstatusIdAsync(int estatusId);
         Task<AccionistaSociedad?> GetByIdAsync(int id);
         Task<List<AccionistaSociedad>> GetBySociedadIdAsync(int sociedadId);
         Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
@@ -17,5 +18,7 @@ namespace SociePolar.Application.Interfaces
         Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, Int64 nroacciones, int updateUserId, int opcioaudi);
         Task<List<AuditoriaNroAccion>?> GetAuditoriaBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
         Task AccionistasSociedadInactivar(int procesoid);
+        Task<List<AccionistaSociedadHistorico>> GetHistoricoBySociedadIdRangeDateAsync(int sociedadId, DateTime endDate);
+
     }
 }

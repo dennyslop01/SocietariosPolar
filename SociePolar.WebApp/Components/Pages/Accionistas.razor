@@ -192,6 +192,7 @@
     private async Task LoadGenericDataAsync()
     {
         cargando = true;
+        StateHasChanged();
         try
         {
             var listAaccionista = await repository.GetAllAsync();
@@ -226,6 +227,7 @@
         finally
         {
             cargando = false;
+            StateHasChanged();
         }
     }
 

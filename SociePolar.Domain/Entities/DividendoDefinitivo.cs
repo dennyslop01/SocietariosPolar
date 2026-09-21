@@ -14,9 +14,10 @@
         public string? Observaciones { get; set; }
         public decimal? MontoPagadoTesoreria { get; set; }
         public decimal? MontoPagadoAccionistas { get; set; }
-        public decimal MontoTotalRepartir { get; set; }
+        public decimal? MontoTotalRepartir { get; set; }
         public DateTime CreateDate { get; set; }
         public int CreateUserId { get; set; }
+        public Moneda? Moneda { get; set; }
     }
 
     public class DividendoDefinitivoDetalle

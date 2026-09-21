@@ -31,9 +31,13 @@ namespace SociePolar.Domain.Dtos
         public decimal MontoPagadoDiferencia { get; set; }
 
         [Range(0, double.MaxValue, ErrorMessage = "El Monto total a repartir debe ser un valor mayor a cero.")]
-        public decimal MontoTotalRepartir { get; set; }
+        public decimal? MontoTotalRepartir { get; set; }
 
         public DateTime CreateDate { get; set; }
         public int CreateUserId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Moneda válida.")]
+        public int MonedaId { get; set; }
+
     }
 }

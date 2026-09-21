@@ -16,6 +16,7 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<DividendoPreliminar>()
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Moneda)
                 .ToListAsync();
         }
 
@@ -25,6 +26,7 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<DividendoPreliminar>()
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
+                .Include(b => b.Moneda)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
         }
@@ -37,9 +39,14 @@ namespace SociePolar.Infrastructure.Repositories
             if (sociedad == null)
                 throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
 
+            var moneda = await context.Set<Moneda>().FindAsync(entity.MonedaId);
+            if (moneda == null)
+                throw new Exception($"Moneda con ID {entity.MonedaId} no existe.");
+
             DividendoPreliminar newDividendoPreliminar = new()
             {
                 Sociedad = sociedad,
+                Moneda = moneda,
                 Explicacion = entity.Explicacion,
                 NombreDividendos = entity.NombreDividendos,
                 RutaDividendos = entity.RutaDividendos,

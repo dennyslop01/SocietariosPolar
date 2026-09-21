@@ -73,7 +73,20 @@
                             </div>
                             <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
-
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold text-secondary small">Moneda</label>
+                            <select class="form-select form-select-sm" value="@entidadEditando.MonedaId" @onchange="OnMonedaChanged">
+                                <option value="0">Seleccione ...</option>
+                                @if (listMoneda != null)
+                                {
+                                    @foreach (var moneda in listMoneda)
+                                    {
+                                        <option value="@moneda.Id">@moneda.Nombre</option>
+                                    }
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => entidadEditando.MonedaId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                        </div>
                         <!-- Explicación -->
                         <div class="col-12">
                             <label class="form-label fw-bold text-secondary small text-uppercase">Explicación</label>
@@ -259,6 +272,7 @@
 
     private DividendoPreliminarDto entidadEditando = new();
     private List<Sociedad> listSociedad = new();
+    private List<Moneda> listMoneda = new();
 
     private EditContext editContext = new(new DividendoPreliminarDto());
     private ValidationMessageStore? mensajeStore;
@@ -274,6 +288,7 @@
 
     [Inject] private ISociedad repoSociedades { get; set; } = null!;
     [Inject] private IDividendoPreliminar repository { get; set; } = null!;
+    [Inject] private IMoneda repoMoneda { get; set; } = null!;
 
     private bool isDropdownOpen = false;
     private string textoBusqueda = "";
@@ -349,6 +364,7 @@
     {
         listSociedad = await repoSociedades.GetAllAsync();
         Listgral = await repository.GetAllAsync();
+        listMoneda = await repoMoneda.GetAllAsync();
     }
 
     private async Task CerrarModal()
@@ -857,5 +873,13 @@
         if (texto == "-" || string.IsNullOrEmpty(texto)) return null;
 
         return DateTime.TryParse(texto, out DateTime res) ? res : (DateTime?)null;
+    }
+
+    private void OnMonedaChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.MonedaId = idSeleccionado;
+        }
     }
 }

@@ -17,9 +17,10 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Region)
                 .Include(b => b.UnidadNegocio)
                 .Include(b => b.Empresa)
-                //.Include(b => b.TipoSociedad)
+                .Include(b => b.TipoSociedad)
                 .Include(b => b.EstatusSociedad)
                 .Include(b => b.TipoSociedadActiva)
+                .Include(b => b.TipoSociedadInactiva)
                 .Include(b => b.Moneda)
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoDocumento1)
@@ -35,9 +36,10 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Region)
                 .Include(b => b.UnidadNegocio)
                 .Include(b => b.Empresa)
-                //.Include(b => b.TipoSociedad)
+                .Include(b => b.TipoSociedad)
                 .Include(b => b.EstatusSociedad)
                 .Include(b => b.TipoSociedadActiva)
+                .Include(b => b.TipoSociedadInactiva)
                 .Include(b => b.Moneda)
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoDocumento1)
@@ -59,8 +61,8 @@ namespace SociePolar.Infrastructure.Repositories
             var empresa = await context.Set<Empresa>().FindAsync(entity.EmpresaId);
             if (empresa == null) throw new Exception($"Empresa con ID {entity.EmpresaId} no existe.");
 
-            //var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
-            //if(tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
+            var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
+            if(tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
 
             var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(entity.EstatusSociedadId);
             if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {entity.EstatusSociedadId} no existe.");
@@ -113,7 +115,7 @@ namespace SociePolar.Infrastructure.Repositories
                 UnidadNegocio = unidadNegocio,
                 Empresa = empresa,
                 NumeroSap = entity.NumeroSap,
-                //TipoSociedad = tipoSociedad,
+                TipoSociedad = tipoSociedad,
                 EstatusSociedad = estatusSociedad,
                 TipoSociedadActiva = tipoSociedadActiva,
                 Objeto = entity.Objeto,
@@ -152,17 +154,21 @@ namespace SociePolar.Infrastructure.Repositories
                 NombreDiario = nombre,
                 VencimientoDocumento1 = entity.VencimientoDocumento1,
                 VencimientoDocumento2 = entity.VencimientoDocumento2,
-                VencimientoDocumento3 = entity.VencimientoDocumento3
+                VencimientoDocumento3 = entity.VencimientoDocumento3,
+                EmpresaFusion = entity.EmpresaFusion,
+                FechaFusion = entity.FechaFusion
             };
 
             await context.Set<Sociedad>().AddAsync(newsociedad);
             context.Entry(newsociedad.Region).State = EntityState.Unchanged;
             context.Entry(newsociedad.UnidadNegocio).State = EntityState.Unchanged;
             context.Entry(newsociedad.Empresa).State = EntityState.Unchanged;
-            //context.Entry(newsociedad.TipoSociedad).State = EntityState.Unchanged;
+            context.Entry(newsociedad.TipoSociedad).State = EntityState.Unchanged;
             context.Entry(newsociedad.EstatusSociedad).State = EntityState.Unchanged;
             if (newsociedad.TipoSociedadActiva != null)
                 context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Unchanged;
+            if (newsociedad.TipoSociedadInactiva != null)
+                context.Entry(newsociedad.TipoSociedadInactiva).State = EntityState.Unchanged;
             context.Entry(newsociedad.Moneda).State = EntityState.Unchanged;
             if (newsociedad.NombreDiario != null)
                 context.Entry(newsociedad.NombreDiario).State = EntityState.Unchanged;
@@ -178,6 +184,8 @@ namespace SociePolar.Infrastructure.Repositories
             context.Entry(newsociedad.EstatusSociedad).State = EntityState.Detached;
             if (newsociedad.TipoSociedadActiva != null)
                 context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Detached;
+            if (newsociedad.TipoSociedadInactiva != null)
+                context.Entry(newsociedad.TipoSociedadInactiva).State = EntityState.Detached;
             context.Entry(newsociedad.Moneda).State = EntityState.Detached;
             if(newsociedad.NombreDiario != null)
                 context.Entry(newsociedad.NombreDiario).State = EntityState.Detached;
@@ -199,8 +207,8 @@ namespace SociePolar.Infrastructure.Repositories
             var empresa = await context.Set<Empresa>().FindAsync(entity.EmpresaId);
             if (empresa == null) throw new Exception($"Empresa con ID {entity.EmpresaId} no existe.");
 
-            //var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
-            //if (tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
+            var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
+            if (tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
 
             var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(entity.EstatusSociedadId);
             if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {entity.EstatusSociedadId} no existe.");
@@ -259,7 +267,7 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.UnidadNegocio = unidadNegocio;
             editsociedad.Empresa = empresa;
             editsociedad.NumeroSap = entity.NumeroSap;
-            //editsociedad.TipoSociedad = tipoSociedad;
+            editsociedad.TipoSociedad = tipoSociedad;
             editsociedad.EstatusSociedad = estatusSociedad;
             if (entity.TipoSociedadActivaId != null)
                 editsociedad.TipoSociedadActiva = tipoSociedadActiva;
@@ -299,6 +307,8 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.VencimientoDocumento1 = entity.VencimientoDocumento1;
             editsociedad.VencimientoDocumento2 = entity.VencimientoDocumento2;
             editsociedad.VencimientoDocumento3 = entity.VencimientoDocumento3;
+            editsociedad.EmpresaFusion = entity.EmpresaFusion;
+            editsociedad.FechaFusion = entity.FechaFusion;
 
             context.Set<Sociedad>().Update(editsociedad);
             context.SaveChanges();
@@ -317,13 +327,13 @@ namespace SociePolar.Infrastructure.Repositories
             var empresa = await context.Set<Empresa>().FindAsync(entity.EmpresaId);
             if (empresa == null) throw new Exception($"Empresa con ID {entity.EmpresaId} no existe.");
 
-            //var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
-            //if(tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
+            var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
+            if(tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
 
             var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(entity.EstatusSociedadId);
             if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {entity.EstatusSociedadId} no existe.");
 
-            var tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(entity.TipoSociedadActivaId);
+            var tipoSociedadInactiva = await context.Set<TipoSociedadInactiva>().FindAsync(entity.TipoSociedadInactivaId);
 
             var moneda = await context.Set<Moneda>().FindAsync(entity.MonedaId);
             if (moneda == null) throw new Exception($"Moneda con ID {entity.MonedaId} no existe.");
@@ -371,9 +381,9 @@ namespace SociePolar.Infrastructure.Repositories
                 UnidadNegocio = unidadNegocio,
                 Empresa = empresa,
                 NumeroSap = entity.NumeroSap,
-                //TipoSociedad = tipoSociedad,
+                TipoSociedad = tipoSociedad,
                 EstatusSociedad = estatusSociedad,
-                TipoSociedadActiva = tipoSociedadActiva,
+                TipoSociedadInactiva = tipoSociedadInactiva,
                 Objeto = entity.Objeto,
                 Domicilio = entity.Domicilio,
                 DireccionFiscal = entity.DireccionFiscal,
@@ -407,17 +417,21 @@ namespace SociePolar.Infrastructure.Repositories
                 AnoPublicacion = entity.AnoPublicacion,
                 NumeroPublicacion = entity.NumeroPublicacion,
                 FechaPublicacion = entity.FechaPublicacion,
-                NombreDiario = nombre
+                NombreDiario = nombre,
+                FechaFusion = entity.FechaFusion,
+                EmpresaFusion = entity.EmpresaFusion
             };
 
             await context.Set<Sociedad>().AddAsync(newsociedad);
             context.Entry(newsociedad.Region).State = EntityState.Unchanged;
             context.Entry(newsociedad.UnidadNegocio).State = EntityState.Unchanged;
             context.Entry(newsociedad.Empresa).State = EntityState.Unchanged;
-            //context.Entry(newsociedad.TipoSociedad).State = EntityState.Unchanged;
+            context.Entry(newsociedad.TipoSociedad).State = EntityState.Unchanged;
             context.Entry(newsociedad.EstatusSociedad).State = EntityState.Unchanged;
             if (newsociedad.TipoSociedadActiva != null)
                 context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Unchanged;
+            if (newsociedad.TipoSociedadInactiva != null)
+                context.Entry(newsociedad.TipoSociedadInactiva).State = EntityState.Unchanged;
             context.Entry(newsociedad.Moneda).State = EntityState.Unchanged;
             if (newsociedad.NombreDiario != null)
                 context.Entry(newsociedad.NombreDiario).State = EntityState.Unchanged;
@@ -429,10 +443,12 @@ namespace SociePolar.Infrastructure.Repositories
             context.Entry(newsociedad.Region).State = EntityState.Detached;
             context.Entry(newsociedad.UnidadNegocio).State = EntityState.Detached;
             context.Entry(newsociedad.Empresa).State = EntityState.Detached;
-            //context.Entry(newsociedad.TipoSociedad).State = EntityState.Detached;
+            context.Entry(newsociedad.TipoSociedad).State = EntityState.Detached;
             context.Entry(newsociedad.EstatusSociedad).State = EntityState.Detached;
             if (newsociedad.TipoSociedadActiva != null)
                 context.Entry(newsociedad.TipoSociedadActiva).State = EntityState.Detached;
+            if (newsociedad.TipoSociedadInactiva != null)
+                context.Entry(newsociedad.TipoSociedadInactiva).State = EntityState.Detached;
             context.Entry(newsociedad.Moneda).State = EntityState.Detached;
             if (newsociedad.NombreDiario != null)
                 context.Entry(newsociedad.NombreDiario).State = EntityState.Detached;
@@ -454,17 +470,17 @@ namespace SociePolar.Infrastructure.Repositories
             var empresa = await context.Set<Empresa>().FindAsync(entity.EmpresaId);
             if (empresa == null) throw new Exception($"Empresa con ID {entity.EmpresaId} no existe.");
 
-            //var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
-            //if (tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
+            var tipoSociedad = await context.Set<TipoSociedad>().FindAsync(entity.TipoSociedadId);
+            if (tipoSociedad == null) throw new Exception($"TipoSociedad con ID {entity.TipoSociedadId} no existe.");
 
             var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(entity.EstatusSociedadId);
             if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {entity.EstatusSociedadId} no existe.");
 
-            TipoSociedadActiva? tipoSociedadActiva = null;
-            if (entity.TipoSociedadActivaId != null)
+            TipoSociedadInactiva? tipoSociedadInactiva = null;
+            if (entity.TipoSociedadInactivaId != null)
             {
-                tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(entity.TipoSociedadActivaId);
-                if (tipoSociedadActiva == null) throw new Exception($"TipoSociedadActiva con ID {entity.TipoSociedadActivaId} no existe.");
+                tipoSociedadInactiva = await context.Set<TipoSociedadInactiva>().FindAsync(entity.TipoSociedadInactivaId);
+                if (tipoSociedadInactiva == null) throw new Exception($"TipoSociedadInactiva con ID {entity.TipoSociedadInactivaId} no existe.");
             }
 
             var moneda = await context.Set<Moneda>().FindAsync(entity.MonedaId);
@@ -514,10 +530,10 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.UnidadNegocio = unidadNegocio;
             editsociedad.Empresa = empresa;
             editsociedad.NumeroSap = entity.NumeroSap;
-            //editsociedad.TipoSociedad = tipoSociedad;
+            editsociedad.TipoSociedad = tipoSociedad;
             editsociedad.EstatusSociedad = estatusSociedad;
-            if (entity.TipoSociedadActivaId != null)
-                editsociedad.TipoSociedadActiva = tipoSociedadActiva;
+            if (entity.TipoSociedadInactivaId != null)
+                editsociedad.TipoSociedadInactiva = tipoSociedadInactiva;
 
             editsociedad.Objeto = entity.Objeto;
             editsociedad.Domicilio = entity.Domicilio;
@@ -551,6 +567,8 @@ namespace SociePolar.Infrastructure.Repositories
             editsociedad.NumeroPublicacion = entity.NumeroPublicacion;
             editsociedad.FechaPublicacion = entity.FechaPublicacion;
             editsociedad.NombreDiario = nombre;
+            editsociedad.FechaFusion = entity.FechaFusion;
+            editsociedad.EmpresaFusion = entity.EmpresaFusion;
 
             context.Set<Sociedad>().Update(editsociedad);
             context.SaveChanges();

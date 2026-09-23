@@ -22,13 +22,13 @@ namespace SociePolar.Domain.Dtos
         [Required(ErrorMessage = "El Número SAP es requerido.")]
         public string? NumeroSap { get; set; }
 
-        //[Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad.")]
-        //public int? TipoSociedadId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo Sociedad.")]
+        public int? TipoSociedadId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Estatus.")]
         public int? EstatusSociedadId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Sociedad.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Sociedad Activa.")]
         public int? TipoSociedadActivaId { get; set; }
 
         [Required(ErrorMessage = "El objeto de la sociedad es requerido.")]
@@ -72,7 +72,8 @@ namespace SociePolar.Domain.Dtos
         public string? NumeroPublicacion { get; set; }
         public DateTime? FechaPublicacion { get; set; }
         public int? NombreDiarioId { get; set; }
-
+        public string? EmpresaFusion { get; set; }
+        public DateTime? FechaFusion { get; set; }
     }
 
     public class SociedadInactivaDto
@@ -94,14 +95,14 @@ namespace SociePolar.Domain.Dtos
         [Required(ErrorMessage = "El Número SAP es requerido.")]
         public string? NumeroSap { get; set; }
 
-        //[Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad.")]
-        //public int? TipoSociedadId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo Sociedad.")]
+        public int? TipoSociedadId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Estatus.")]
         public int? EstatusSociedadId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Sociedad.")]
-        public int? TipoSociedadActivaId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Sociedad Inactiva.")]
+        public int? TipoSociedadInactivaId { get; set; }
 
         [Required(ErrorMessage = "El objeto de la sociedad es requerido.")]
         public string? Objeto { get; set; }
@@ -142,6 +143,7 @@ namespace SociePolar.Domain.Dtos
         public string? NumeroPublicacion { get; set; }
         public DateTime? FechaPublicacion { get; set; }
         public int? NombreDiarioId { get; set; }
-
+        public string? EmpresaFusion { get; set; }
+        public DateTime? FechaFusion { get; set; }
     }
 }

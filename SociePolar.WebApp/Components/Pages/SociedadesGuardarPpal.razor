@@ -83,8 +83,22 @@
                                 <ValidationMessage For="@(() => entidadEditando.NumeroSap)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
                             <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Tipo de Sociedad</label>
+                                <select class="form-select form-select-sm" value="@entidadEditando.TipoSociedadId" @onchange="OnTipoSociedadChanged">
+                                    <option value="0" selected>Seleccione ...</option>
+                                    @if (listTipoSociedad != null)
+                                    {
+                                        @foreach (var tipo in listTipoSociedad)
+                                        {
+                                            <option value="@tipo.Id">@tipo.Nombre</option>
+                                        }
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => entidadEditando.TipoSociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold text-secondary small">Estatus de la Sociedad</label>
-                                <select class="form-select form-select-sm" value="@entidadEditando.EstatusSociedadId" @onchange="OnEstatusSociedadChanged">
+                            <select class="form-select form-select-sm" value="@entidadEditando.EstatusSociedadId" @onchange="OnEstatusSociedadChanged" disabled>
                                     <option value="0">Seleccione ...</option>
                                     @if (listEstatusSociedad != null)
                                     {
@@ -367,6 +381,20 @@
                                        maxlength="20"
                                        inputmode="text" />
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Empresa Fusión</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.EmpresaFusion"
+                                       placeholder="Ingrese el nombre de la empresa..."
+                                       maxlength="200"
+                                       inputmode="text" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Fecha de Fusión</label>
+                                <input type="date" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.FechaFusion" @bind:format="yyyy-MM-dd" />
+                            </div>
+
                             <div class="col-md-12 mb-3">
                                 <hr />
                                 <label class="form-label fw-bold text-primary small">Datos de Publicación</label>
@@ -513,6 +541,7 @@
                 entidadEditando.RegionId ??= 0;
                 entidadEditando.EstatusSociedadId ??= 1;
                 entidadEditando.TipoSociedadActivaId ??= 0;
+                entidadEditando.TipoSociedadId ??= 0;
                 entidadEditando.UnidadNegocioId ??= 0;
                 entidadEditando.EmpresaId ??= 0;
                 entidadEditando.MonedaId ??= 0;
@@ -532,6 +561,7 @@
                         EmpresaId = item.Empresa?.Id,
                         UnidadNegocioId = item.UnidadNegocio?.Id,
                         RegionId = item.UnidadNegocio?.Region?.Id,
+                        TipoSociedadId = item.TipoSociedad?.Id ?? 0,
                         TipoSociedadActivaId = item.TipoSociedadActiva?.Id ?? 0,
                         Objeto = item.Objeto,
                         Domicilio = item.Domicilio,
@@ -570,7 +600,9 @@
                         ValorPatrimonial = item.ValorPatrimonial,
                         VencimientoDocumento1 = item.VencimientoDocumento1,
                         VencimientoDocumento2 = item.VencimientoDocumento2,
-                        VencimientoDocumento3 = item.VencimientoDocumento3
+                        VencimientoDocumento3 = item.VencimientoDocumento3,
+                        EmpresaFusion = item.EmpresaFusion,
+                        FechaFusion = item.FechaFusion
                     };
 
                     if (dto.RegionId > 0)
@@ -834,23 +866,6 @@
         editContext?.NotifyValidationStateChanged();
     }
 
-    private void OnEstatusChanged(ChangeEventArgs e)
-    {
-        // 1. Capturamos el valor seleccionado y lo asignamos manualmente
-        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
-        {
-            entidadEditando.EstatusSociedadId = idSeleccionado;
-        }
-
-        // 2. Lógica de negocio según el estatus
-        if (entidadEditando.EstatusSociedadId != 1)
-        {
-            entidadEditando.TipoSociedadActivaId = 0;
-        }
-
-        StateHasChanged();
-    }
-
     private void OnAplicaCapitalChanged(bool aplica)
     {
         entidadEditando.AplicaCapital = aplica ? 1 : 0;
@@ -863,6 +878,16 @@
         }
 
         // Forzamos el refresco para mostrar u ocultar los campos al instante
+        StateHasChanged();
+    }
+
+    private void OnTipoSociedadChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var idSeleccionado))
+        {
+            entidadEditando.TipoSociedadId = idSeleccionado;
+        }        
+
         StateHasChanged();
     }
 }

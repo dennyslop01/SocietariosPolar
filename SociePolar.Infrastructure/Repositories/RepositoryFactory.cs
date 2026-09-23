@@ -37,6 +37,7 @@ namespace SociePolar.Infrastructure.Repositories
                 { "estadosciviles", typeof(EstadoCivil)  },
                 { "condicionesespeciales", typeof(CondicionEspecial) },
                 { "tipodocumento", typeof(TipoDocumento) },
+                { "tiposociedadinactiva", typeof(TipoSociedadInactiva) },
             };
         }
 

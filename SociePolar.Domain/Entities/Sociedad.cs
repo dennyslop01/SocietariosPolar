@@ -9,9 +9,10 @@ namespace SociePolar.Domain.Entities
         public UnidadNegocio? UnidadNegocio { get; set; }
         public Empresa? Empresa { get; set; }
         public string? NumeroSap { get; set; }
-        //public TipoSociedad? TipoSociedad { get; set; }
+        public TipoSociedad? TipoSociedad { get; set; }
         public EstatusSociedad? EstatusSociedad { get; set; }
         public TipoSociedadActiva? TipoSociedadActiva { get; set; }
+        public TipoSociedadInactiva? TipoSociedadInactiva { get; set; }
         public string? Objeto { get; set; }
         public string? Domicilio { get; set; }
         public string? DireccionFiscal { get; set; }
@@ -53,6 +54,7 @@ namespace SociePolar.Domain.Entities
         public string? NumeroPublicacion { get; set; }
         public DateTime? FechaPublicacion { get; set; }
         public NombreDiario? NombreDiario { get; set; }
-
+        public string? EmpresaFusion { get; set; }
+        public DateTime? FechaFusion { get; set; }
     }
 }

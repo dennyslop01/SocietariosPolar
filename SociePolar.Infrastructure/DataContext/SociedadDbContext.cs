@@ -16,6 +16,7 @@ namespace SociePolar.Infrastructure.DataContext
         public DbSet<TipoReforma> TiposReformas { get; set; }
         public DbSet<TipoSociedad> TiposSociedades { get; set; }
         public DbSet<TipoSociedadActiva> TiposSociedadActivas { get; set; }
+        public DbSet<TipoSociedadInactiva> TiposSociedadInactivas { get; set; }
         public DbSet<UnidadNegocio> UnidadesNegocios { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Sociedad> Sociedades { get; set; }

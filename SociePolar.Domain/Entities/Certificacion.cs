@@ -10,5 +10,7 @@
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }
         public int UpdateUserId { get; set; }
+        public string? EjercicioFiscal { get; set; }
+        public string? Observaciones { get; set; }
     }
 }

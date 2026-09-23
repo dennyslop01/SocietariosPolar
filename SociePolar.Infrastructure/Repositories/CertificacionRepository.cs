@@ -63,7 +63,9 @@ namespace SociePolar.Infrastructure.Repositories
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
-                UpdateUserId = entity.UpdateUserId
+                UpdateUserId = entity.UpdateUserId,
+                EjercicioFiscal = entity.EjercicioFiscal,
+                Observaciones = entity.Observaciones
             };
 
             await context.Set<Certificacion>().AddAsync(newCertificacion);
@@ -93,7 +95,8 @@ namespace SociePolar.Infrastructure.Repositories
             editCertificacion.Fecha = entity.Fecha;
             editCertificacion.UpdateDate = DateTime.UtcNow;
             editCertificacion.UpdateUserId = entity.UpdateUserId;
-
+            editCertificacion.EjercicioFiscal = entity.EjercicioFiscal;
+            editCertificacion.Observaciones = entity.Observaciones;
 
             context.Set<Certificacion>().Update(editCertificacion);
             context.SaveChanges();

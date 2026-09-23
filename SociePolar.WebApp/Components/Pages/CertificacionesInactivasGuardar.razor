@@ -90,6 +90,21 @@
                                        @bind="entidadEditando.Fecha" @bind:format="yyyy-MM-dd" />
                                 <ValidationMessage For="@(() => entidadEditando.Fecha)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                             </div>
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Ejercicio Fiscal</label>
+                                <input type="text" class="form-control form-control-sm small"
+                                       @bind="entidadEditando.EjercicioFiscal" maxlength="200" />
+                            </div>
+                            <div class="col-md-10 mb-3">
+                                <label class="form-label fw-bold text-secondary small">Observaciones</label>
+                                <textarea class="form-control form-control-sm small"
+                                          @bind="entidadEditando.Observaciones"
+                                          @bind:event="oninput"
+                                          rows="4"
+                                          maxlength="2000"
+                                          placeholder="Ingrese las observaciones (máximo 2,000 caracteres)...">
+                                            </textarea>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
                             </div>
@@ -179,7 +194,9 @@
                         CreateDate = item.CreateDate,
                         CreateUserId = item.CreateUserId,
                         UpdateDate = item.UpdateDate,
-                        UpdateUserId = item.UpdateUserId
+                        UpdateUserId = item.UpdateUserId,
+                        EjercicioFiscal = item.EjercicioFiscal,
+                        Observaciones = item.Observaciones
                     };
                 }
             }

@@ -61,12 +61,12 @@
 
 @code {
     [Parameter] public IEnumerable<TItem> Items { get; set; } = Enumerable.Empty<TItem>();
-    [Parameter] public int DefaultPageSize { get; set; } = 10;
+    [Parameter] public int DefaultPageSize { get; set; } = 50;
     [Parameter] public RenderFragment ChildContentHeader { get; set; }
     [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
 
     private int CurrentPage { get; set; } = 1;
-    private readonly int[] PageSizes = new[] { 5, 10, 20, 50 };
+    private readonly int[] PageSizes = new[] { 5, 10, 20, 50, 100 };
     private int _pageSize;
     private int PageSize
     {

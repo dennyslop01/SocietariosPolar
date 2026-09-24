@@ -140,19 +140,24 @@
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acción</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Anulación</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Descripción</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha de creación</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Accion</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
-                            <td class="text-start text-secondary small" style="width: 25%;">@p.Descripcion</td>
-                            <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
+                        <tr class="align-middle border-bottom @(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "")">
+                            <td class="ps-3" style="width: 5%;"><span class="@(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "text-muted") small">@p.Id</span></td>
+                            <td class="text-start small" style="width: 10%;"><span class="@(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "text-muted") small">@p.Accion</span></td>
+                            <td class="text-start small" style="width: 10%;"><span class="@(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "text-muted") small">@UtilClass.FormatearMiles(p.NroAcciones)</span></td>
+                            <td class="text-start small" style="width: 10%;"><span class="@(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "text-muted") small">
+                                @(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "Si" : "No")</span>
+                            </td>
+                            <td class="text-start small" style="width: 25%;"><span class="@(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "text-muted") small">@p.Descripcion</span></td>
+                            <td class="text-center small" style="width: 10%;"><span class="@(p.Descripcion != null && p.Descripcion.Contains("Anulación") ? "text-danger" : "text-muted") small">@p.CreateDate.ToShortDateString()</span></td>
                         </tr>
                     </ChildContentRow>
+
                 </PaginationComponent>
             </div>
         </div>

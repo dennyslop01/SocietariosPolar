@@ -251,6 +251,18 @@ namespace SociePolar.Infrastructure.Repositories
                 UpdateDate = DateTime.UtcNow,
                 CreateUserId = entity.CreateUserId,
                 UpdateUserId = entity.UpdateUserId,
+                DocumentoConstitutivo = entity.DocumentoConstitutivo,
+                InscritoEn = entity.InscritoEn,
+                Publicacion = entity.Publicacion,
+                DatosPublicacion = entity.DatosPublicacion,
+                AnoEmisionJD = entity.AnoEmisionJD,
+                Difunto = entity.Difunto,
+                FechaDefuncion = entity.FechaDefuncion,
+                ActaDefuncion = entity.ActaDefuncion,
+                DatosActaDefuncion = entity.DatosActaDefuncion,
+                Declaracion = entity.Declaracion,
+                DatosDeclaracion = entity.DatosDeclaracion,
+                MiembrosSucesion = entity.MiembrosSucesion
             };
 
             await context.Set<Accionista>().AddAsync(newAccionista);
@@ -469,6 +481,18 @@ namespace SociePolar.Infrastructure.Repositories
             editaccionista.FechaVencimientoOtroSucesion = entity.FechaVencimientoOtroSucesion;
             editaccionista.UpdateDate = DateTime.UtcNow;
             editaccionista.UpdateUserId = entity.UpdateUserId;
+            editaccionista.DocumentoConstitutivo = entity.DocumentoConstitutivo;
+            editaccionista.InscritoEn = entity.InscritoEn;
+            editaccionista.Publicacion = entity.Publicacion;
+            editaccionista.DatosPublicacion = entity.DatosPublicacion;
+            editaccionista.AnoEmisionJD = entity.AnoEmisionJD;
+            editaccionista.Difunto = entity.Difunto;
+            editaccionista.FechaDefuncion = entity.FechaDefuncion;
+            editaccionista.ActaDefuncion = entity.ActaDefuncion;
+            editaccionista.DatosActaDefuncion = entity.DatosActaDefuncion;
+            editaccionista.Declaracion = entity.Declaracion;
+            editaccionista.DatosDeclaracion = entity.DatosDeclaracion;
+            editaccionista.MiembrosSucesion = entity.MiembrosSucesion;
 
             context.Set<Accionista>().Update(editaccionista);
             context.SaveChanges();

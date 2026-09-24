@@ -65,15 +65,22 @@ else
                                 @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1 || entidadEditando.TipoAccionistaId == 2)
                                 {
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Nombre o Razón Social</label>
+                                        @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1)
+                                        {
+                                            <label class="form-label fw-bold text-secondary small">Nombre o Razón Social</label>
+                                        }
+                                        else
+                                        {
+                                            <label class="form-label fw-bold text-secondary small">Nombre Representante Legal</label>
+                                        }
                                         <InputText type="text" class="form-control form-control-sm small"
-                                        @bind-Value="entidadEditando.Nombre"
-                                        placeholder="Ingrese nombre..."
-                                        maxlength="200" />
+                                            @bind-Value="entidadEditando.Nombre"
+                                            placeholder="Ingrese nombre..."
+                                            maxlength="200" />
                                     </div>
                                 }
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                                    <label class="form-label fw-bold text-secondary small">Tipo Documento 1</label>
                                     <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento1Id">
                                         <option value="0">Seleccione ...</option>
                                         @if (listTipoDoc != null)
@@ -86,7 +93,7 @@ else
                                     </InputSelect>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
+                                    <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 1</label>
                                     <InputText type="text" class="form-control form-control-sm small"
                                                @bind-Value="entidadEditando.Documento1"
                                                placeholder="Ingrese número de documento..."
@@ -97,17 +104,17 @@ else
                                 {
                                     
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión 1</label>
                                         <input type="date" class="form-control form-control-sm small"
                                                @bind="entidadEditando.FechaEmision1" @bind:format="yyyy-MM-dd" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 1</label>
                                         <input type="date" class="form-control form-control-sm small"
                                                @bind="entidadEditando.FechaVencimiento1" @bind:format="yyyy-MM-dd" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                                        <label class="form-label fw-bold text-secondary small">Tipo Documento 2</label>
                                         <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento2Id">
                                             <option value="0">Seleccione ...</option>
                                             @if (listTipoDoc != null)
@@ -128,17 +135,17 @@ else
                                                    oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión 2</label>
                                         <input type="date" class="form-control form-control-sm small"
                                                @bind="entidadEditando.FechaEmision2" @bind:format="yyyy-MM-dd" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 2</label>
                                         <input type="date" class="form-control form-control-sm small"
                                                @bind="entidadEditando.FechaVencimiento2" @bind:format="yyyy-MM-dd" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
+                                        <label class="form-label fw-bold text-secondary small">Tipo Documento 3</label>
                                         <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento3Id">
                                             <option value="0">Seleccione ...</option>
                                             @if (listTipoDoc != null)
@@ -159,46 +166,49 @@ else
                                                    oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión 3</label>
                                         <input type="date" class="form-control form-control-sm small"
                                                @bind="entidadEditando.FechaEmision3" @bind:format="yyyy-MM-dd" />
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
+                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 3</label>
                                         <input type="date" class="form-control form-control-sm small"
                                                @bind="entidadEditando.FechaVencimiento3" @bind:format="yyyy-MM-dd" />
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Tipo Documento</label>
-                                        <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento4Id">
-                                            <option value="0">Seleccione ...</option>
-                                            @if (listTipoDoc != null)
-                                            {
-                                                @foreach (var tipo in listTipoDoc)
+                                    @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tipo Documento 4</label>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento4Id">
+                                                <option value="0">Seleccione ...</option>
+                                                @if (listTipoDoc != null)
                                                 {
-                                                    <option value="@tipo.Id">@tipo.Nombre</option>
+                                                    @foreach (var tipo in listTipoDoc)
+                                                    {
+                                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                                    }
                                                 }
-                                            }
-                                        </InputSelect>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 4</label>
-                                        <InputText type="text" class="form-control form-control-sm small"
-                                                   @bind-Value="entidadEditando.Documento4"
-                                                   placeholder="Ingrese número de documento..."
-                                                   maxlength="20"
-                                                   oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Emisión</label>
-                                        <input type="date" class="form-control form-control-sm small"
-                                               @bind="entidadEditando.FechaEmision4" @bind:format="yyyy-MM-dd" />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento</label>
-                                        <input type="date" class="form-control form-control-sm small"
-                                               @bind="entidadEditando.FechaVencimiento4" @bind:format="yyyy-MM-dd" />
-                                    </div>
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 4</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.Documento4"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión 4</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmision4" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 4</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimiento4" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                    }
                                     @* <div class="col-md-6 mb-3">
                                         </div> *@
                                 }
@@ -267,6 +277,66 @@ else
                                             <input type="date" class="form-control form-control-sm small"
                                                    @bind="entidadEditando.FechaVencimientoJunta" @bind:format="yyyy-MM-dd" />
                                         </div>
+                                        <div class="col-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">¿Documento Constitutivo?</label>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio"
+                                                       name="docConstGroup"
+                                                       id="docConstSi"
+                                                       class="form-check-input"
+                                                       value="1"
+                                                       checked="@(entidadEditando.DocumentoConstitutivo == 1)"
+                                                       @onchange="() => ActualizarDocumentoConstitutivo(1)" />
+                                                <label class="form-check-label small text-secondary" for="faltaSi">Sí</label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio"
+                                                       name="docConstGroup"
+                                                       id="docConstNo"
+                                                       class="form-check-input"
+                                                       value="0"
+                                                       checked="@(entidadEditando.DocumentoConstitutivo == 0)"
+                                                       @onchange="() => ActualizarDocumentoConstitutivo(0)" />
+                                                <label class="form-check-label small text-secondary" for="faltaNo">No</label>
+                                            </div>
+                                        </div>
+                                        @if(entidadEditando.DocumentoConstitutivo == 1)
+                                        {
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Inscrito En</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.InscritoEn"
+                                                           placeholder="Ingrese Inscrito En..."
+                                                           maxlength="50"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Publicación</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.Publicacion"
+                                                           placeholder="Ingrese Publicacion..."
+                                                           maxlength="50"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Datos Publicación</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.DatosPublicacion"
+                                                           placeholder="Ingrese Datos Publicacion..."
+                                                           maxlength="50"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Año Emisión JD</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.AnoEmisionJD"
+                                                           placeholder="Ingrese Año Emisión JD..."
+                                                           maxlength="10"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>
+                                                
+                                        }
                                         @* <div class="col-md-10 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Registrada En</label>
                                             <textarea class="form-control form-control-sm small"
@@ -359,6 +429,70 @@ else
                                         </div>
                                         <div class="col-md-6 mb-3">
                                         </div> *@
+                                        <div class="col-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">¿Difunto?</label>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio"
+                                                       name="difuntoGroup"
+                                                       id="difuntoSi"
+                                                       class="form-check-input"
+                                                       value="1"
+                                                       checked="@(entidadEditando.Difunto == 1)"
+                                                       @onchange="() => ActualizarDifunto(1)" />
+                                                <label class="form-check-label small text-secondary" for="faltaSi">Sí</label>
+                                            </div>
+
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio"
+                                                       name="difuntoGroup"
+                                                       id="difuntoNo"
+                                                       class="form-check-input"
+                                                       value="0"
+                                                       checked="@(entidadEditando.Difunto == 0)"
+                                                       @onchange="() => ActualizarDifunto(0)" />
+                                                <label class="form-check-label small text-secondary" for="faltaNo">No</label>
+                                            </div>
+                                        </div>
+                                        @if(entidadEditando.Difunto == 1)
+                                        {
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Fecha Defunción</label>
+                                                 <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaDefuncion" @bind:format="yyyy-MM-dd" />
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Datos Acta Defunción</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.DatosActaDefuncion"
+                                                           placeholder="Ingrese datos acta defunción..."
+                                                           maxlength="50"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Declaración</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.Declaracion"
+                                                           placeholder="Ingrese Datos Declaración..."
+                                                           maxlength="50"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small">Datos Declaración</label>
+                                                <InputText type="text" class="form-control form-control-sm small"
+                                                           @bind-Value="entidadEditando.DatosDeclaracion"
+                                                           placeholder="Ingrese datos declaración..."
+                                                           maxlength="100"
+                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                            </div>                                                
+                                        }
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Miembros Sucesión</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                        @bind-Value="entidadEditando.MiembrosSucesion"
+                                                        placeholder="Ingrese miembros sucesión..."
+                                                        maxlength="100"
+                                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
                                     }
                                 }
                                 <div class="col-md-6 mb-3">
@@ -1085,6 +1219,18 @@ else
                         CreateUserId = entity.CreateUserId,
                         UpdateDate = entity.UpdateDate,
                         UpdateUserId = entity.UpdateUserId,
+                        DocumentoConstitutivo = entity.DocumentoConstitutivo,
+                        InscritoEn = entity.InscritoEn,
+                        Publicacion = entity.Publicacion,
+                        DatosPublicacion = entity.DatosPublicacion,
+                        AnoEmisionJD = entity.AnoEmisionJD,
+                        Difunto = entity.Difunto,
+                        FechaDefuncion = entity.FechaDefuncion,
+                        ActaDefuncion = entity.ActaDefuncion,
+                        DatosActaDefuncion = entity.DatosActaDefuncion,
+                        Declaracion = entity.Declaracion,
+                        DatosDeclaracion = entity.DatosDeclaracion,
+                        MiembrosSucesion = entity.MiembrosSucesion
                     };
 
                     entidadEditando = dto;
@@ -1416,6 +1562,39 @@ else
 
     private void ActualizarFaltaActualizar(int v)
     {
-       entidadEditando.FaltaActualizar = v;
+        entidadEditando.FaltaActualizar = v;
     }
+
+    private void ActualizarDocumentoConstitutivo(int v)
+    {
+        entidadEditando.DocumentoConstitutivo = v;
+
+        if(v == 0)
+        {
+            entidadEditando.InscritoEn = null;
+            entidadEditando.Publicacion = null;
+            entidadEditando.DatosPublicacion = null;
+            entidadEditando.AnoEmisionJD = null;
+        }
+        StateHasChanged();
+
+    }
+
+    private void ActualizarDifunto(int v)
+    {
+        entidadEditando.Difunto = v;
+
+        if(v == 0)
+        {
+            entidadEditando.FechaDefuncion = null;
+            entidadEditando.ActaDefuncion = null;
+            entidadEditando.DatosActaDefuncion = null;
+            entidadEditando.Declaracion = null;
+            entidadEditando.DatosDeclaracion = null;
+            entidadEditando.MiembrosSucesion = null;
+        }
+        StateHasChanged();
+
+    }
+
 }

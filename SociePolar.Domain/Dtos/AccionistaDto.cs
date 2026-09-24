@@ -109,6 +109,20 @@
         public string? FechaEmisionOtroSucesion { get; set; }
         public string? FechaVencimientoOtroSucesion { get; set; }
 
+        public int? DocumentoConstitutivo { get; set; }
+        public string? InscritoEn { get; set; }
+        public string? Publicacion { get; set; }
+        public string? DatosPublicacion { get; set; }
+        public string? AnoEmisionJD { get; set; }
+
+        public int? Difunto { get; set; }
+        public DateTime? FechaDefuncion { get; set; }
+        public string? ActaDefuncion { get; set; }
+        public string? DatosActaDefuncion { get; set; }
+        public string? Declaracion { get; set; }
+        public string? DatosDeclaracion { get; set; }
+        public string? MiembrosSucesion { get; set; }
+
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

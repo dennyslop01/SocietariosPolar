@@ -112,6 +112,22 @@
         public string? DatosDeclaracion { get; set; }
         public string? MiembrosSucesion { get; set; }
 
+        public string? RepresentanteLegal { get; set; }
+        public int? TipoDocumento1IdLegal { get; set; }
+        public int? TipoDocumento2IdLegal { get; set; }
+        public int? TipoDocumento3IdLegal { get; set; }
+        public string? Documento1Legal { get; set; }
+        public string? Documento2Legal { get; set; }
+        public string? Documento3Legal { get; set; }
+        public DateTime? FechaEmision1Legal { get; set; }
+        public DateTime? FechaVencimiento1Legal { get; set; }
+        public DateTime? FechaEmision2Legal { get; set; }
+        public DateTime? FechaVencimiento2Legal { get; set; }
+        public DateTime? FechaEmision3Legal { get; set; }
+        public DateTime? FechaVencimiento3Legal { get; set; }
+
+        public ModalidadPago? ModalidadPago { get; set; }
+
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int CreateUserId { get; set; }

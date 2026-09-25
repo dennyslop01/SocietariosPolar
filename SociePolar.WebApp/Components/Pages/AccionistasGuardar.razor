@@ -65,14 +65,7 @@ else
                                 @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1 || entidadEditando.TipoAccionistaId == 2)
                                 {
                                     <div class="col-md-6 mb-3">
-                                        @if (entidadEditando.TipoAccionistaId == 0 || entidadEditando.TipoAccionistaId == 1)
-                                        {
-                                            <label class="form-label fw-bold text-secondary small">Nombre o Razón Social</label>
-                                        }
-                                        else
-                                        {
-                                            <label class="form-label fw-bold text-secondary small">Nombre Representante Legal</label>
-                                        }
+                                        <label class="form-label fw-bold text-secondary small">Nombre o Razón Social</label>
                                         <InputText type="text" class="form-control form-control-sm small"
                                             @bind-Value="entidadEditando.Nombre"
                                             placeholder="Ingrese nombre..."
@@ -209,8 +202,6 @@ else
                                                    @bind="entidadEditando.FechaVencimiento4" @bind:format="yyyy-MM-dd" />
                                         </div>
                                     }
-                                    @* <div class="col-md-6 mb-3">
-                                        </div> *@
                                 }
                          
                                 @if (entidadEditando.TipoAccionistaId != 0)
@@ -246,6 +237,106 @@ else
 
                                     @if (entidadEditando.TipoAccionistaId == 2)
                                     {
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Nombre Representante Legal</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                @bind-Value="entidadEditando.RepresentanteLegal"
+                                                placeholder="Ingrese nombre representante legal..."
+                                                maxlength="200" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tipo Documento 1 Representante Legal</label>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento1IdLegal">
+                                                <option value="0">Seleccione ...</option>
+                                                @if (listTipoDoc != null)
+                                                {
+                                                    @foreach (var tipo in listTipoDoc)
+                                                    {
+                                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                                    }
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 1 Representante Legal</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.Documento1Legal"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión 1 Representante Legal</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmision1Legal" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 1 Representante Legal</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimiento1Legal" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tipo Documento 2 Representante Legal</label>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento2IdLegal">
+                                                <option value="0">Seleccione ...</option>
+                                                @if (listTipoDoc != null)
+                                                {
+                                                    @foreach (var tipo in listTipoDoc)
+                                                    {
+                                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                                    }
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 2 Representante Legal</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.Documento2Legal"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión 2 Representante Legal</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmision2Legal" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 2 Representante Legal</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimiento2Legal" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Tipo Documento 3 Representante Legal</label>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.TipoDocumento3IdLegal">
+                                                <option value="0">Seleccione ...</option>
+                                                @if (listTipoDoc != null)
+                                                {
+                                                    @foreach (var tipo in listTipoDoc)
+                                                    {
+                                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                                    }
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal 3 Representante Legal</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                       @bind-Value="entidadEditando.Documento3Legal"
+                                                       placeholder="Ingrese número de documento..."
+                                                       maxlength="20"
+                                                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Emisión 3 Representante Legal</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaEmision3Legal" @bind:format="yyyy-MM-dd" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Fecha de Vencimiento 3 Representante Legal</label>
+                                            <input type="date" class="form-control form-control-sm small"
+                                                   @bind="entidadEditando.FechaVencimiento3Legal" @bind:format="yyyy-MM-dd" />
+                                        </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Años de duración de la compañía</label>
                                             <InputText class="form-control form-control-sm small"
@@ -337,16 +428,6 @@ else
                                             </div>
                                                 
                                         }
-                                        @* <div class="col-md-10 mb-3">
-                                            <label class="form-label fw-bold text-secondary small">Registrada En</label>
-                                            <textarea class="form-control form-control-sm small"
-                                                      @bind="entidadEditando.JuntaDirectiva"
-                                                      @bind:event="oninput"
-                                                      rows="4"
-                                                      maxlength="2000"
-                                                      placeholder="Ingrese donde esta registrada la junta (máximo 2,000 caracteres)...">
-                                            </textarea>
-                                        </div> *@
                                     }
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small">Dirigido A</label>
@@ -373,10 +454,6 @@ else
                                                       maxlength="1000"
                                                       placeholder="Ingrese nombre (máximo 1,000 caracteres)...">
                                             </textarea>
-                                            @* <InputText type="text" class="form-control form-control-sm small"
-                                                       @bind-Value="entidadEditando.NombreSusesion"
-                                                       placeholder="Ingrese nombre..."
-                                                       maxlength="2000" /> *@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label fw-bold text-secondary small">Documento de Identidad Fiscal</label>
@@ -574,13 +651,6 @@ else
                                                placeholder="ejemplo@correo.com"
                                                maxlength="100" />
 
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold text-secondary small">Teléfono Móvil</label>
-                                    <InputText type="text" class="form-control form-control-sm small"
-                                               @bind-Value="entidadEditando.TelefonoMovil"
-                                               placeholder="Ingrese número de teléfono móvil..."
-                                               maxlength="35" />
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold text-secondary small">Teléfono 1</label>
@@ -829,6 +899,19 @@ else
                                                placeholder="Ingrese nombre titular..."
                                                maxlength="200" />
                                 </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Modalidad de Pago</label>
+                                    <InputSelect class="form-select form-select-sm" @bind-Value="entidadEditando.ModalidadPagoId">
+                                        <option value="0">Seleccione ...</option>
+                                        @if (listModalidadPago != null)
+                                        {
+                                            @foreach (var modalidad in listModalidadPago)
+                                            {
+                                                <option value="@modalidad.Id">@modalidad.Nombre</option>
+                                            }
+                                        }
+                                    </InputSelect>
+                                </div>
                                 <div class="col-6 mb-3">
                                     <label class="form-label fw-bold text-secondary small d-block">¿Tiene Apoderado?:</label>
                                     <div class="form-check form-check-inline">
@@ -1075,6 +1158,7 @@ else
     private List<IBaseEntity> listTipoCuenta = new();
     private List<IBaseEntity> listCondicionEspecial = new();
     private List<IBaseEntity> listEstatusAccionista = new();
+    private List<IBaseEntity> listModalidadPago = new();
 
     private EditContext editContext = new(new AccionistaDto());
     private ValidationMessageStore? mensajeStore;
@@ -1230,7 +1314,21 @@ else
                         DatosActaDefuncion = entity.DatosActaDefuncion,
                         Declaracion = entity.Declaracion,
                         DatosDeclaracion = entity.DatosDeclaracion,
-                        MiembrosSucesion = entity.MiembrosSucesion
+                        MiembrosSucesion = entity.MiembrosSucesion,
+                        RepresentanteLegal = entity.RepresentanteLegal,
+                        TipoDocumento1IdLegal = entity.TipoDocumento1IdLegal,
+                        Documento1Legal = entity.Documento1Legal,
+                        TipoDocumento2IdLegal = entity.TipoDocumento2IdLegal,
+                        Documento2Legal = entity.Documento2Legal,
+                        TipoDocumento3IdLegal = entity.TipoDocumento3IdLegal,
+                        Documento3Legal = entity.Documento3Legal,
+                        FechaEmision1Legal = entity.FechaEmision1Legal,
+                        FechaVencimiento1Legal = entity.FechaVencimiento1Legal,
+                        FechaEmision2Legal = entity.FechaEmision2Legal,
+                        FechaVencimiento2Legal = entity.FechaVencimiento2Legal,
+                        FechaEmision3Legal = entity.FechaEmision3Legal,
+                        FechaVencimiento3Legal = entity.FechaVencimiento3Legal,
+                        ModalidadPagoId = entity.ModalidadPago?.Id
                     };
 
                     entidadEditando = dto;
@@ -1278,6 +1376,7 @@ else
         listCondicionEspecial = await GetEntityListAsync("condicionesespeciales");
         listEstatusAccionista = await GetEntityListAsync("estatusaccionistas");
         listTipoDoc = await GetEntityListAsync("tipodocumento");
+        listModalidadPago = await GetEntityListAsync("modalidadpago");
 
         var listSociedades = await reposociedad.GetAllAsync();
         listSociedad = listSociedades.OrderBy(x => x.Empresa?.Nombre).ToList();

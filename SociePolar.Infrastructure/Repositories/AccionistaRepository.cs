@@ -24,6 +24,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Banco)
                 .Include(b => b.TipoCuenta)
                 .Include(b => b.CondicionEspecial)
+                .Include(b => b.ModalidadPago)
                 .ToListAsync();
         }
 
@@ -41,6 +42,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Banco)
                 .Include(b => b.TipoCuenta)
                 .Include(b => b.CondicionEspecial)
+                .Include(b => b.ModalidadPago)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
         }
@@ -156,6 +158,16 @@ namespace SociePolar.Infrastructure.Repositories
                 }
             }
 
+            ModalidadPago? modalidad = null;
+            if (entity.ModalidadPagoId != null)
+            {
+                if (entity.ModalidadPagoId != 0)
+                {
+                    modalidad = await context.Set<ModalidadPago>().FindAsync(entity.ModalidadPagoId.Value);
+                    if (modalidad == null) throw new Exception($"Modalidad de Pago con ID {entity.ModalidadPagoId.Value} no existe.");
+                }
+            }
+
             Accionista? newAccionista = new()
             {
                 TipoAccionista = tipoAccionista,
@@ -262,7 +274,21 @@ namespace SociePolar.Infrastructure.Repositories
                 DatosActaDefuncion = entity.DatosActaDefuncion,
                 Declaracion = entity.Declaracion,
                 DatosDeclaracion = entity.DatosDeclaracion,
-                MiembrosSucesion = entity.MiembrosSucesion
+                MiembrosSucesion = entity.MiembrosSucesion,
+                RepresentanteLegal = entity.RepresentanteLegal,
+                TipoDocumento1IdLegal = entity.TipoDocumento1IdLegal,
+                TipoDocumento2IdLegal = entity.TipoDocumento2IdLegal,
+                TipoDocumento3IdLegal = entity.TipoDocumento3IdLegal,
+                Documento1Legal = entity.Documento1Legal,
+                Documento2Legal = entity.Documento2Legal,
+                Documento3Legal = entity.Documento3Legal,
+                FechaEmision1Legal = entity.FechaEmision1Legal,
+                FechaEmision2Legal = entity.FechaEmision2Legal,
+                FechaEmision3Legal = entity.FechaEmision3Legal,
+                FechaVencimiento1Legal = entity.FechaVencimiento1Legal,
+                FechaVencimiento2Legal = entity.FechaVencimiento2Legal,
+                FechaVencimiento3Legal = entity.FechaVencimiento3Legal,
+                ModalidadPago = modalidad
             };
 
             await context.Set<Accionista>().AddAsync(newAccionista);
@@ -276,6 +302,7 @@ namespace SociePolar.Infrastructure.Repositories
             if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Unchanged;
             if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Unchanged;
             if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Unchanged;
+            if(modalidad != null) context.Entry(newAccionista.ModalidadPago!).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Detached;
@@ -288,6 +315,7 @@ namespace SociePolar.Infrastructure.Repositories
             if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Detached;
             if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Detached;
             if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Detached;
+            if(modalidad != null) context.Entry(newAccionista.ModalidadPago!).State = EntityState.Detached;
         }
 
         public async void Update(AccionistaDto entity)
@@ -387,6 +415,16 @@ namespace SociePolar.Infrastructure.Repositories
                 {
                     tipodoc4 = await context.Set<TipoDocumento>().FindAsync(entity.TipoDocumento4Id.Value);
                     if (tipodoc4 == null) throw new Exception($"Tipo Documento con ID {entity.TipoDocumento4Id.Value} no existe.");
+                }
+            }
+
+            ModalidadPago? modalidad = null;
+            if (entity.ModalidadPagoId != null)
+            {
+                if (entity.ModalidadPagoId != 0)
+                {
+                    modalidad = await context.Set<ModalidadPago>().FindAsync(entity.ModalidadPagoId.Value);
+                    if (modalidad == null) throw new Exception($"Modalidad de Pago con ID {entity.ModalidadPagoId.Value} no existe.");
                 }
             }
 
@@ -493,6 +531,20 @@ namespace SociePolar.Infrastructure.Repositories
             editaccionista.Declaracion = entity.Declaracion;
             editaccionista.DatosDeclaracion = entity.DatosDeclaracion;
             editaccionista.MiembrosSucesion = entity.MiembrosSucesion;
+            editaccionista.RepresentanteLegal = entity.RepresentanteLegal;
+            editaccionista.TipoDocumento1IdLegal = entity.TipoDocumento1IdLegal;
+            editaccionista.TipoDocumento2IdLegal = entity.TipoDocumento2IdLegal;
+            editaccionista.TipoDocumento3IdLegal = entity.TipoDocumento3IdLegal;
+            editaccionista.Documento1Legal = entity.Documento1Legal;
+            editaccionista.Documento2Legal = entity.Documento2Legal;
+            editaccionista.Documento3Legal = entity.Documento3Legal;
+            editaccionista.FechaEmision1Legal = entity.FechaEmision1Legal;
+            editaccionista.FechaEmision2Legal = entity.FechaEmision2Legal;
+            editaccionista.FechaEmision3Legal = entity.FechaEmision3Legal;
+            editaccionista.FechaVencimiento1Legal = entity.FechaVencimiento1Legal;
+            editaccionista.FechaVencimiento2Legal = entity.FechaVencimiento2Legal;
+            editaccionista.FechaVencimiento3Legal = entity.FechaVencimiento3Legal;
+            editaccionista.ModalidadPago = modalidad;
 
             context.Set<Accionista>().Update(editaccionista);
             context.SaveChanges();

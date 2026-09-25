@@ -210,9 +210,7 @@
         try
         {
             List<AccionistaSociedadVerDto> listNewAccionista = new();
-
             var listAaccionista = await repository.GetAllEstatusIdAsync(1);
-
             var listTitulos = await repotitulo.GetAllAsync();
 
             foreach (var item in listAaccionista)
@@ -262,7 +260,6 @@
                 listNewAccionista.Add(accionista);
             }
 
-
             Listgral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
             ListgralBuscar = Listgral;
         }
@@ -284,7 +281,7 @@
         mostrarModal = true;
     }
 
-    private void FiltrarBusqueda(ChangeEventArgs e)
+    private async Task FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
         if (string.IsNullOrWhiteSpace(searchTerm))
@@ -303,6 +300,63 @@
                 .Where(b => b.AccionistaNombre != null && b.AccionistaNombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
             }
+
+            if(!Listgral.Any())
+            {
+                List<AccionistaSociedadVerDto> listNewAccionista = new();
+                var listAaccionista = await repository.GetByNameAsync(1, searchTerm);
+                var listTitulos = await repotitulo.GetAllAsync();
+
+                foreach (var item in listAaccionista)
+                {
+                    Int64 nroacciones = 0;
+                    decimal porcparticipa = 0;
+                    Int64 accionesaux = 0;
+                    if (item.NroAcciones != null)
+                    {
+                        accionesaux = (Int64)item.NroAcciones;
+                    }
+
+                    var titulos = listTitulos.Where(x => x.AccionistaSociedad.Id == item.Id);
+                    if (titulos != null && titulos.Count() > 0)
+                    {
+                        nroacciones = (Int64) titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
+
+                        if(nroacciones > 0)
+                        {
+                            if (nroacciones != accionesaux)
+                            {
+                                await repository.UpdateNroAccionesAsync(item.Accionista.Id, item.Sociedad.Id, nroacciones, item.UpdateUserId, 0);
+                            }
+                        }
+                    }                
+
+                    if (item.Sociedad != null)
+                    {
+                        if (item.Sociedad.NumeroAcciones != null)
+                        {
+                            porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
+                        }
+                    }
+
+                    AccionistaSociedadVerDto accionista = new()
+                    {
+                        Id = item.Id,
+                        SociedadNombre = item.Sociedad?.Empresa?.Nombre,
+                        TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
+                        AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion,
+                        NroAcciones = (nroacciones != 0) ? nroacciones : accionesaux,
+                        Participacion = porcparticipa,
+                        CreateDate = item.CreateDate,
+                        UpdateDate = item.UpdateDate
+                    };
+
+                    listNewAccionista.Add(accionista);
+                }
+                Listgral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
+                ListgralBuscar = Listgral;
+            }
+
         }
     }
 

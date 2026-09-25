@@ -237,7 +237,7 @@
         mostrarModal = true;
     }
 
-    private void FiltrarBusqueda(ChangeEventArgs e)
+    private async Task FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
         if (string.IsNullOrWhiteSpace(searchTerm))
@@ -249,6 +249,32 @@
             Listgral = ListgralBuscar
                 .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            if(!Listgral.Any())
+            {
+                var listAaccionista = await repository.GetByNameAsync(searchTerm);
+                List<AccionistaMostrarDto> accionistas = new();
+
+                foreach (var item in listAaccionista)
+                {
+                    accionistas.Add(new AccionistaMostrarDto
+                    {
+                        Id = item.Id,
+                        TipoAccionistaV = item.TipoAccionista?.Nombre,
+                        Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
+                        //TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
+                        //Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
+                        TipoDocumentoV = item.TipoDocumento1?.Nombre,
+                        Documento = item.Documento1,
+                        Telefono = item.Telefono1,
+                        CreateDate = item.CreateDate,
+                        UpdateDate = item.UpdateDate
+                    });
+                }
+
+                Listgral = accionistas.OrderBy(x => x.Nombre).ToList();
+                ListgralBuscar = Listgral;
+            }
         }
     }
 

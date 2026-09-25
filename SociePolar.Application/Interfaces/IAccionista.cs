@@ -6,6 +6,7 @@ namespace SociePolar.Application.Interfaces
     public interface IAccionista
     {
         Task<List<Accionista>> GetAllAsync();
+        Task<List<Accionista>> GetByNameAsync(string name);
         Task<Accionista?> GetByIdAsync(int id);
         Task<Accionista?> GetByRifAsync(string tipoDoc, string rif);
 

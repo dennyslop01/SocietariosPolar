@@ -25,6 +25,27 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.TipoCuenta)
                 .Include(b => b.CondicionEspecial)
                 .Include(b => b.ModalidadPago)
+                .Take(1000)
+                .ToListAsync();
+        }
+
+        public async Task<List<Accionista>> GetByNameAsync(string name)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<Accionista>()
+                .Include(b => b.TipoAccionista)
+                .Include(b => b.TipoDocumento1)
+                .Include(b => b.TipoDocumento2)
+                .Include(b => b.TipoDocumento3)
+                .Include(b => b.TipoDocumento4)
+                .Include(b => b.DirigidoA)
+                .Include(b => b.EstadoCivil)
+                .Include(b => b.Banco)
+                .Include(b => b.TipoCuenta)
+                .Include(b => b.CondicionEspecial)
+                .Include(b => b.ModalidadPago)
+                .Where(x => x.Nombre.Contains(name) || x.NombreSusesion.Contains(name))
+                .Take(1000)
                 .ToListAsync();
         }
 
@@ -288,7 +309,8 @@ namespace SociePolar.Infrastructure.Repositories
                 FechaVencimiento1Legal = entity.FechaVencimiento1Legal,
                 FechaVencimiento2Legal = entity.FechaVencimiento2Legal,
                 FechaVencimiento3Legal = entity.FechaVencimiento3Legal,
-                ModalidadPago = modalidad
+                ModalidadPago = modalidad,
+                DatosDocumentoConstitutivo = entity.DatosDocumentoConstitutivo,
             };
 
             await context.Set<Accionista>().AddAsync(newAccionista);
@@ -545,6 +567,7 @@ namespace SociePolar.Infrastructure.Repositories
             editaccionista.FechaVencimiento2Legal = entity.FechaVencimiento2Legal;
             editaccionista.FechaVencimiento3Legal = entity.FechaVencimiento3Legal;
             editaccionista.ModalidadPago = modalidad;
+            editaccionista.DatosDocumentoConstitutivo = entity.DatosDocumentoConstitutivo;
 
             context.Set<Accionista>().Update(editaccionista);
             context.SaveChanges();

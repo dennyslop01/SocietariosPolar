@@ -22,6 +22,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Accionista)
                 .ThenInclude(a => a!.TipoAccionista)
                 .Include(b => b.EstatusAccionista)
+                .Take(1000)
                 .ToListAsync();
         }
 
@@ -37,6 +38,23 @@ namespace SociePolar.Infrastructure.Repositories
                 .ThenInclude(a => a!.TipoAccionista)
                 .Include(b => b.EstatusAccionista)
                 .Where(x => x.EstatusAccionista!.Id == estatusId)
+                .Take(1000)
+                .ToListAsync();
+        }
+
+        public async Task<List<AccionistaSociedad>> GetByNameAsync(int estatusId, string name)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.EstatusAccionista!.Id == estatusId && (x.Accionista.Nombre.Contains(name) || x.Accionista.NombreSusesion.Contains(name) || x.Sociedad.Empresa.Nombre.Contains(name)))
+                .Take(1000)
                 .ToListAsync();
         }
 

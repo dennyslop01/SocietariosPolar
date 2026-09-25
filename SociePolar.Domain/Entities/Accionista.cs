@@ -99,6 +99,7 @@
 
 
         public int? DocumentoConstitutivo { get; set; }
+        public string DatosDocumentoConstitutivo { get; set; }
         public string? InscritoEn { get; set; }
         public string? Publicacion { get; set; }
         public string? DatosPublicacion { get; set; }

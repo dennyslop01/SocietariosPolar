@@ -392,42 +392,46 @@ else
                                                 <label class="form-check-label small text-secondary" for="faltaNo">No</label>
                                             </div>
                                         </div>
-                                        @if(entidadEditando.DocumentoConstitutivo == 1)
-                                        {
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold text-secondary small">Inscrito En</label>
-                                                <InputText type="text" class="form-control form-control-sm small"
-                                                           @bind-Value="entidadEditando.InscritoEn"
-                                                           placeholder="Ingrese Inscrito En..."
-                                                           maxlength="50"
-                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold text-secondary small">Publicación</label>
-                                                <InputText type="text" class="form-control form-control-sm small"
-                                                           @bind-Value="entidadEditando.Publicacion"
-                                                           placeholder="Ingrese Publicacion..."
-                                                           maxlength="50"
-                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold text-secondary small">Datos Publicación</label>
-                                                <InputText type="text" class="form-control form-control-sm small"
-                                                           @bind-Value="entidadEditando.DatosPublicacion"
-                                                           placeholder="Ingrese Datos Publicacion..."
-                                                           maxlength="50"
-                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label fw-bold text-secondary small">Año Emisión JD</label>
-                                                <InputText type="text" class="form-control form-control-sm small"
-                                                           @bind-Value="entidadEditando.AnoEmisionJD"
-                                                           placeholder="Ingrese Año Emisión JD..."
-                                                           maxlength="10"
-                                                           oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
-                                            </div>
-                                                
-                                        }
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Datos Documento Constitutivo</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                        @bind-Value="entidadEditando.DatosDocumentoConstitutivo"
+                                                        placeholder="Ingrese Datos Documento Constitutivo..."
+                                                        maxlength="600"
+                                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Inscrito En</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                        @bind-Value="entidadEditando.InscritoEn"
+                                                        placeholder="Ingrese Inscrito En..."
+                                                        maxlength="600"
+                                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Publicación</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                        @bind-Value="entidadEditando.Publicacion"
+                                                        placeholder="Ingrese Publicacion..."
+                                                        maxlength="50"
+                                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Datos Publicación</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                        @bind-Value="entidadEditando.DatosPublicacion"
+                                                        placeholder="Ingrese Datos Publicacion..."
+                                                        maxlength="50"
+                                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small">Año Emisión JD</label>
+                                            <InputText type="text" class="form-control form-control-sm small"
+                                                        @bind-Value="entidadEditando.AnoEmisionJD"
+                                                        placeholder="Ingrese Año Emisión JD..."
+                                                        maxlength="10"
+                                                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
+                                        </div>
                                     }
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold text-secondary small">Dirigido A</label>
@@ -542,7 +546,7 @@ else
                                                 <InputText type="text" class="form-control form-control-sm small"
                                                            @bind-Value="entidadEditando.DatosActaDefuncion"
                                                            placeholder="Ingrese datos acta defunción..."
-                                                           maxlength="50"
+                                                           maxlength="600"
                                                            oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
                                             </div>
                                             <div class="col-md-6 mb-3">
@@ -567,7 +571,7 @@ else
                                             <InputText type="text" class="form-control form-control-sm small"
                                                         @bind-Value="entidadEditando.MiembrosSucesion"
                                                         placeholder="Ingrese miembros sucesión..."
-                                                        maxlength="100"
+                                                        maxlength="600"
                                                         oninput="this.value = this.value.replace(/[^a-zA-Z0-9.-]/g, '');" />
                                         </div>
                                     }
@@ -1328,7 +1332,8 @@ else
                         FechaVencimiento2Legal = entity.FechaVencimiento2Legal,
                         FechaEmision3Legal = entity.FechaEmision3Legal,
                         FechaVencimiento3Legal = entity.FechaVencimiento3Legal,
-                        ModalidadPagoId = entity.ModalidadPago?.Id
+                        ModalidadPagoId = entity.ModalidadPago?.Id,
+                        DatosDocumentoConstitutivo = entity.DatosDocumentoConstitutivo,
                     };
 
                     entidadEditando = dto;
@@ -1667,14 +1672,6 @@ else
     private void ActualizarDocumentoConstitutivo(int v)
     {
         entidadEditando.DocumentoConstitutivo = v;
-
-        if(v == 0)
-        {
-            entidadEditando.InscritoEn = null;
-            entidadEditando.Publicacion = null;
-            entidadEditando.DatosPublicacion = null;
-            entidadEditando.AnoEmisionJD = null;
-        }
         StateHasChanged();
 
     }

@@ -6,14 +6,15 @@ namespace SociePolar.Domain.Dtos
     {
         public int Id { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad válida.")] 
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Sociedad válida.")]
         public int? SociedadId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Accionista válida.")] 
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Accionista válida.")]
         public int? AccionistaId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Estatus válida.")] 
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Estatus válida.")]
         public int? EstatusAccionistaId { get; set; }
+        public int? CustodioId { get; set; }
         public Int64? NroAcciones { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
@@ -24,6 +25,8 @@ namespace SociePolar.Domain.Dtos
     public class AccionistaSociedadVerDto
     {
         public int Id { get; set; }
+        public int SociedadId { get; set; }
+        public int AccionistaId { get; set; }
         public string? SociedadNombre { get; set; }
         public string? AccionistaNombre { get; set; }
         public string? TipoAccionistaNombre { get; set; }
@@ -31,5 +34,10 @@ namespace SociePolar.Domain.Dtos
         public decimal? Participacion { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime UpdateDate { get; set; }
+
+        // Propiedades de UI para el Custodio
+        public bool EsCustodio { get; set; }
+        public bool MostrarCustodiados { get; set; }
+        public List<AccionistaSociedadVerDto> SubCustodiados { get; set; } = new();
     }
 }

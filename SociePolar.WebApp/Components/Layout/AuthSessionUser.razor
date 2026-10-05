@@ -2,24 +2,46 @@
 @using SociePolar.WebApp.Components.Pages
 @rendermode InteractiveServer
 
-<div class="container-fluid mt-4">
-    @if (mostrarAlerta)
-    {
-        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
-            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
-                <i class="bi @iconoAlerta me-2 fs-5"></i>
-                <div class="fw-bold">
-                    @mensajeAlerta
+<AuthorizeView>
+    <Authorized>
+        <div class="container-fluid mt-4">
+            @if (mostrarAlerta)
+            {
+                <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+                    <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                        <i class="bi @iconoAlerta me-2 fs-5"></i>
+                        <div class="fw-bold">
+                            @mensajeAlerta
+                        </div>
+                    </div>
                 </div>
+            }
+        </div>
+
+        @if (cargando)
+        {
+            <ModalCargando />
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="row">
+            <div class="col-11">
+                <h6>
+                    ¡Bienvenido a la plataforma de Societarios Polar!
+                </h6>
+            </div>
+            <div class="col-11">
+                <h6>Ingresa con tu usuario y contraseña de Autoservicios de Empresas Polar: <a class="btn-link" href="/Saml2/Login">Aquí</a></h6>
+            </div>
+            <div class="col-11">
+                <h7>Si no visualizas tus datos, por favor contacta al equipo de Legal</h7>
+            </div>
+            <div class="col-11">
+                <br />
             </div>
         </div>
-    }
-</div>
-
-@if (cargando)
-{
-    <ModalCargando />
-}
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private string userEmail = "cesaralejandro.garcia@empresaspolar.com";

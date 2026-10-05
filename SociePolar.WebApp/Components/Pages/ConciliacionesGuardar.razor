@@ -67,6 +67,59 @@
                             </div>
                             <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
+                        <div class="col-md-10 mb-3">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="flexSwitchCustodia" @bind="isCustodia">
+                                <label class="form-check-label fw-bold small text-secondary" for="flexSwitchCustodia">¿Es un archivo de Custodia?</label>
+                            </div>
+
+                            @if (isCustodia)
+                            {
+                                <label class="form-label fw-bold text-secondary small">Seleccione Custodio (Macro-accionista)</label>
+                                <div class="dropdown">
+                                    <button class="form-select text-start d-flex justify-content-between align-items-center"
+                                            type="button"
+                                            style="font-size: 0.8rem;"
+                                            @onclick="ToggleDropdownCustodio">
+                                        <span>@(ObtenerNombreCustodioSeleccionado())</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 @(isDropdownCustodioOpen ? "show" : "")"
+                                        style="max-height: 300px; overflow-y: auto; z-index: 1050;">
+                                        <li class="mb-2">
+                                            <input type="text"
+                                                   class="form-control"
+                                                   placeholder="Buscar custodio..."
+                                                   style="font-size: 0.8rem;"
+                                                   @bind="textoBusquedaCustodio"
+                                                   @bind:event="oninput" />
+                                        </li>
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item @(custodioId == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarCustodio(0)">
+                                                Seleccione Custodio ...
+                                            </button>
+                                        </li>
+                                        @if (listaCustodios != null)
+                                        {
+                                            @foreach (var custodio in listaCustodios.Where(c => string.IsNullOrEmpty(textoBusquedaCustodio) || (c.Accionista?.Nombre != null && c.Accionista.Nombre.Contains(textoBusquedaCustodio, StringComparison.OrdinalIgnoreCase))))
+                                            {
+                                                <li>
+                                                    <button type="button"
+                                                            class="dropdown-item @(custodioId == custodio.Id ? "active bg-primary text-white" : "")"
+                                                            style="font-size: 0.8rem;"
+                                                            @onclick="() => SeleccionarCustodio(custodio.Id)">
+                                                        @(custodio.Accionista?.Nombre) - (Acciones: @custodio.NroAcciones)
+                                                    </button>
+                                                </li>
+                                            }
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Tipo Archivo</label>
                             <input type="text" class="form-control form-control-sm small"
@@ -179,6 +232,12 @@
     private bool isDropdownOpen = false;
     private string textoBusqueda = "";
     private ElementReference searchInputRef;
+
+    private bool isCustodia = false;
+    private int custodioId = 0;
+    private List<AccionistaSociedad> listaCustodios = new();
+    private bool isDropdownCustodioOpen = false;
+    private string textoBusquedaCustodio = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -429,6 +488,7 @@
                                     AccionistaId = accionista.Id,
                                     SociedadId = entidadEditando.SociedadId,
                                     EstatusAccionistaId = 1,
+                                    CustodioId = isCustodia && custodioId > 0 ? custodioId : null,
                                     NroAcciones = item.TotalAcciones,
                                     CreateDate = DateTime.Now,
                                     CreateUserId = userid,
@@ -642,11 +702,41 @@
     }
 
     // Asigna el ID real a tu modelo y cierra el menú
-    private void SeleccionarOpcion(int id)
+    private async Task SeleccionarOpcion(int id)
     {
         entidadEditando.SociedadId = id;
         isDropdownOpen = false;
         textoBusqueda = ""; // Reinicia el filtro
+
+        if (id > 0)
+        {
+            listaCustodios = await repoaccionistasocie.GetBySociedadIdAsync(id);
+        }
+        else
+        {
+            listaCustodios.Clear();
+        }
+        custodioId = 0;
+    }
+
+    private void ToggleDropdownCustodio()
+    {
+        isDropdownCustodioOpen = !isDropdownCustodioOpen;
+        if (!isDropdownCustodioOpen) textoBusquedaCustodio = "";
+    }
+
+    private string ObtenerNombreCustodioSeleccionado()
+    {
+        if (custodioId == 0 || listaCustodios == null) return "Seleccione Custodio ...";
+        var seleccionado = listaCustodios.FirstOrDefault(s => s.Id == custodioId);
+        return seleccionado?.Accionista?.Nombre ?? "Seleccione Custodio ...";
+    }
+
+    private void SeleccionarCustodio(int id)
+    {
+        custodioId = id;
+        isDropdownCustodioOpen = false;
+        textoBusquedaCustodio = "";
     }
 
     static string GetString(object val)

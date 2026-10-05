@@ -26,8 +26,16 @@
         </div>
 
         <div class="card-body">
-            <!-- Buscador Global por Nombre -->
+            <!-- Controles Superiores: Expandir/Colapsar y Buscador -->
             <div class="row mb-3">
+                <div class="col-md-6 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary btn-sm me-2 shadow-sm" @onclick="ExpandirTodo" title="Expandir todo en esta página">
+                        <i class="bi bi-arrows-angle-expand me-1"></i> Expandir Todo
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick="ColapsarTodo" title="Colapsar todo en esta página">
+                        <i class="bi bi-arrows-angle-contract me-1"></i> Colapsar Todo
+                    </button>
+                </div>
                 <div class="col-md-4 ms-auto">
                     <div class="input-group input-group-sm shadow-sm">
                         <span class="input-group-text bg-white border-end-0 text-secondary">
@@ -41,7 +49,13 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="AccionistaSociedadVerDto" Items="Listgral" DefaultPageSize="50">
+                <PaginationComponentAccionista TItem="AccionistaSociedadVerDto" 
+                                     Items="Listgral" 
+                                     DefaultPageSize="50"
+                                     IsServerSide="true"
+                                     ServerTotalItems="@TotalItems"
+                                     OnPageChanged="HandlePageChanged"
+                                     OnPageSizeChanged="HandlePageSizeChanged">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <!-- Columna 1: Sociedad -->
@@ -64,14 +78,50 @@
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
+                        @{
+                            var index = Listgral.IndexOf(p);
+
+                            // 1. Ruptura para Sociedad
+                            bool esNuevaSociedad = index == 0 ||
+                                                   Listgral[index - 1].SociedadNombre != p.SociedadNombre;
+                        }
+
+                        @if (esNuevaSociedad)
+                        {
+                            long granTotalAcciones = totalesGlobalesPorSociedad.ContainsKey(p.SociedadId) ? totalesGlobalesPorSociedad[p.SociedadId] : 0;
+                            int granTotalAccionistas = totalAccionistasPorSociedad.ContainsKey(p.SociedadId) ? totalAccionistasPorSociedad[p.SociedadId] : 0;
+                            var totalParticipacionVisible = Listgral.Where(x => x.SociedadNombre == p.SociedadNombre).Sum(x => x.Participacion ?? 0);
+                            bool colapsado = sociedadesColapsadas.Contains(p.SociedadNombre ?? "");
+
+                            <tr class="align-middle border-bottom" @onclick='() => ToggleSociedad(p.SociedadNombre ?? "")' style="cursor: pointer;" title="Clic para expandir/colapsar">
+                                <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace text-secondary" style="text-align: left !important; font-size: 0.9rem; letter-spacing: 0.5px;">
+                                    <i class="bi @(colapsado ? "bi-chevron-right" : "bi-chevron-down") me-2 text-primary fw-bold"></i>
+                                    🏢 @p.SociedadNombre
+                                    <span class="float-end badge bg-white text-dark border shadow-sm me-3 mt-1" style="font-size: 0.75rem;">
+                                        Total: @UtilClass.FormatearMiles(granTotalAcciones) acciones y @UtilClass.FormatearMiles(granTotalAccionistas) accionistas
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        
+                        @if (!sociedadesColapsadas.Contains(p.SociedadNombre ?? ""))
+                        {
                         <tr class="align-middle border-bottom">
                             <td class="text-start text-dark fw-semibold small ps-3" style="width: 15%;">
-                                @(p.SociedadNombre ?? "-")
+                                -@* @(p.SociedadNombre ?? "-") *@
                             </td>
                             <td class="text-start text-secondary small" style="width: 15%;">
                                 <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
                             </td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.AccionistaNombre</td>
+                            <td class="text-start text-secondary small" style="width: 15%;">
+                                @if (p.EsCustodio)
+                                {
+                                    <button @onclick="() => ToggleCustodiados(p)" class="btn btn-sm btn-link p-0 text-decoration-none me-2" title="Ver sub-accionistas custodiados">
+                                        <i class="bi @(p.MostrarCustodiados ? "bi-dash-square-fill" : "bi-plus-square-fill") text-primary"></i>
+                                    </button>
+                                }
+                                @p.AccionistaNombre
+                            </td>
                             <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
                             <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
@@ -92,8 +142,37 @@
                                 }
                             </td>
                         </tr>
+                        @if (p.MostrarCustodiados && p.SubCustodiados.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="p-0 border-0">
+                                    <div class="bg-light p-2 shadow-inner">
+                                        <table class="table table-sm table-bordered m-0 bg-white" style="font-size: 0.85rem;">
+                                            <thead class="table-secondary text-start">
+                                                <tr>
+                                                    <th class="ps-3" style="width: 40%;">Sub-Accionista</th>
+                                                    <th style="width: 30%;">Tipo</th>
+                                                    <th style="width: 30%;">Acciones Custodiadas</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="text-start">
+                                                @foreach (var sub in p.SubCustodiados)
+                                                {
+                                                    <tr>
+                                                        <td class="ps-3"><i class="bi bi-person-badge me-2 text-muted"></i>@sub.AccionistaNombre</td>
+                                                        <td>@sub.TipoAccionistaNombre</td>
+                                                        <td>@UtilClass.FormatearMiles(sub.NroAcciones ?? 0)</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        }
                     </ChildContentRow>
-                </PaginationComponent>
+                </PaginationComponentAccionista>
             </div>
         </div>
     </div>
@@ -183,6 +262,15 @@
     private bool mostrarModalInactivar = false;
     private int idRol = 0;
 
+    // Variables de paginación server-side
+    private int TotalItems = 0;
+    private int currentPage = 1;
+    private int currentSize = 50;
+    private HashSet<string> sociedadesColapsadas = new();
+    private Dictionary<int, long> totalesGlobalesPorSociedad = new();
+    private Dictionary<int, int> totalAccionistasPorSociedad = new();
+    private HashSet<int> accionistasQueSonCustodios = new();
+
     [Inject] private IAccionistaSociedad repository { get; set; } = null!;
     [Inject] private ITitulo repotitulo { get; set; } = null!;
 
@@ -203,6 +291,19 @@
         await LoadGenericDataAsync();
     }
 
+    private async Task HandlePageChanged(int newPage)
+    {
+        currentPage = newPage;
+        await LoadGenericDataAsync();
+    }
+
+    private async Task HandlePageSizeChanged(int newSize)
+    {
+        currentSize = newSize;
+        currentPage = 1;
+        await LoadGenericDataAsync();
+    }
+
     private async Task LoadGenericDataAsync()
     {
         cargando = true;
@@ -210,8 +311,11 @@
         try
         {
             List<AccionistaSociedadVerDto> listNewAccionista = new();
-            var listAaccionista = await repository.GetAllEstatusIdAsync(1);
-            var listTitulos = await repotitulo.GetAllAsync();
+            var paginatedResult = await repository.GetPaginatedAsync(1, currentPage, currentSize, searchTerm);
+            TotalItems = paginatedResult.TotalCount;
+            var listAaccionista = paginatedResult.Items;
+            
+            var listTitulos = await repotitulo.GetAllAsync(); // Idealmente esto también debería optimizarse, pero por ahora se mantiene
 
             foreach (var item in listAaccionista)
             {
@@ -248,6 +352,8 @@
                 AccionistaSociedadVerDto accionista = new()
                 {
                     Id = item.Id,
+                    SociedadId = item.Sociedad.Id, // <- Modificamos esto en el DTO en un paso anterior o usaremos item.Sociedad.Id? No, el Dto no tiene SociedadId, usaremos otra forma.
+                    AccionistaId = item.Accionista.Id,
                     SociedadNombre = item.Sociedad?.Empresa?.Nombre,
                     TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
                     AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion,
@@ -260,8 +366,34 @@
                 listNewAccionista.Add(accionista);
             }
 
-            Listgral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
-            ListgralBuscar = Listgral;
+            // Precargar el Gran Total desde BD para cada sociedad en pantalla
+            var sociedadesUnicasEnPantalla = listAaccionista.Select(x => x.Sociedad).Where(s => s != null).DistinctBy(s => s.Id).ToList();
+            accionistasQueSonCustodios.Clear();
+            foreach(var s in sociedadesUnicasEnPantalla)
+            {
+                if(!totalesGlobalesPorSociedad.ContainsKey(s.Id))
+                {
+                    long totalReal = await repository.GetTotalAccionesBySociedadIdAsync(s.Id);
+                    totalesGlobalesPorSociedad[s.Id] = totalReal;
+                    int totalAccionistas = await repository.GetTotalAccionistasBySociedadIdAsync(s.Id);
+                    totalAccionistasPorSociedad[s.Id] = totalAccionistas;
+                }
+
+                var custodiosId = await repository.GetCustodiosIdBySociedadAsync(s.Id);
+                foreach (var cid in custodiosId) accionistasQueSonCustodios.Add(cid);
+            }
+
+            foreach(var dto in listNewAccionista)
+            {
+                // CustodioId guarda el Id de la relación (AccionistaSociedad.Id), NO el del Accionista
+                if (accionistasQueSonCustodios.Contains(dto.Id))
+                {
+                    dto.EsCustodio = true;
+                }
+            }
+
+            // Ya no hacemos OrderBy en memoria porque el repositorio lo trae ordenado
+            Listgral = listNewAccionista;
         }
         catch (Exception ex)
         {
@@ -284,80 +416,8 @@
     private async Task FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            Listgral = ListgralBuscar;
-        }
-        else
-        {
-            Listgral = ListgralBuscar
-                .Where(b => b.SociedadNombre != null && b.SociedadNombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            if (Listgral.Count() == 0)
-            {
-                Listgral = ListgralBuscar
-                .Where(b => b.AccionistaNombre != null && b.AccionistaNombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            }
-
-            if(!Listgral.Any())
-            {
-                List<AccionistaSociedadVerDto> listNewAccionista = new();
-                var listAaccionista = await repository.GetByNameAsync(1, searchTerm);
-                var listTitulos = await repotitulo.GetAllAsync();
-
-                foreach (var item in listAaccionista)
-                {
-                    Int64 nroacciones = 0;
-                    decimal porcparticipa = 0;
-                    Int64 accionesaux = 0;
-                    if (item.NroAcciones != null)
-                    {
-                        accionesaux = (Int64)item.NroAcciones;
-                    }
-
-                    var titulos = listTitulos.Where(x => x.AccionistaSociedad.Id == item.Id);
-                    if (titulos != null && titulos.Count() > 0)
-                    {
-                        nroacciones = (Int64) titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
-
-                        if(nroacciones > 0)
-                        {
-                            if (nroacciones != accionesaux)
-                            {
-                                await repository.UpdateNroAccionesAsync(item.Accionista.Id, item.Sociedad.Id, nroacciones, item.UpdateUserId, 0);
-                            }
-                        }
-                    }                
-
-                    if (item.Sociedad != null)
-                    {
-                        if (item.Sociedad.NumeroAcciones != null)
-                        {
-                            porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
-                        }
-                    }
-
-                    AccionistaSociedadVerDto accionista = new()
-                    {
-                        Id = item.Id,
-                        SociedadNombre = item.Sociedad?.Empresa?.Nombre,
-                        TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
-                        AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion,
-                        NroAcciones = (nroacciones != 0) ? nroacciones : accionesaux,
-                        Participacion = porcparticipa,
-                        CreateDate = item.CreateDate,
-                        UpdateDate = item.UpdateDate
-                    };
-
-                    listNewAccionista.Add(accionista);
-                }
-                Listgral = listNewAccionista.OrderBy(x => x.SociedadNombre).ToList();
-                ListgralBuscar = Listgral;
-            }
-
-        }
+        currentPage = 1;
+        await LoadGenericDataAsync();
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)
@@ -468,6 +528,55 @@
         }
 
         cargando = false; // Oculta el spinner después de todo
+    }
+
+    private async Task ToggleCustodiados(AccionistaSociedadVerDto p)
+    {
+        p.MostrarCustodiados = !p.MostrarCustodiados;
+
+        if (p.MostrarCustodiados && !p.SubCustodiados.Any())
+        {
+            var custodiadosDb = await repository.GetCustodiadosAsync(p.SociedadId, p.Id);
+            p.SubCustodiados = custodiadosDb.Select(x => new AccionistaSociedadVerDto
+            {
+                Id = x.Id,
+                AccionistaId = x.Accionista?.Id ?? 0,
+                AccionistaNombre = (x.Accionista?.TipoAccionista?.Id != 3) ? x.Accionista?.Nombre : x.Accionista?.NombreSusesion,
+                TipoAccionistaNombre = x.Accionista?.TipoAccionista?.Nombre,
+                NroAcciones = x.NroAcciones
+            }).ToList();
+        }
+    }
+
+    private void ToggleSociedad(string nombreSociedad)
+    {
+        if (sociedadesColapsadas.Contains(nombreSociedad))
+        {
+            sociedadesColapsadas.Remove(nombreSociedad);
+        }
+        else
+        {
+            sociedadesColapsadas.Add(nombreSociedad);
+        }
+        StateHasChanged();
+    }
+
+    private void ExpandirTodo()
+    {
+        sociedadesColapsadas.Clear();
+        StateHasChanged();
+    }
+
+    private void ColapsarTodo()
+    {
+        foreach (var item in Listgral)
+        {
+            if (!string.IsNullOrEmpty(item.SociedadNombre))
+            {
+                sociedadesColapsadas.Add(item.SociedadNombre);
+            }
+        }
+        StateHasChanged();
     }
 
     private void OrdenarPor(string columna)

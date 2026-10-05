@@ -7,7 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Societarios - Dev.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.21.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.18" />
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="9.0.15" />
     <PackageReference Include="MudBlazor" Version="9.4.0" />

@@ -1,29 +1,53 @@
 @page "/"
 @rendermode InteractiveServer
 
-@if (!string.IsNullOrEmpty(usuario))
-{
-    <div class="mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 pb-2">
-            <div>
-                <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">Panel de Control</h4>
-                <p class="text-muted mb-0 small">
-                    Bienvenido, <span class="fw-semibold text-primary">@usuario</span> &bull; Resumen societario y alertas operativas
-                </p>
+<PageTitle>Home</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        @if (!string.IsNullOrEmpty(usuario))
+        {
+            <div class="mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 pb-2">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">Panel de Control</h4>
+                        <p class="text-muted mb-0 small">
+                            Bienvenido, <span class="fw-semibold text-primary">@usuario</span> &bull; Resumen societario y alertas operativas
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
+                            <i class="bi bi-calendar3 me-1"></i> @DateTime.Now.ToString("dd MMMM, yyyy")
+                        </span>
+                    </div>
+                </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
-                    <i class="bi bi-calendar3 me-1"></i> @DateTime.Now.ToString("dd MMMM, yyyy")
-                </span>
+
+            <div class="d-flex flex-column gap-4">
+                <ListarVencimientoDocs />
+                <ListarActualizacionSociedades />
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="row">
+            <div class="col-11">
+                <h6>
+                    ¡Bienvenido a la plataforma de Societarios Polar!
+                </h6>
+            </div>
+            <div class="col-11">
+                <h6>Ingresa con tu usuario y contraseña de Autoservicios de Empresas Polar: <a class="btn-link" href="/Saml2/Login">Aquí</a></h6>
+            </div>
+            <div class="col-11">
+                <h7>Si no visualizas tus datos, por favor contacta al equipo de Legal</h7>
+            </div>
+            <div class="col-11">
+                <br />
             </div>
         </div>
-    </div>
-
-    <div class="d-flex flex-column gap-4">
-        <ListarVencimientoDocs />
-        <ListarActualizacionSociedades />
-    </div>
-}
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     private string usuario = string.Empty;
@@ -31,13 +55,22 @@
     {
         if (firstRender)
         {
-            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
-            if (string.IsNullOrEmpty(useremailaux.Value))
-                navManager.NavigateTo($"/authsessionuser");
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+                if (string.IsNullOrEmpty(useremailaux.Value))
+                    navManager.NavigateTo($"/authsessionuser");
+                else
+                {
+                    usuario = useremailaux.Value;
+                    StateHasChanged();
+                }
+            }
             else
             {
-                usuario = useremailaux.Value;
-                StateHasChanged();
+                navManager.NavigateTo("/Saml2/Login", forceLoad: true);
             }
         }
     }

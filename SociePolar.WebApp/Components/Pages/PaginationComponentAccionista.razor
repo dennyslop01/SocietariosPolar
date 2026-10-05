@@ -1,0 +1,231 @@
+﻿@typeparam TItem
+
+<div class="polar-table-container">
+    <table class="table">
+        <thead class="table-light">
+            @ChildContentHeader
+        </thead>
+        <tbody>
+            @foreach (var item in PaginatedData)
+            {
+                @ChildContentRow(item)
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 gap-3 bg-white border-top">
+        <div class="d-flex align-items-center">
+            <!-- Selector de Tamaño -->
+            <label class="me-2 text-muted small fw-semibold">Filas por página:</label>
+            <select value="@PageSize" @onchange="OnPageSizeChangedInternal" class="form-select form-select-sm polar-pagination-select">
+                @foreach (var size in PageSizes)
+                {
+                    <option value="@size">@size</option>
+                }
+            </select>
+
+            <!-- Botones de Navegación -->
+            <div class="ms-3 d-flex align-items-center gap-1">
+                <button class="polar-page-btn"
+                        @onclick="PreviousPage" 
+                        disabled="@IsPreviousDisabled" 
+                        title="Página anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+
+                @foreach (var pageNumber in GetVisiblePages())
+                {
+                    if (pageNumber == -1)
+                    {
+                        <span class="px-2 text-muted">...</span>
+                    }
+                    else
+                    {
+                        <button @onclick="() => GoToPage(pageNumber)"
+                                class="polar-page-btn @(CurrentPage == pageNumber ? "active" : "")">
+                            @pageNumber
+                        </button>
+                    }
+                }
+
+                <button class="polar-page-btn" 
+                        @onclick="NextPage" 
+                        disabled="@IsNextDisabled" 
+                        title="Página siguiente">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Info de Registros -->
+        <div class="text-muted small">
+            Mostrando <span class="fw-semibold text-dark">@RecordStart</span> a
+            <span class="fw-semibold text-dark">@RecordEnd</span> de
+            <span class="fw-semibold text-dark">@TotalItems</span> registros
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = Enumerable.Empty<TItem>();
+    [Parameter] public int DefaultPageSize { get; set; } = 50;
+    [Parameter] public RenderFragment ChildContentHeader { get; set; }
+    [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
+
+    [Parameter] public bool IsServerSide { get; set; } = false;
+    [Parameter] public int ServerTotalItems { get; set; } = 0;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+    [Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
+
+    private int CurrentPage { get; set; } = 1;
+    private readonly int[] PageSizes = new[] { 5, 10, 20, 50, 100 };
+    private int PageSize { get; set; }
+
+    // Lógica de datos paginados
+    private List<TItem> PaginatedData => IsServerSide 
+        ? Items?.ToList() ?? new List<TItem>() 
+        : (Items?.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList() ?? new List<TItem>());
+
+    // Propiedades de conteo
+    private int TotalItems => IsServerSide ? ServerTotalItems : (Items?.Count() ?? 0);
+    private int TotalPages => TotalItems > 0 ? (int)Math.Ceiling(TotalItems / (double)PageSize) : 1;
+    private int RecordStart => TotalItems == 0 ? 0 : (CurrentPage - 1) * PageSize + 1;
+    private int RecordEnd => Math.Min(CurrentPage * PageSize, TotalItems);
+
+    protected override void OnInitialized()
+    {
+        PageSize = DefaultPageSize;
+    }
+
+    private async Task OnPageSizeChangedInternal(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newSize))
+        {
+            PageSize = newSize;
+            CurrentPage = 1;
+            if (IsServerSide && OnPageSizeChanged.HasDelegate) 
+            {
+                await OnPageSizeChanged.InvokeAsync(newSize);
+            }
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages) 
+        {
+            CurrentPage++;
+            if (IsServerSide && OnPageChanged.HasDelegate) await OnPageChanged.InvokeAsync(CurrentPage);
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1) 
+        {
+            CurrentPage--;
+            if (IsServerSide && OnPageChanged.HasDelegate) await OnPageChanged.InvokeAsync(CurrentPage);
+        }
+    }
+
+    private async Task GoToPage(int pageNumber)
+    {
+        CurrentPage = pageNumber;
+        if (IsServerSide && OnPageChanged.HasDelegate) await OnPageChanged.InvokeAsync(CurrentPage);
+    }
+
+    private bool IsPreviousDisabled => CurrentPage == 1;
+    private bool IsNextDisabled => CurrentPage >= TotalPages;
+
+    private IEnumerable<int> GetVisiblePages()
+    {
+        var pages = new List<int>();
+        if (TotalPages <= 7)
+        {
+            for (int i = 1; i <= TotalPages; i++) pages.Add(i);
+        }
+        else
+        {
+            if (CurrentPage <= 4)
+            {
+                for (int i = 1; i <= 5; i++) pages.Add(i);
+                pages.Add(-1);
+                pages.Add(TotalPages);
+            }
+            else if (CurrentPage >= TotalPages - 3)
+            {
+                pages.Add(1);
+                pages.Add(-1);
+                for (int i = TotalPages - 4; i <= TotalPages; i++) pages.Add(i);
+            }
+            else
+            {
+                pages.Add(1);
+                pages.Add(-1);
+                pages.Add(CurrentPage - 1);
+                pages.Add(CurrentPage);
+                pages.Add(CurrentPage + 1);
+                pages.Add(-1);
+                pages.Add(TotalPages);
+            }
+        }
+        return pages;
+    }
+}
+
+<style>
+    .polar-table-container {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .polar-pagination-select {
+        width: 70px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+        border: 1px solid #CBD5E1 !important;
+        background-color: #FFFFFF !important;
+        padding: 2px 8px !important;
+        cursor: pointer;
+    }
+
+    .polar-pagination-select:focus {
+        border-color: #004B87 !important;
+        box-shadow: 0 0 0 2px rgba(0, 75, 135, 0.12) !important;
+    }
+
+    .polar-page-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background-color: transparent;
+        border: 1px solid transparent;
+        color: #475569;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+    .polar-page-btn:hover:not(:disabled):not(.active) {
+        background-color: #F1F5F9;
+        color: #0F172A;
+    }
+
+    .polar-page-btn.active {
+        background-color: #004B87;
+        color: #FFFFFF;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 75, 135, 0.2);
+    }
+
+    .polar-page-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+</style>

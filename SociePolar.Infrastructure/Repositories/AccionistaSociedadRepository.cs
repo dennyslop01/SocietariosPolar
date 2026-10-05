@@ -22,7 +22,6 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Accionista)
                 .ThenInclude(a => a!.TipoAccionista)
                 .Include(b => b.EstatusAccionista)
-                .Take(1000)
                 .ToListAsync();
         }
 
@@ -38,7 +37,6 @@ namespace SociePolar.Infrastructure.Repositories
                 .ThenInclude(a => a!.TipoAccionista)
                 .Include(b => b.EstatusAccionista)
                 .Where(x => x.EstatusAccionista!.Id == estatusId)
-                .Take(1000)
                 .ToListAsync();
         }
 
@@ -54,8 +52,52 @@ namespace SociePolar.Infrastructure.Repositories
                 .ThenInclude(a => a!.TipoAccionista)
                 .Include(b => b.EstatusAccionista)
                 .Where(x => x.EstatusAccionista!.Id == estatusId && (x.Accionista.Nombre.Contains(name) || x.Accionista.NombreSusesion.Contains(name) || x.Sociedad.Empresa.Nombre.Contains(name)))
-                .Take(1000)
                 .ToListAsync();
+        }
+
+        public async Task<(List<AccionistaSociedad> Items, int TotalCount)> GetPaginatedAsync(int estatusId, int pageNumber, int pageSize, string searchTerm)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            // 1. Crear la consulta base filtrada (Mantenla lo más ligera posible, sin Includes)
+            var queryBase = context.Set<AccionistaSociedad>()
+                .AsNoTracking() // Desactiva el tracking para mejorar rendimiento de lectura
+                .Where(x => x.EstatusAccionista.Id == estatusId && x.CustodioId == null); // Usa la FK directa si existe en lugar de x.EstatusAccionista!.Id
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                queryBase = queryBase.Where(x => x.Accionista.Nombre.Contains(searchTerm)
+                                              || x.Accionista.NombreSusesion.Contains(searchTerm)
+                                              || x.Sociedad.Empresa.Nombre.Contains(searchTerm));
+            }
+
+            // 2. Obtener el conteo total de forma rápida
+            int totalCount = await queryBase.CountAsync();
+
+            // 3. Obtener solo los IDs de la página actual (Operación muy rápida)
+            // Nota: El OrderBy se hace aquí para asegurar que la paginación sea consistente
+            var pagedIds = await queryBase
+                .OrderBy(x => x.Sociedad.Empresa.Nombre)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => x.Id) // Suponiendo que tu llave primaria se llama Id
+                .ToListAsync();
+
+            // 4. Cargar los datos completos e Includes SOLO para los registros de la página
+            var items = await context.Set<AccionistaSociedad>()
+                .AsNoTracking()
+                .Where(x => pagedIds.Contains(x.Id))
+                .OrderBy(x => x.Sociedad.Empresa.Nombre) // Reordenar el set pequeño
+                .Include(b => b.Sociedad)
+                    .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Sociedad)
+                    .ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                    .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
 
         public async Task<AccionistaSociedad?> GetByIdAsync(int id)
@@ -106,6 +148,7 @@ namespace SociePolar.Infrastructure.Repositories
                 Sociedad = sociedad,
                 Accionista = accionista,
                 EstatusAccionista = estatus,
+                CustodioId = entity.CustodioId,
                 NroAcciones = entity.NroAcciones,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
@@ -162,7 +205,7 @@ namespace SociePolar.Infrastructure.Repositories
                 context.SaveChanges();
             }
         }
-        
+
         public async void Activar(int Id, int status)
         {
             using var context = _contextFactory.CreateDbContext();
@@ -192,6 +235,36 @@ namespace SociePolar.Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var sum = await context.Set<AccionistaSociedad>()
+                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == 1 && x.CustodioId == null)
+                .SumAsync(x => x.NroAcciones);
+            return sum ?? 0;
+        }
+
+        public async Task<List<int>> GetCustodiosIdBySociedadAsync(int sociedadId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Where(x => x.Sociedad.Id == sociedadId /*&& x.CustodioId != null*/ && x.EstatusAccionista.Id == 1)
+                .Select(x => x.Sociedad.Id)//.Select(x => x.CustodioId.Value)
+                .Distinct()
+                .ToListAsync();
+        }
+
+        public async Task<List<AccionistaSociedad>> GetCustodiadosAsync(int sociedadId, int custodioId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Include(b => b.Accionista).ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId == custodioId && x.EstatusAccionista.Id == 1)
+                .OrderBy(x => x.Accionista.Nombre)
+                .ToListAsync();
+        }
+
         public async Task<AccionistaSociedad> AddReturnEntidadAsync(AccionistaSociedadDto entity)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
@@ -210,6 +283,7 @@ namespace SociePolar.Infrastructure.Repositories
                 Sociedad = sociedad,
                 Accionista = accionista,
                 EstatusAccionista = estatus,
+                //CustodioId = entity.CustodioId,
                 NroAcciones = entity.NroAcciones,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
@@ -323,6 +397,15 @@ namespace SociePolar.Infrastructure.Repositories
                     .ThenInclude(a => a!.TipoAccionista)
                 .Where(h => registrosGanadoresIds.Contains(h.Id))
                 .ToListAsync();
+        }
+
+        public async Task<int> GetTotalAccionistasBySociedadIdAsync(int sociedadId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var count = await context.Set<AccionistaSociedad>()
+                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == 1)
+                .CountAsync();
+            return count;
         }
 
     }

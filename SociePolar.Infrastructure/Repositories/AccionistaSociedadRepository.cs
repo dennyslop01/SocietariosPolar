@@ -216,6 +216,8 @@ namespace SociePolar.Infrastructure.Repositories
             AccionistaSociedad? editaccionista = await context.AccionistasSociedades.FindAsync(Id);
             if (editaccionista == null) throw new Exception($"Accionista - Sociedad con ID {Id} no existe.");
 
+            editaccionista.EstatusAccionista = estatusAccionista;
+
             context.Set<AccionistaSociedad>().Update(editaccionista);
             context.SaveChanges();
         }

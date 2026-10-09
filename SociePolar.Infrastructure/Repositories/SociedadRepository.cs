@@ -595,15 +595,23 @@ namespace SociePolar.Infrastructure.Repositories
             var estatusSociedad = await context.Set<EstatusSociedad>().FindAsync(accion);
             if (estatusSociedad == null) throw new Exception($"EstatusSociedad con ID {accion} no existe.");
 
-            TipoSociedadActiva? tipoSociedadActiva = null;
-            if (accion != 1)
+            editsociedad.EstatusSociedad = estatusSociedad;
+
+            if (accion == 1)
             {
-                tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(1);
+                TipoSociedadActiva? tipoSociedadActiva = await context.Set<TipoSociedadActiva>().FindAsync(1);
                 if (tipoSociedadActiva == null) throw new Exception($"TipoSociedadActiva con ID {1} no existe.");
+                editsociedad.TipoSociedadActiva = tipoSociedadActiva;
+                editsociedad.TipoSociedadInactiva = null;
             }
 
-            editsociedad.EstatusSociedad = estatusSociedad;
-            editsociedad.TipoSociedadActiva = tipoSociedadActiva;            
+            if (accion != 1)
+            {
+                TipoSociedadInactiva? tipoSociedadInactiva = await context.Set<TipoSociedadInactiva>().FindAsync(1);
+                if (tipoSociedadInactiva == null) throw new Exception($"TipoSociedadInactiva con ID {1} no existe.");
+                editsociedad.TipoSociedadActiva = null;
+                editsociedad.TipoSociedadInactiva = tipoSociedadInactiva;
+            }
 
             context.Set<Sociedad>().Update(editsociedad);
             context.SaveChanges();

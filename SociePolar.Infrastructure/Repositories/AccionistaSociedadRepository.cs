@@ -250,8 +250,8 @@ namespace SociePolar.Infrastructure.Repositories
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<AccionistaSociedad>()
-                .Where(x => x.Sociedad.Id == sociedadId /*&& x.CustodioId != null*/ && x.EstatusAccionista.Id == 1)
-                .Select(x => x.Sociedad.Id)//.Select(x => x.CustodioId.Value)
+                .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId != null && x.EstatusAccionista.Id == 1)
+                .Select(x => x.CustodioId.Value)
                 .Distinct()
                 .ToListAsync();
         }
@@ -285,7 +285,7 @@ namespace SociePolar.Infrastructure.Repositories
                 Sociedad = sociedad,
                 Accionista = accionista,
                 EstatusAccionista = estatus,
-                //CustodioId = entity.CustodioId,
+                CustodioId = entity.CustodioId,
                 NroAcciones = entity.NroAcciones,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,

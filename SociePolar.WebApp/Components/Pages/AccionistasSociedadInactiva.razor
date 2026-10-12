@@ -1,6 +1,7 @@
 @page "/accionistassociedadinactivas"
 
 @rendermode InteractiveServer
+@implements IDisposable
 
 <div class="container-fluid mt-4">
     <div class="card shadow-sm border-0 h-auto">
@@ -11,9 +12,12 @@
                     <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
                         <i class="bi bi-person-vcard text-white fs-5"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-dark">
-                        Accionistas - Sociedades Inactivos
-                    </h5>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            Accionistas - Sociedades Inactivas
+                        </h5>
+                        <small class="text-muted">Vista agrupada estilo Lotus Notes (@gruposFiltrados.Count sociedades)</small>
+                    </div>
                 </div>
 
                 <!-- Parte Derecha: Botón Agregar -->
@@ -27,12 +31,12 @@
 
         <div class="card-body">
             <!-- Controles Superiores: Expandir/Colapsar y Buscador -->
-            <div class="row mb-3">
-                <div class="col-md-6 d-flex align-items-end">
-                    <button class="btn btn-outline-secondary btn-sm me-2 shadow-sm" @onclick="ExpandirTodo" title="Expandir todo en esta página">
+            <div class="row mb-3 align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <button class="btn btn-outline-secondary btn-sm me-2 shadow-sm" @onclick="ExpandirTodo" title="Expandir todas las sociedades">
                         <i class="bi bi-arrows-angle-expand me-1"></i> Expandir Todo
                     </button>
-                    <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick="ColapsarTodo" title="Colapsar todo en esta página">
+                    <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick="ColapsarTodo" title="Colapsar todas las sociedades">
                         <i class="bi bi-arrows-angle-contract me-1"></i> Colapsar Todo
                     </button>
                 </div>
@@ -43,136 +47,296 @@
                         </span>
                         <input type="text"
                                class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
-                               @oninput="FiltrarBusqueda" />
+                               placeholder="Buscar por accionista o sociedad (mín. 3 caracteres)..."
+                               @bind="searchTerm"
+                               @bind:event="oninput"
+                               @bind:after="OnSearchInputChanged" />
+                        @if (!string.IsNullOrEmpty(searchTerm))
+                        {
+                            <button class="btn btn-outline-secondary border-start-0 bg-white" @onclick="LimpiarBusqueda" title="Limpiar búsqueda">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
+
+            <!-- Tabla Agrupada Estilo Lotus Notes -->
             <div class="table-responsive">
-                <PaginationComponentAccionista TItem="AccionistaSociedadVerDto" 
-                                     Items="Listgral" 
-                                     DefaultPageSize="50"
-                                     IsServerSide="true"
-                                     ServerTotalItems="@TotalItems"
-                                     OnPageChanged="HandlePageChanged"
-                                     OnPageSizeChanged="HandlePageSizeChanged">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <!-- Columna 1: Sociedad -->
-                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("Sociedad")'>
-                                Sociedad <i class="bi @ObtenerIconoOrden("Sociedad") ms-1 small"></i>
-                            </th>
-                            <!-- Columna 3: Tipo Accionista -->
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("TipoAccionista")'>
-                                Tipo Accionista <i class="bi @ObtenerIconoOrden("TipoAccionista") ms-1 small"></i>
-                            </th>
-                            <!-- Columna 2: Nombre y Apellido -->
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;" @onclick='() => OrdenarPor("Nombre")'>
-                                Nombre y Apellido <i class="bi @ObtenerIconoOrden("Nombre") ms-1 small"></i>
-                            </th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro. Acciones</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">% Participación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                <table class="table table-hover align-middle mb-0 border">
+                    <thead class="table-light border-bottom">
+                        <tr>
+                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Accionista</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Nombre y Apellido</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 12%; font-size: 0.85rem;">Nro. Acciones</th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 8%; font-size: 0.85rem;">% Part.</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 8%; font-size: 0.85rem;">Fecha Creación</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="width: 8%; font-size: 0.85rem;">Modificación</th>
+                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 9%; font-size: 0.85rem;">Acciones</th>
                         </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        @{
-                            var index = Listgral.IndexOf(p);
-
-                            // 1. Ruptura para Sociedad
-                            bool esNuevaSociedad = index == 0 ||
-                                                   Listgral[index - 1].SociedadNombre != p.SociedadNombre;
-                        }
-
-                        @if (esNuevaSociedad)
-                        {
-                            long granTotalAcciones = totalesGlobalesPorSociedad.ContainsKey(p.SociedadId) ? totalesGlobalesPorSociedad[p.SociedadId] : 0;
-                            int granTotalAccionistas = totalAccionistasPorSociedad.ContainsKey(p.SociedadId) ? totalAccionistasPorSociedad[p.SociedadId] : 0;
-                            var totalParticipacionVisible = Listgral.Where(x => x.SociedadNombre == p.SociedadNombre).Sum(x => x.Participacion ?? 0);
-                            bool colapsado = sociedadesColapsadas.Contains(p.SociedadNombre ?? "");
-
-                            <tr class="align-middle border-bottom" @onclick='() => ToggleSociedad(p.SociedadNombre ?? "")' style="cursor: pointer;" title="Clic para expandir/colapsar">
-                                <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace text-secondary" style="text-align: left !important; font-size: 0.9rem; letter-spacing: 0.5px;">
-                                    <i class="bi @(colapsado ? "bi-chevron-right" : "bi-chevron-down") me-2 text-primary fw-bold"></i>
-                                    🏢 @p.SociedadNombre
-                                    <span class="float-end badge bg-white text-dark border shadow-sm me-3 mt-1" style="font-size: 0.75rem;">
-                                        Total: @UtilClass.FormatearMiles(granTotalAcciones) acciones y @UtilClass.FormatearMiles(granTotalAccionistas) accionistas
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                        
-                        @if (!sociedadesColapsadas.Contains(p.SociedadNombre ?? ""))
-                        {
-                        <tr class="align-middle border-bottom">
-                            <td class="text-start text-dark fw-semibold small ps-3" style="width: 15%;">
-                                -@* @(p.SociedadNombre ?? "-") *@
-                            </td>
-                            <td class="text-start text-secondary small" style="width: 15%;">
-                                <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
-                            </td>
-                            <td class="text-start text-secondary small" style="width: 15%;">
-                                @if (p.EsCustodio)
-                                {
-                                    <button @onclick="() => ToggleCustodiados(p)" class="btn btn-sm btn-link p-0 text-decoration-none me-2" title="Ver sub-accionistas custodiados">
-                                        <i class="bi @(p.MostrarCustodiados ? "bi-dash-square-fill" : "bi-plus-square-fill") text-primary"></i>
-                                    </button>
-                                }
-                                @p.AccionistaNombre
-                            </td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
-                            <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                            <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => VerTitulos(p)" title="Ver Títulos">
-                                    <i class="bi bi-file-medical fs-6"></i>
-                                </button>
-                                @if (idRol == 1 || idRol == 2)
-                                {
-                                    <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                        <i class="bi bi-trash3 fs-6"></i>
-                                    </button>
-                                    <button class="btn btn-link btn-sm text-danger p-0 me-2"
-                                    @onclick="() => VerificarInactivar(p)" title="Inactivar">
-                                        <i class="bi bi-x-circle fs-6"></i>
-                                    </button>
-                                }
-                            </td>
-                        </tr>
-                        @if (p.MostrarCustodiados && p.SubCustodiados.Any())
+                    </thead>
+                    <tbody>
+                        @if (cargando)
                         {
                             <tr>
-                                <td colspan="8" class="p-0 border-0">
-                                    <div class="bg-light p-2 shadow-inner">
-                                        <table class="table table-sm table-bordered m-0 bg-white" style="font-size: 0.85rem;">
-                                            <thead class="table-secondary text-start">
-                                                <tr>
-                                                    <th class="ps-3" style="width: 40%;">Sub-Accionista</th>
-                                                    <th style="width: 30%;">Tipo</th>
-                                                    <th style="width: 30%;">Acciones Custodiadas</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="text-start">
-                                                @foreach (var sub in p.SubCustodiados)
-                                                {
-                                                    <tr>
-                                                        <td class="ps-3"><i class="bi bi-person-badge me-2 text-muted"></i>@sub.AccionistaNombre</td>
-                                                        <td>@sub.TipoAccionistaNombre</td>
-                                                        <td>@UtilClass.FormatearMiles(sub.NroAcciones ?? 0)</td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="spinner-border text-primary me-2" role="status"></div>
+                                    <span class="text-muted">Cargando sociedades y accionistas...</span>
                                 </td>
                             </tr>
                         }
+                        else if (!gruposFiltrados.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    No se encontraron sociedades ni accionistas con el término de búsqueda.
+                                </td>
+                            </tr>
                         }
-                    </ChildContentRow>
-                </PaginationComponentAccionista>
+                        else
+                        {
+                            @foreach (var grupo in gruposFiltrados)
+                            {
+                                <!-- Fila Cabecera de la Sociedad (Categoría Lotus Notes) -->
+                                <tr class="table-group-header border-bottom"
+                                    @onclick="() => ToggleSociedad(grupo)"
+                                    style="cursor: pointer; background-color: #f8f9fa;">
+                                    <td colspan="8" class="ps-3 py-2 text-uppercase font-monospace text-dark" style="text-align: left !important; font-size: 0.9rem; letter-spacing: 0.5px;">
+                                        <i class="bi @(grupo.IsExpanded ? "bi-chevron-down" : "bi-chevron-right") me-2 text-primary fw-bold"></i>
+                                        <strong>🏢 @grupo.SociedadNombre</strong>
+                                        <span class="float-end badge bg-white text-dark border shadow-sm me-3 mt-1" style="font-size: 0.75rem;">
+                                            Gran Total Empresa: @UtilClass.FormatearMiles(grupo.GranTotalAcciones) acciones y @UtilClass.FormatearMiles(grupo.GranTotalAccionistas) accionistas
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- Filas de Accionistas de esta Sociedad cuando está Expandida -->
+                                @if (grupo.IsExpanded)
+                                {
+                                    @if (grupo.IsLoading)
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="ps-5 py-3 text-muted bg-white">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                                Cargando nómina de accionistas...
+                                            </td>
+                                        </tr>
+                                    }
+                                    else if (!grupo.AccionistasFiltrados.Any())
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="ps-5 py-2 text-muted fst-italic small bg-white">
+                                                No hay accionistas que coincidan con la búsqueda en esta sociedad.
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var p in grupo.AccionistasPaginados)
+                                        {
+                                            <tr class="align-middle border-bottom bg-white">
+                                                <td class="text-start text-dark fw-semibold small ps-4" style="width: 20%;">
+                                                    <span class="text-muted small">↳</span>
+                                                </td>
+                                                <td class="text-start text-secondary small" style="width: 15%;">
+                                                    <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
+                                                </td>
+                                                <td class="text-start text-secondary small" style="width: 20%;">
+                                                    @if (p.EsCustodio)
+                                                    {
+                                                        <button @onclick="() => ToggleCustodiados(p)" class="btn btn-sm btn-link p-0 text-decoration-none me-2" title="Ver sub-accionistas custodiados">
+                                                            <i class="bi @(p.MostrarCustodiados ? "bi-dash-square-fill" : "bi-plus-square-fill") text-primary"></i>
+                                                        </button>
+                                                    }
+                                                    <span class="text-dark fw-medium">@p.AccionistaNombre</span>
+                                                </td>
+                                                <td class="text-start text-secondary small" style="width: 12%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
+                                                <td class="text-start text-secondary small" style="width: 8%;">@p.Participacion%</td>
+                                                <td class="text-center text-secondary small" style="width: 8%;">@p.CreateDate.ToShortDateString()</td>
+                                                <td class="text-center text-secondary small" style="width: 8%;">@p.UpdateDate.ToShortDateString()</td>
+                                                <td class="text-end pe-3" style="width: 9%;">
+                                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => VerTitulos(p)" title="Ver Títulos">
+                                                        <i class="bi bi-file-medical fs-6"></i>
+                                                    </button>
+                                                    @if (idRol == 1 || idRol == 2)
+                                                    {
+                                                        <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                                            <i class="bi bi-trash3 fs-6"></i>
+                                                        </button>
+                                                        <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarInactivar(p)" title="Inactivar">
+                                                            <i class="bi bi-x-circle fs-6"></i>
+                                                        </button>
+                                                    }
+                                                </td>
+                                            </tr>
+
+                                            @if (p.MostrarCustodiados && p.SubCustodiados.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="8" class="p-0 border-0">
+                                                        <div class="bg-light p-3 ps-5 border-start border-4 border-primary shadow-sm my-2 rounded-2">
+                                                            <!-- Encabezado y Buscador de Sub-cuentas -->
+                                                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                                <div>
+                                                                    <span class="fw-bold text-dark me-2">
+                                                                        <i class="bi bi-bank2 me-1 text-primary"></i> Sub-Cuentas Custodiadas en @p.AccionistaNombre
+                                                                    </span>
+                                                                    <span class="badge bg-primary text-white font-monospace">
+                                                                        @UtilClass.FormatearMiles(p.SubCustodiados.Count) registros | @UtilClass.FormatearMiles(p.NroAcciones ?? 0) acciones
+                                                                    </span>
+                                                                </div>
+                                                                <div class="input-group input-group-sm mt-2 mt-md-0" style="max-width: 380px;">
+                                                                    <span class="input-group-text bg-white border-end-0 text-secondary">
+                                                                        <i class="bi bi-search"></i>
+                                                                    </span>
+                                                                    <input type="text"
+                                                                           class="form-control border-start-0 ps-0"
+                                                                           placeholder="Buscar por Nombre o Cédula/RIF (mín. 2 letras)..."
+                                                                           @bind="p.SubSearchTerm"
+                                                                           @bind:event="oninput"
+                                                                           @bind:after="() => { p.SubCurrentPage = 1; StateHasChanged(); }" />
+                                                                    @if (!string.IsNullOrEmpty(p.SubSearchTerm))
+                                                                    {
+                                                                        <button class="btn btn-outline-secondary border-start-0 bg-white" @onclick="() => { p.SubSearchTerm = string.Empty; p.SubCurrentPage = 1; }" title="Limpiar búsqueda">
+                                                                            <i class="bi bi-x-lg"></i>
+                                                                        </button>
+                                                                    }
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Tabla Paginada de Sub-cuentas -->
+                                                            <div class="table-responsive bg-white rounded border shadow-xs">
+                                                                <table class="table table-sm table-hover align-middle m-0" style="font-size: 0.85rem;">
+                                                                    <thead class="table-light border-bottom text-secondary">
+                                                                        <tr>
+                                                                            <th class="ps-3 py-2" style="width: 14%;">Cédula / RIF</th>
+                                                                            <th class="py-2" style="width: 26%;">Sub-Accionista (Beneficiario / Casa de Bolsa)</th>
+                                                                            <th class="py-2" style="width: 12%;">Tipo</th>
+                                                                            <th class="py-2 text-end" style="width: 12%;">Nro. Acciones</th>
+                                                                            <th class="py-2 text-end" style="width: 8%;">% Part.</th>
+                                                                            <th class="py-2 text-center" style="width: 9%;">Fecha Creación</th>
+                                                                            <th class="py-2 text-center" style="width: 9%;">Modificación</th>
+                                                                            <th class="pe-3 py-2 text-end" style="width: 10%;">Acciones</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @if (!p.SubCustodiadosFiltrados.Any())
+                                                                        {
+                                                                            <tr>
+                                                                                <td colspan="8" class="text-center py-3 text-muted fst-italic">
+                                                                                    No se encontraron sub-cuentas con el término ingresado.
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            @foreach (var sub in p.SubCustodiadosPaginados)
+                                                                            {
+                                                                                <tr class="border-bottom">
+                                                                                    <td class="ps-3 font-monospace small text-secondary">
+                                                                                        <i class="bi bi-card-heading me-1 text-muted"></i>@(string.IsNullOrWhiteSpace(sub.DocumentoIdentidad) ? "-" : sub.DocumentoIdentidad)
+                                                                                    </td>
+                                                                                    <td class="fw-semibold text-dark">
+                                                                                        <i class="bi bi-person me-1 text-muted"></i>@sub.AccionistaNombre
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span class="badge bg-light text-secondary border">@(sub.TipoAccionistaNombre ?? "Sub-Cuenta")</span>
+                                                                                    </td>
+                                                                                    <td class="text-end font-monospace fw-bold text-primary">
+                                                                                        @UtilClass.FormatearMiles(sub.NroAcciones ?? 0)
+                                                                                    </td>
+                                                                                    <td class="text-end text-secondary small">
+                                                                                        @(sub.Participacion > 0 ? $"{sub.Participacion}%" : "0%")
+                                                                                    </td>
+                                                                                    <td class="text-center text-secondary small">
+                                                                                        @sub.CreateDate.ToShortDateString()
+                                                                                    </td>
+                                                                                    <td class="text-center text-secondary small">
+                                                                                        @sub.UpdateDate.ToShortDateString()
+                                                                                    </td>
+                                                                                    <td class="text-end pe-3">
+                                                                                        <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => VerTitulos(sub)" title="Ver Títulos">
+                                                                                            <i class="bi bi-file-medical fs-6"></i>
+                                                                                        </button>
+                                                                                        @if (idRol == 1 || idRol == 2)
+                                                                                        {
+                                                                                            <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(sub)" title="Eliminar">
+                                                                                                <i class="bi bi-trash3 fs-6"></i>
+                                                                                            </button>
+                                                                                            <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarInactivar(sub)" title="Inactivar">
+                                                                                                <i class="bi bi-x-circle fs-6"></i>
+                                                                                            </button>
+                                                                                        }
+                                                                                    </td>
+                                                                                </tr>
+                                                                            }
+                                                                        }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+                                                            <!-- Paginador de Sub-cuentas -->
+                                                            @if (p.TotalSubPages > 1)
+                                                            {
+                                                                <div class="d-flex flex-wrap align-items-center justify-content-between pt-2 px-1 text-muted small mt-1">
+                                                                    <span>
+                                                                        Mostrando @((p.SubCurrentPage - 1) * p.SubPageSize + 1) - @Math.Min(p.SubCurrentPage * p.SubPageSize, p.SubCustodiadosFiltrados.Count()) de @UtilClass.FormatearMiles(p.SubCustodiadosFiltrados.Count()) sub-cuentas
+                                                                    </span>
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <button class="btn btn-outline-secondary btn-sm py-0 px-2 shadow-xs"
+                                                                                disabled="@(p.SubCurrentPage <= 1)"
+                                                                                @onclick="() => p.SubCurrentPage--">
+                                                                            <i class="bi bi-chevron-left me-1"></i> Anterior
+                                                                        </button>
+                                                                        <span class="mx-2 font-monospace">Página @p.SubCurrentPage de @p.TotalSubPages</span>
+                                                                        <button class="btn btn-outline-secondary btn-sm py-0 px-2 shadow-xs"
+                                                                                disabled="@(p.SubCurrentPage >= p.TotalSubPages)"
+                                                                                @onclick="() => p.SubCurrentPage++">
+                                                                            Siguiente <i class="bi bi-chevron-right ms-1"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+
+                                        <!-- Paginador Interno por Sociedad si supera 50 accionistas -->
+                                        @if (grupo.TotalPages > 1)
+                                        {
+                                            <tr class="bg-light border-bottom">
+                                                <td colspan="8" class="py-2 px-4">
+                                                    <div class="d-flex align-items-center justify-content-between small text-muted">
+                                                        <span>
+                                                            Mostrando @((grupo.CurrentPage - 1) * grupo.PageSize + 1) - @Math.Min(grupo.CurrentPage * grupo.PageSize, grupo.AccionistasFiltrados.Count) de @grupo.AccionistasFiltrados.Count accionistas
+                                                        </span>
+                                                        <div class="d-flex align-items-center gap-1">
+                                                            <button class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                                                    disabled="@(grupo.CurrentPage <= 1)"
+                                                                    @onclick="() => grupo.CurrentPage--">
+                                                                <i class="bi bi-chevron-left"></i>
+                                                            </button>
+                                                            <span class="mx-2">Página @grupo.CurrentPage de @grupo.TotalPages</span>
+                                                            <button class="btn btn-outline-secondary btn-sm py-0 px-2"
+                                                                    disabled="@(grupo.CurrentPage >= grupo.TotalPages)"
+                                                                    @onclick="() => grupo.CurrentPage++">
+                                                                <i class="bi bi-chevron-right"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -188,20 +352,12 @@
             </div>
         </div>
     }
-
 </div>
-
-@if (cargando)
-{
-    <ModalCargando />
-}
-
 
 @if (mostrarModal)
 {
     <AccionistasSociedadesGuardar id="@idAccionista.ToString()" OnFinalizado="ManejarCierreModal" />
 }
-
 
 @if (mostrarModalEliminar)
 {
@@ -246,31 +402,46 @@
 }
 
 @code {
-    private List<AccionistaSociedadVerDto> Listgral = new();
-    private List<AccionistaSociedadVerDto> ListgralBuscar = new();
-    private string searchTerm = ""; 
+    public class SociedadGrupoModel
+    {
+        public int SociedadId { get; set; }
+        public string SociedadNombre { get; set; } = "";
+        public string? NumeroAccionesSociedad { get; set; }
+        public long GranTotalAcciones { get; set; }
+        public int GranTotalAccionistas { get; set; }
+        public int TotalSubCustodiados { get; set; } = 0;
+        public int TotalGeneralAccionistas => GranTotalAccionistas + TotalSubCustodiados;
+        public bool IsExpanded { get; set; } = false;
+        public bool IsLoading { get; set; } = false;
+        public int CurrentPage { get; set; } = 1;
+        public int PageSize { get; set; } = 50;
+        public List<AccionistaSociedadVerDto> Accionistas { get; set; } = new();
+        public List<AccionistaSociedadVerDto> AccionistasFiltrados { get; set; } = new();
+
+        public int TotalPages => (int)Math.Ceiling((double)AccionistasFiltrados.Count / PageSize);
+
+        public IEnumerable<AccionistaSociedadVerDto> AccionistasPaginados =>
+            AccionistasFiltrados.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+    }
+
+    private List<SociedadGrupoModel> gruposSociedades = new();
+    private List<SociedadGrupoModel> gruposFiltrados = new();
+    private string searchTerm = "";
     private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
-    private AccionistaSociedadVerDto? entidadParaEliminar;
-    private string claseAlerta = "alert-success"; // Por defecto verde
-    private string iconoAlerta = "bi-check-circle-fill";
-    int idAccionista = 0;
-    private string columnaActual = "";
-    private bool ordenAscendente = true;
     private bool mostrarModalInactivar = false;
+    private AccionistaSociedadVerDto? entidadParaEliminar;
+    private string claseAlerta = "alert-success";
+    private string iconoAlerta = "bi-check-circle-fill";
+    private int idAccionista = 0;
     private int idRol = 0;
 
-    // Variables de paginación server-side
-    private int TotalItems = 0;
-    private int currentPage = 1;
-    private int currentSize = 50;
-    private HashSet<string> sociedadesColapsadas = new();
-    private Dictionary<int, long> totalesGlobalesPorSociedad = new();
-    private Dictionary<int, int> totalAccionistasPorSociedad = new();
-    private HashSet<int> accionistasQueSonCustodios = new();
+    // Control de rendimiento y Debounce para búsqueda
+    private CancellationTokenSource? _searchCts;
+    private bool _busquedaPreviaAplicada = false;
 
     [Inject] private IAccionistaSociedad repository { get; set; } = null!;
     [Inject] private ITitulo repotitulo { get; set; } = null!;
@@ -289,123 +460,297 @@
         {
             await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
         }
-        await LoadGenericDataAsync();
+
+        await CargarGruposSociedadesAsync();
     }
 
-    private async Task HandlePageChanged(int newPage)
-    {
-        currentPage = newPage;
-        await LoadGenericDataAsync();
-    }
-
-    private async Task HandlePageSizeChanged(int newSize)
-    {
-        currentSize = newSize;
-        currentPage = 1;
-        await LoadGenericDataAsync();
-    }
-
-    private async Task LoadGenericDataAsync()
+    private async Task CargarGruposSociedadesAsync()
     {
         cargando = true;
         StateHasChanged();
         try
         {
-            List<AccionistaSociedadVerDto> listNewAccionista = new();
-            var paginatedResult = await repository.GetPaginatedAsync(2, currentPage, currentSize, searchTerm);
-            TotalItems = paginatedResult.TotalCount;
-            var listAaccionista = paginatedResult.Items;
-            
-            var listTitulos = await repotitulo.GetAllAsync(); // Idealmente esto también debería optimizarse, pero por ahora se mantiene
+            var todasSociedades = await repository.GetAllSociedadesAsync(2);
+            var activas = todasSociedades
+                .Where(s => /*s.EstatusSociedad?.Id == 2 &&*/ s.Empresa != null)
+                .OrderBy(s => s.Empresa!.Nombre)
+                .ToList();
 
-            foreach (var item in listAaccionista)
+            List<SociedadGrupoModel> lista = new();
+
+            foreach (var soc in activas)
             {
-                Int64 nroacciones = 0;
-                decimal porcparticipa = 0;
-                Int64 accionesaux = 0;
-                if (item.NroAcciones != null)
+                int totalAccionistas = await repository.GetTotalAccionistasBySociedadIdAsync(soc.Id, 2);
+                if (totalAccionistas > 0)
                 {
-                    accionesaux = (Int64)item.NroAcciones;
-                }
-
-                var titulos = listTitulos.Where(x => x.AccionistaSociedad.Id == item.Id);
-                if (titulos != null && titulos.Count() > 0)
-                {
-                    nroacciones = (Int64) titulos.Where(x => x.Anulado != 1).Sum(x => x.Acciones);
-
-                    if(nroacciones > 0)
+                    long totalAcciones = await repository.GetTotalAccionesBySociedadIdAsync(soc.Id, 2);
+                    int totalCustodiados = await repository.GetTotalCustodiadosCountBySociedadIdAsync(soc.Id, 2);
+                    lista.Add(new SociedadGrupoModel
                     {
-                        if (nroacciones != accionesaux)
-                        {
-                            await repository.UpdateNroAccionesAsync(item.Accionista.Id, item.Sociedad.Id, nroacciones, item.UpdateUserId, 0);
-                        }
-                    }
-                }                
-
-                if (item.Sociedad != null)
-                {
-                    if (item.Sociedad.NumeroAcciones != null)
-                    {
-                        porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
-                    }
-                }
-
-                AccionistaSociedadVerDto accionista = new()
-                {
-                    Id = item.Id,
-                    SociedadId = item.Sociedad.Id, // <- Modificamos esto en el DTO en un paso anterior o usaremos item.Sociedad.Id? No, el Dto no tiene SociedadId, usaremos otra forma.
-                    AccionistaId = item.Accionista.Id,
-                    SociedadNombre = item.Sociedad?.Empresa?.Nombre,
-                    TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
-                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3) ? item.Accionista?.Nombre : (item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion,
-                    NroAcciones = (nroacciones != 0) ? nroacciones : accionesaux,
-                    Participacion = porcparticipa,
-                    CreateDate = item.CreateDate,
-                    UpdateDate = item.UpdateDate
-                };
-
-                listNewAccionista.Add(accionista);
-            }
-
-            // Precargar el Gran Total desde BD para cada sociedad en pantalla
-            var sociedadesUnicasEnPantalla = listAaccionista.Select(x => x.Sociedad).Where(s => s != null).DistinctBy(s => s.Id).ToList();
-            accionistasQueSonCustodios.Clear();
-            foreach(var s in sociedadesUnicasEnPantalla)
-            {
-                if(!totalesGlobalesPorSociedad.ContainsKey(s.Id))
-                {
-                    long totalReal = await repository.GetTotalAccionesBySociedadIdAsync(s.Id);
-                    totalesGlobalesPorSociedad[s.Id] = totalReal;
-                    int totalAccionistas = await repository.GetTotalAccionistasBySociedadIdAsync(s.Id);
-                    totalAccionistasPorSociedad[s.Id] = totalAccionistas;
-                }
-
-                var custodiosId = await repository.GetCustodiosIdBySociedadAsync(s.Id);
-                foreach (var cid in custodiosId) accionistasQueSonCustodios.Add(cid);
-            }
-
-            foreach(var dto in listNewAccionista)
-            {
-                // CustodioId guarda el Id de la relación (AccionistaSociedad.Id), NO el del Accionista
-                if (accionistasQueSonCustodios.Contains(dto.Id))
-                {
-                    dto.EsCustodio = true;
+                        SociedadId = soc.Id,
+                        SociedadNombre = soc.Empresa?.Nombre ?? $"Sociedad #{soc.Id}",
+                        NumeroAccionesSociedad = soc.NumeroAcciones,
+                        GranTotalAcciones = totalAcciones,
+                        GranTotalAccionistas = totalAccionistas,
+                        TotalSubCustodiados = totalCustodiados,
+                        IsExpanded = false
+                    });
                 }
             }
 
-            // Ya no hacemos OrderBy en memoria porque el repositorio lo trae ordenado
-            Listgral = listNewAccionista;
+            gruposSociedades = lista;
+            FiltrarGrupos();
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+            await MostrarNotificacion("Error al cargar sociedades: " + ex.Message, true);
         }
         finally
         {
             cargando = false;
+            StateHasChanged();
         }
+    }
+
+    private async Task ToggleSociedad(SociedadGrupoModel grupo)
+    {
+        grupo.IsExpanded = !grupo.IsExpanded;
+
+        if (grupo.IsExpanded && !grupo.Accionistas.Any())
+        {
+            await CargarAccionistasDeGrupoAsync(grupo);
+        }
+
+        FiltrarAccionistasEnGrupo(grupo);
+        StateHasChanged();
+    }
+
+    private async Task CargarAccionistasDeGrupoAsync(SociedadGrupoModel grupo)
+    {
+        grupo.IsLoading = true;
+        StateHasChanged();
+        try
+        {
+            var accionistasDb = await repository.GetBySociedadIdAsync(grupo.SociedadId);
+            var activos = accionistasDb
+                .Where(x => x.EstatusAccionista?.Id == 2 && x.CustodioId == null)
+                .ToList();
+
+            var custodiosIds = await repository.GetCustodiosIdBySociedadAsync(grupo.SociedadId, 2);
+            var custodiosSet = new HashSet<int>(custodiosIds);
+
+            List<AccionistaSociedadVerDto> listaDto = new();
+
+            foreach (var item in activos)
+            {
+                long nroAcciones = item.NroAcciones ?? 0;
+                decimal porcParticipa = 0;
+
+                if (!string.IsNullOrEmpty(grupo.NumeroAccionesSociedad) && long.TryParse(grupo.NumeroAccionesSociedad, out long numTotalSociedad) && numTotalSociedad > 0)
+                {
+                    porcParticipa = Math.Round((decimal)nroAcciones / numTotalSociedad * 100, 6);
+                }
+
+                var dto = new AccionistaSociedadVerDto
+                {
+                    Id = item.Id,
+                    SociedadId = grupo.SociedadId,
+                    AccionistaId = item.Accionista?.Id ?? 0,
+                    SociedadNombre = grupo.SociedadNombre,
+                    TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
+                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3)
+                        ? item.Accionista?.Nombre
+                        : ((item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion),
+                    NroAcciones = nroAcciones,
+                    Participacion = porcParticipa,
+                    EsCustodio = custodiosSet.Contains(item.Id),
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                };
+
+                listaDto.Add(dto);
+            }
+
+            grupo.Accionistas = listaDto.OrderByDescending(x => x.NroAcciones).ToList();
+            FiltrarAccionistasEnGrupo(grupo);
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion($"Error cargando accionistas de {grupo.SociedadNombre}: {ex.Message}", true);
+        }
+        finally
+        {
+            grupo.IsLoading = false;
+        }
+    }
+
+    private void FiltrarGrupos()
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            gruposFiltrados = gruposSociedades;
+            foreach (var g in gruposFiltrados)
+            {
+                g.AccionistasFiltrados = g.Accionistas;
+                g.CurrentPage = 1;
+            }
+        }
+        else
+        {
+            var term = searchTerm.Trim().ToLowerInvariant();
+            gruposFiltrados = gruposSociedades.Where(g =>
+                g.SociedadNombre.ToLowerInvariant().Contains(term) ||
+                g.Accionistas.Any(a => (a.AccionistaNombre ?? "").ToLowerInvariant().Contains(term))
+            ).ToList();
+
+            foreach (var g in gruposFiltrados)
+            {
+                if (g.Accionistas.Any())
+                {
+                    FiltrarAccionistasEnGrupo(g);
+                }
+                g.IsExpanded = true; // Auto-expandir cuando hay búsqueda activa
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void FiltrarAccionistasEnGrupo(SociedadGrupoModel grupo)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            grupo.AccionistasFiltrados = grupo.Accionistas;
+        }
+        else
+        {
+            var term = searchTerm.Trim().ToLowerInvariant();
+            // Si la búsqueda coincide con la sociedad, mostramos todos; si no, filtramos por nombre de accionista
+            if (grupo.SociedadNombre.ToLowerInvariant().Contains(term))
+            {
+                grupo.AccionistasFiltrados = grupo.Accionistas;
+            }
+            else
+            {
+                grupo.AccionistasFiltrados = grupo.Accionistas
+                    .Where(a => (a.AccionistaNombre ?? "").ToLowerInvariant().Contains(term))
+                    .ToList();
+            }
+        }
+        grupo.CurrentPage = 1;
+    }
+
+    /// <summary>
+    /// Optimización de rendimiento (Debounce + Umbral mínimo de caracteres):
+    /// Espera 350 ms tras la última pulsación de tecla y requiere al menos 3 caracteres.
+    /// Esto evita saturar el WebSocket de Blazor Server y previene ejecuciones masivas de filtrado.
+    /// </summary>
+    private async Task OnSearchInputChanged()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        try
+        {
+            var trimmed = (searchTerm ?? "").Trim();
+
+            // Si el término tiene menos de 3 caracteres
+            if (trimmed.Length < 3)
+            {
+                // Si previamente se había ejecutado un filtro con 3+ caracteres, restauramos la vista completa
+                if (_busquedaPreviaAplicada)
+                {
+                    _busquedaPreviaAplicada = false;
+                    FiltrarGrupos();
+                }
+                return;
+            }
+
+            // Esperar 350 ms a que el usuario termine de tipear
+            await Task.Delay(350, token);
+
+            if (!token.IsCancellationRequested)
+            {
+                _busquedaPreviaAplicada = true;
+                FiltrarGrupos();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancelación intencional al presionar una nueva tecla antes del tiempo de espera
+        }
+    }
+
+    private void LimpiarBusqueda()
+    {
+        _searchCts?.Cancel();
+        searchTerm = "";
+        _busquedaPreviaAplicada = false;
+        FiltrarGrupos();
+    }
+
+    private async Task ExpandirTodo()
+    {
+        cargando = true;
+        StateHasChanged();
+
+        foreach (var grupo in gruposFiltrados)
+        {
+            grupo.IsExpanded = true;
+            if (!grupo.Accionistas.Any())
+            {
+                await CargarAccionistasDeGrupoAsync(grupo);
+            }
+            FiltrarAccionistasEnGrupo(grupo);
+        }
+
+        cargando = false;
+        StateHasChanged();
+    }
+
+    private void ColapsarTodo()
+    {
+        foreach (var grupo in gruposFiltrados)
+        {
+            grupo.IsExpanded = false;
+        }
+        StateHasChanged();
+    }
+
+    private async Task ToggleCustodiados(AccionistaSociedadVerDto p)
+    {
+        p.MostrarCustodiados = !p.MostrarCustodiados;
+
+        if (p.MostrarCustodiados && !p.SubCustodiados.Any())
+        {
+            var custodiadosDb = await repository.GetCustodiadosAsync(p.SociedadId, p.Id, 2);
+            var grupo = gruposSociedades.FirstOrDefault(g => g.SociedadId == p.SociedadId);
+            long numTotalSociedad = 0;
+            if (grupo != null && !string.IsNullOrEmpty(grupo.NumeroAccionesSociedad) && long.TryParse(grupo.NumeroAccionesSociedad, out long n))
+            {
+                numTotalSociedad = n;
+            }
+
+            p.SubCustodiados = custodiadosDb.Select(x => new AccionistaSociedadVerDto
+            {
+                Id = x.Id,
+                SociedadId = p.SociedadId,
+                SociedadNombre = p.SociedadNombre,
+                AccionistaId = x.Accionista?.Id ?? 0,
+                DocumentoIdentidad = x.Accionista?.Documento1,
+                AccionistaNombre = (x.Accionista?.TipoAccionista?.Id != 3) ? x.Accionista?.Nombre : x.Accionista?.NombreSusesion,
+                TipoAccionistaNombre = x.Accionista?.TipoAccionista?.Nombre,
+                NroAcciones = x.NroAcciones,
+                Participacion = (numTotalSociedad > 0 && (x.NroAcciones ?? 0) > 0)
+                    ? Math.Round((decimal)x.NroAcciones!.Value / numTotalSociedad * 100, 6)
+                    : 0,
+                CreateDate = x.CreateDate,
+                UpdateDate = x.UpdateDate
+            }).ToList();
+        }
+        p.SubCurrentPage = 1;
+        StateHasChanged();
     }
 
     private void AbrirModalNuevo()
@@ -414,38 +759,11 @@
         mostrarModal = true;
     }
 
-    private async Task FiltrarBusqueda(ChangeEventArgs e)
-    {
-        searchTerm = e.Value?.ToString() ?? "";
-        currentPage = 1;
-        await LoadGenericDataAsync();
-    }
-
-    private async Task MostrarNotificacion(string mensaje, bool esError = false)
-    {
-        mensajeAlerta = mensaje;
-        claseAlerta = esError ? "alert-danger" : "alert-success";
-        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
-
-        mostrarAlerta = true;
-        StateHasChanged();
-
-        await Task.Delay(4000); // 4 segundos para errores es mejor
-        mostrarAlerta = false;
-        StateHasChanged();
-    }
-
-    private void Editar(AccionistaSociedadVerDto item)
-    {
-        idAccionista = item.Id;
-        mostrarModal = true;
-    }
-
     private void VerTitulos(AccionistaSociedadVerDto item)
     {
         navManager.NavigateTo($"/vertitulos/{item.Id}");
     }
-    
+
     private void VerificarEliminar(AccionistaSociedadVerDto item)
     {
         entidadParaEliminar = item;
@@ -463,15 +781,12 @@
         {
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
-            await LoadGenericDataAsync();
-            await MostrarNotificacion($"Accionista - Sociedad eliminado correctamente");
+            await CargarGruposSociedadesAsync();
+            await MostrarNotificacion("Accionista - Sociedad eliminado correctamente");
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al eliminar: {ex.Message}");
-            await MostrarNotificacion("No se pudo eliminar el registro", true);
+            await MostrarNotificacion("No se pudo eliminar el registro: " + ex.Message, true);
         }
         finally
         {
@@ -495,18 +810,14 @@
         cargando = true;
         try
         {
-            repository.Activar(entidadParaEliminar.Id, 2); // 2 para inactivar
+            repository.Activar(entidadParaEliminar.Id, 1);
             mostrarModalInactivar = false;
-            await MostrarNotificacion($"");
-            await LoadGenericDataAsync();
-            await MostrarNotificacion($"Accionista - Sociedad inactivado correctamente");
+            await CargarGruposSociedadesAsync();
+            await MostrarNotificacion("Accionista - Sociedad inactivado correctamente");
         }
         catch (Exception ex)
         {
-            cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inactivar: {ex.Message}");
-            await MostrarNotificacion("No se pudo inactivar el registro", true);
+            await MostrarNotificacion("No se pudo inactivar el registro: " + ex.Message, true);
         }
         finally
         {
@@ -517,114 +828,31 @@
 
     private async Task ManejarCierreModal(bool guardadoExitoso)
     {
-        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
-        // 1. Cierra el modal en cualquier caso (true o false)
         mostrarModal = false;
-
-        // 2. Si se guardó con éxito, refresca los datos
         if (guardadoExitoso)
         {
-            await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Accionista - Sociedad guardada correctamente");
-        }
-
-        cargando = false; // Oculta el spinner después de todo
-    }
-
-    private async Task ToggleCustodiados(AccionistaSociedadVerDto p)
-    {
-        p.MostrarCustodiados = !p.MostrarCustodiados;
-
-        if (p.MostrarCustodiados && !p.SubCustodiados.Any())
-        {
-            var custodiadosDb = await repository.GetCustodiadosAsync(p.SociedadId, p.Id);
-            p.SubCustodiados = custodiadosDb.Select(x => new AccionistaSociedadVerDto
-            {
-                Id = x.Id,
-                AccionistaId = x.Accionista?.Id ?? 0,
-                AccionistaNombre = (x.Accionista?.TipoAccionista?.Id != 3) ? x.Accionista?.Nombre : x.Accionista?.NombreSusesion,
-                TipoAccionistaNombre = x.Accionista?.TipoAccionista?.Nombre,
-                NroAcciones = x.NroAcciones
-            }).ToList();
+            await CargarGruposSociedadesAsync();
+            await MostrarNotificacion("Accionista - Sociedad guardado correctamente");
         }
     }
 
-    private void ToggleSociedad(string nombreSociedad)
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
     {
-        if (sociedadesColapsadas.Contains(nombreSociedad))
-        {
-            sociedadesColapsadas.Remove(nombreSociedad);
-        }
-        else
-        {
-            sociedadesColapsadas.Add(nombreSociedad);
-        }
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000);
+        mostrarAlerta = false;
         StateHasChanged();
     }
 
-    private void ExpandirTodo()
+    public void Dispose()
     {
-        sociedadesColapsadas.Clear();
-        StateHasChanged();
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
     }
-
-    private void ColapsarTodo()
-    {
-        foreach (var item in Listgral)
-        {
-            if (!string.IsNullOrEmpty(item.SociedadNombre))
-            {
-                sociedadesColapsadas.Add(item.SociedadNombre);
-            }
-        }
-        StateHasChanged();
-    }
-
-    private void OrdenarPor(string columna)
-    {
-        if (Listgral == null || !Listgral.Any()) return;
-
-        // Si hace clic en la misma columna, invierte el sentido; si es otra, empieza en ascendente
-        if (columnaActual == columna)
-        {
-            ordenAscendente = !ordenAscendente;
-        }
-        else
-        {
-            columnaActual = columna;
-            ordenAscendente = true;
-        }
-
-        // Ejecutar el ordenamiento según la columna seleccionada
-        if (columna == "Sociedad")
-        {
-            Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.SociedadNombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.SociedadNombre ?? "").ToList();
-        }
-        else if (columna == "Nombre")
-        {
-            Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.AccionistaNombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.AccionistaNombre ?? "").ToList();
-        }
-        else if (columna == "TipoAccionista")
-        {
-            Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.TipoAccionistaNombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.TipoAccionistaNombre ?? "").ToList();
-        }
-
-        StateHasChanged(); // Forzar el refresco visual de la grilla en Blazor
-    }
-
-    // Método auxiliar para alternar los íconos de Bootstrap Icons (bi)
-    private string ObtenerIconoOrden(string columna)
-    {
-        if (columnaActual != columna)
-        {
-            return "bi-arrow-down-up text-muted opacity-50"; // Ícono neutral
-        }
-        return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
-    }
-} 
+}

@@ -1,6 +1,7 @@
 @page "/accionistassociedad"
 
 @rendermode InteractiveServer
+@implements IDisposable
 
 <div class="container-fluid mt-4">
     <div class="card shadow-sm border-0 h-auto">
@@ -46,13 +47,13 @@
                         </span>
                         <input type="text"
                                class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por accionista o sociedad..."
+                               placeholder="Buscar por accionista o sociedad (mín. 3 caracteres)..."
                                @bind="searchTerm"
                                @bind:event="oninput"
-                               @bind:after="FiltrarGrupos" />
+                               @bind:after="OnSearchInputChanged" />
                         @if (!string.IsNullOrEmpty(searchTerm))
                         {
-                            <button class="btn btn-outline-secondary border-start-0 bg-white" @onclick="LimpiarBusqueda">
+                            <button class="btn btn-outline-secondary border-start-0 bg-white" @onclick="LimpiarBusqueda" title="Limpiar búsqueda">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         }
@@ -175,26 +176,129 @@
                                             {
                                                 <tr>
                                                     <td colspan="8" class="p-0 border-0">
-                                                        <div class="bg-light p-2 ps-5 shadow-inner">
-                                                            <table class="table table-sm table-bordered m-0 bg-white" style="font-size: 0.85rem;">
-                                                                <thead class="table-secondary text-start">
-                                                                    <tr>
-                                                                        <th class="ps-3" style="width: 40%;">Sub-Accionista</th>
-                                                                        <th style="width: 30%;">Tipo</th>
-                                                                        <th style="width: 30%;">Acciones Custodiadas</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody class="text-start">
-                                                                    @foreach (var sub in p.SubCustodiados)
+                                                        <div class="bg-light p-3 ps-5 border-start border-4 border-primary shadow-sm my-2 rounded-2">
+                                                            <!-- Encabezado y Buscador de Sub-cuentas -->
+                                                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                                <div>
+                                                                    <span class="fw-bold text-dark me-2">
+                                                                        <i class="bi bi-bank2 me-1 text-primary"></i> Sub-Cuentas Custodiadas en @p.AccionistaNombre
+                                                                    </span>
+                                                                    <span class="badge bg-primary text-white font-monospace">
+                                                                        @UtilClass.FormatearMiles(p.SubCustodiados.Count) registros | @UtilClass.FormatearMiles(p.NroAcciones ?? 0) acciones
+                                                                    </span>
+                                                                </div>
+                                                                <div class="input-group input-group-sm mt-2 mt-md-0" style="max-width: 380px;">
+                                                                    <span class="input-group-text bg-white border-end-0 text-secondary">
+                                                                        <i class="bi bi-search"></i>
+                                                                    </span>
+                                                                    <input type="text"
+                                                                           class="form-control border-start-0 ps-0"
+                                                                           placeholder="Buscar por Nombre o Cédula/RIF (mín. 2 letras)..."
+                                                                           @bind="p.SubSearchTerm"
+                                                                           @bind:event="oninput"
+                                                                           @bind:after="() => { p.SubCurrentPage = 1; StateHasChanged(); }" />
+                                                                    @if (!string.IsNullOrEmpty(p.SubSearchTerm))
                                                                     {
-                                                                        <tr>
-                                                                            <td class="ps-3"><i class="bi bi-person-badge me-2 text-muted"></i>@sub.AccionistaNombre</td>
-                                                                            <td>@sub.TipoAccionistaNombre</td>
-                                                                            <td>@UtilClass.FormatearMiles(sub.NroAcciones ?? 0)</td>
-                                                                        </tr>
+                                                                        <button class="btn btn-outline-secondary border-start-0 bg-white" @onclick="() => { p.SubSearchTerm = string.Empty; p.SubCurrentPage = 1; }" title="Limpiar búsqueda">
+                                                                            <i class="bi bi-x-lg"></i>
+                                                                        </button>
                                                                     }
-                                                                </tbody>
-                                                            </table>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Tabla Paginada de Sub-cuentas -->
+                                                            <div class="table-responsive bg-white rounded border shadow-xs">
+                                                                <table class="table table-sm table-hover align-middle m-0" style="font-size: 0.85rem;">
+                                                                    <thead class="table-light border-bottom text-secondary">
+                                                                        <tr>
+                                                                            <th class="ps-3 py-2" style="width: 14%;">Cédula / RIF</th>
+                                                                            <th class="py-2" style="width: 26%;">Sub-Accionista (Beneficiario / Casa de Bolsa)</th>
+                                                                            <th class="py-2" style="width: 12%;">Tipo</th>
+                                                                            <th class="py-2 text-end" style="width: 12%;">Nro. Acciones</th>
+                                                                            <th class="py-2 text-end" style="width: 8%;">% Part.</th>
+                                                                            <th class="py-2 text-center" style="width: 9%;">Fecha Creación</th>
+                                                                            <th class="py-2 text-center" style="width: 9%;">Modificación</th>
+                                                                            <th class="pe-3 py-2 text-end" style="width: 10%;">Acciones</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @if (!p.SubCustodiadosFiltrados.Any())
+                                                                        {
+                                                                            <tr>
+                                                                                <td colspan="8" class="text-center py-3 text-muted fst-italic">
+                                                                                    No se encontraron sub-cuentas con el término ingresado.
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            @foreach (var sub in p.SubCustodiadosPaginados)
+                                                                            {
+                                                                                <tr class="border-bottom">
+                                                                                    <td class="ps-3 font-monospace small text-secondary">
+                                                                                        <i class="bi bi-card-heading me-1 text-muted"></i>@(string.IsNullOrWhiteSpace(sub.DocumentoIdentidad) ? "-" : sub.DocumentoIdentidad)
+                                                                                    </td>
+                                                                                    <td class="fw-semibold text-dark">
+                                                                                        <i class="bi bi-person me-1 text-muted"></i>@sub.AccionistaNombre
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span class="badge bg-light text-secondary border">@(sub.TipoAccionistaNombre ?? "Sub-Cuenta")</span>
+                                                                                    </td>
+                                                                                    <td class="text-end font-monospace fw-bold text-primary">
+                                                                                        @UtilClass.FormatearMiles(sub.NroAcciones ?? 0)
+                                                                                    </td>
+                                                                                    <td class="text-end text-secondary small">
+                                                                                        @(sub.Participacion > 0 ? $"{sub.Participacion}%" : "0%")
+                                                                                    </td>
+                                                                                    <td class="text-center text-secondary small">
+                                                                                        @sub.CreateDate.ToShortDateString()
+                                                                                    </td>
+                                                                                    <td class="text-center text-secondary small">
+                                                                                        @sub.UpdateDate.ToShortDateString()
+                                                                                    </td>
+                                                                                    <td class="text-end pe-3">
+                                                                                        <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => VerTitulos(sub)" title="Ver Títulos">
+                                                                                            <i class="bi bi-file-medical fs-6"></i>
+                                                                                        </button>
+                                                                                        @if (idRol == 1 || idRol == 2)
+                                                                                        {
+                                                                                            <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(sub)" title="Eliminar">
+                                                                                                <i class="bi bi-trash3 fs-6"></i>
+                                                                                            </button>
+                                                                                            <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarInactivar(sub)" title="Inactivar">
+                                                                                                <i class="bi bi-x-circle fs-6"></i>
+                                                                                            </button>
+                                                                                        }
+                                                                                    </td>
+                                                                                </tr>
+                                                                            }
+                                                                        }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+                                                            <!-- Paginador de Sub-cuentas -->
+                                                            @if (p.TotalSubPages > 1)
+                                                            {
+                                                                <div class="d-flex flex-wrap align-items-center justify-content-between pt-2 px-1 text-muted small mt-1">
+                                                                    <span>
+                                                                        Mostrando @((p.SubCurrentPage - 1) * p.SubPageSize + 1) - @Math.Min(p.SubCurrentPage * p.SubPageSize, p.SubCustodiadosFiltrados.Count()) de @UtilClass.FormatearMiles(p.SubCustodiadosFiltrados.Count()) sub-cuentas
+                                                                    </span>
+                                                                    <div class="d-flex align-items-center gap-1">
+                                                                        <button class="btn btn-outline-secondary btn-sm py-0 px-2 shadow-xs"
+                                                                                disabled="@(p.SubCurrentPage <= 1)"
+                                                                                @onclick="() => p.SubCurrentPage--">
+                                                                            <i class="bi bi-chevron-left me-1"></i> Anterior
+                                                                        </button>
+                                                                        <span class="mx-2 font-monospace">Página @p.SubCurrentPage de @p.TotalSubPages</span>
+                                                                        <button class="btn btn-outline-secondary btn-sm py-0 px-2 shadow-xs"
+                                                                                disabled="@(p.SubCurrentPage >= p.TotalSubPages)"
+                                                                                @onclick="() => p.SubCurrentPage++">
+                                                                            Siguiente <i class="bi bi-chevron-right ms-1"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            }
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -305,6 +409,8 @@
         public string? NumeroAccionesSociedad { get; set; }
         public long GranTotalAcciones { get; set; }
         public int GranTotalAccionistas { get; set; }
+        public int TotalSubCustodiados { get; set; } = 0;
+        public int TotalGeneralAccionistas => GranTotalAccionistas + TotalSubCustodiados;
         public bool IsExpanded { get; set; } = false;
         public bool IsLoading { get; set; } = false;
         public int CurrentPage { get; set; } = 1;
@@ -333,7 +439,10 @@
     private int idAccionista = 0;
     private int idRol = 0;
 
-    [Inject] private ISociedad repoSociedad { get; set; } = null!;
+    // Control de rendimiento y Debounce para búsqueda
+    private CancellationTokenSource? _searchCts;
+    private bool _busquedaPreviaAplicada = false;
+
     [Inject] private IAccionistaSociedad repository { get; set; } = null!;
     [Inject] private ITitulo repotitulo { get; set; } = null!;
 
@@ -361,9 +470,9 @@
         StateHasChanged();
         try
         {
-            var todasSociedades = await repoSociedad.GetAllAsync();
+            var todasSociedades = await repository.GetAllSociedadesAsync(1);
             var activas = todasSociedades
-                .Where(s => s.EstatusSociedad?.Id == 1 && s.Empresa != null)
+                .Where(s => /*s.EstatusSociedad?.Id == 1 &&*/ s.Empresa != null)
                 .OrderBy(s => s.Empresa!.Nombre)
                 .ToList();
 
@@ -371,10 +480,11 @@
 
             foreach (var soc in activas)
             {
-                int totalAccionistas = await repository.GetTotalAccionistasBySociedadIdAsync(soc.Id);
+                int totalAccionistas = await repository.GetTotalAccionistasBySociedadIdAsync(soc.Id, 1);
                 if (totalAccionistas > 0)
                 {
-                    long totalAcciones = await repository.GetTotalAccionesBySociedadIdAsync(soc.Id);
+                    long totalAcciones = await repository.GetTotalAccionesBySociedadIdAsync(soc.Id, 1);
+                    int totalCustodiados = await repository.GetTotalCustodiadosCountBySociedadIdAsync(soc.Id, 1);
                     lista.Add(new SociedadGrupoModel
                     {
                         SociedadId = soc.Id,
@@ -382,6 +492,7 @@
                         NumeroAccionesSociedad = soc.NumeroAcciones,
                         GranTotalAcciones = totalAcciones,
                         GranTotalAccionistas = totalAccionistas,
+                        TotalSubCustodiados = totalCustodiados,
                         IsExpanded = false
                     });
                 }
@@ -425,7 +536,7 @@
                 .Where(x => x.EstatusAccionista?.Id == 1 && x.CustodioId == null)
                 .ToList();
 
-            var custodiosIds = await repository.GetCustodiosIdBySociedadAsync(grupo.SociedadId);
+            var custodiosIds = await repository.GetCustodiosIdBySociedadAsync(grupo.SociedadId, 1);
             var custodiosSet = new HashSet<int>(custodiosIds);
 
             List<AccionistaSociedadVerDto> listaDto = new();
@@ -528,9 +639,54 @@
         grupo.CurrentPage = 1;
     }
 
+    /// <summary>
+    /// Optimización de rendimiento (Debounce + Umbral mínimo de caracteres):
+    /// Espera 350 ms tras la última pulsación de tecla y requiere al menos 3 caracteres.
+    /// Esto evita saturar el WebSocket de Blazor Server y previene ejecuciones masivas de filtrado.
+    /// </summary>
+    private async Task OnSearchInputChanged()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        try
+        {
+            var trimmed = (searchTerm ?? "").Trim();
+
+            // Si el término tiene menos de 3 caracteres
+            if (trimmed.Length < 3)
+            {
+                // Si previamente se había ejecutado un filtro con 3+ caracteres, restauramos la vista completa
+                if (_busquedaPreviaAplicada)
+                {
+                    _busquedaPreviaAplicada = false;
+                    FiltrarGrupos();
+                }
+                return;
+            }
+
+            // Esperar 350 ms a que el usuario termine de tipear
+            await Task.Delay(350, token);
+
+            if (!token.IsCancellationRequested)
+            {
+                _busquedaPreviaAplicada = true;
+                FiltrarGrupos();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancelación intencional al presionar una nueva tecla antes del tiempo de espera
+        }
+    }
+
     private void LimpiarBusqueda()
     {
+        _searchCts?.Cancel();
         searchTerm = "";
+        _busquedaPreviaAplicada = false;
         FiltrarGrupos();
     }
 
@@ -568,16 +724,32 @@
 
         if (p.MostrarCustodiados && !p.SubCustodiados.Any())
         {
-            var custodiadosDb = await repository.GetCustodiadosAsync(p.SociedadId, p.Id);
+            var custodiadosDb = await repository.GetCustodiadosAsync(p.SociedadId, p.Id, 1);
+            var grupo = gruposSociedades.FirstOrDefault(g => g.SociedadId == p.SociedadId);
+            long numTotalSociedad = 0;
+            if (grupo != null && !string.IsNullOrEmpty(grupo.NumeroAccionesSociedad) && long.TryParse(grupo.NumeroAccionesSociedad, out long n))
+            {
+                numTotalSociedad = n;
+            }
+
             p.SubCustodiados = custodiadosDb.Select(x => new AccionistaSociedadVerDto
             {
                 Id = x.Id,
+                SociedadId = p.SociedadId,
+                SociedadNombre = p.SociedadNombre,
                 AccionistaId = x.Accionista?.Id ?? 0,
+                DocumentoIdentidad = x.Accionista?.Documento1,
                 AccionistaNombre = (x.Accionista?.TipoAccionista?.Id != 3) ? x.Accionista?.Nombre : x.Accionista?.NombreSusesion,
                 TipoAccionistaNombre = x.Accionista?.TipoAccionista?.Nombre,
-                NroAcciones = x.NroAcciones
+                NroAcciones = x.NroAcciones,
+                Participacion = (numTotalSociedad > 0 && (x.NroAcciones ?? 0) > 0)
+                    ? Math.Round((decimal)x.NroAcciones!.Value / numTotalSociedad * 100, 6)
+                    : 0,
+                CreateDate = x.CreateDate,
+                UpdateDate = x.UpdateDate
             }).ToList();
         }
+        p.SubCurrentPage = 1;
         StateHasChanged();
     }
 
@@ -676,5 +848,11 @@
         await Task.Delay(4000);
         mostrarAlerta = false;
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
     }
 }

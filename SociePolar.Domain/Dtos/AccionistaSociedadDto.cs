@@ -27,6 +27,7 @@ namespace SociePolar.Domain.Dtos
         public int Id { get; set; }
         public int SociedadId { get; set; }
         public int AccionistaId { get; set; }
+        public string? DocumentoIdentidad { get; set; }
         public string? SociedadNombre { get; set; }
         public string? AccionistaNombre { get; set; }
         public string? TipoAccionistaNombre { get; set; }
@@ -39,5 +40,27 @@ namespace SociePolar.Domain.Dtos
         public bool EsCustodio { get; set; }
         public bool MostrarCustodiados { get; set; }
         public List<AccionistaSociedadVerDto> SubCustodiados { get; set; } = new();
+        public string SubSearchTerm { get; set; } = "";
+        public int SubCurrentPage { get; set; } = 1;
+        public int SubPageSize { get; set; } = 25;
+
+        public IEnumerable<AccionistaSociedadVerDto> SubCustodiadosFiltrados
+        {
+            get
+            {
+                // Optimización: si el término está vacío o tiene menos de 2 caracteres, no filtra la lista en memoria
+                if (string.IsNullOrWhiteSpace(SubSearchTerm) || SubSearchTerm.Trim().Length < 2)
+                    return SubCustodiados;
+                var term = SubSearchTerm.Trim().ToLowerInvariant();
+                return SubCustodiados.Where(x =>
+                    (x.AccionistaNombre ?? "").ToLowerInvariant().Contains(term) ||
+                    (x.DocumentoIdentidad ?? "").ToLowerInvariant().Contains(term));
+            }
+        }
+
+        public int TotalSubPages => Math.Max(1, (int)Math.Ceiling((double)SubCustodiadosFiltrados.Count() / SubPageSize));
+
+        public IEnumerable<AccionistaSociedadVerDto> SubCustodiadosPaginados =>
+            SubCustodiadosFiltrados.Skip((SubCurrentPage - 1) * SubPageSize).Take(SubPageSize);
     }
 }

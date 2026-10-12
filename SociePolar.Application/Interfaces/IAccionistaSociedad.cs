@@ -12,9 +12,9 @@ namespace SociePolar.Application.Interfaces
         Task<AccionistaSociedad?> GetByIdAsync(int id);
         Task<List<AccionistaSociedad>> GetBySociedadIdAsync(int sociedadId);
         Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
-        Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId);
-        Task<List<AccionistaSociedad>> GetCustodiadosAsync(int sociedadId, int custodioId);
-        Task<List<int>> GetCustodiosIdBySociedadAsync(int sociedadId);
+        Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId, int estatusId);
+        Task<List<AccionistaSociedad>> GetCustodiadosAsync(int sociedadId, int custodioId, int estatusId);
+        Task<List<int>> GetCustodiosIdBySociedadAsync(int sociedadId, int estatusId);
         Task AddAsync(AccionistaSociedadDto entity);
         Task<AccionistaSociedad> AddReturnEntidadAsync(AccionistaSociedadDto entity);
         void Update(AccionistaSociedadDto entity);
@@ -24,7 +24,8 @@ namespace SociePolar.Application.Interfaces
         Task<List<AuditoriaNroAccion>?> GetAuditoriaBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
         Task AccionistasSociedadInactivar(int procesoid);
         Task<List<AccionistaSociedadHistorico>> GetHistoricoBySociedadIdRangeDateAsync(int sociedadId, DateTime endDate);
-        Task<int> GetTotalAccionistasBySociedadIdAsync(int sociedadId);
-
+        Task<int> GetTotalAccionistasBySociedadIdAsync(int sociedadId, int estatusId);
+        Task<int> GetTotalCustodiadosCountBySociedadIdAsync(int sociedadId, int estatusId);
+        Task<List<Sociedad>> GetAllSociedadesAsync(int estatusId);
     }
 }

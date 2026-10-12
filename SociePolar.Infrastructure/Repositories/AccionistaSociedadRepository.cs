@@ -237,32 +237,32 @@ namespace SociePolar.Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId)
+        public async Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId, int estatusId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             var sum = await context.Set<AccionistaSociedad>()
-                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == 1 && x.CustodioId == null)
+                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == estatusId && x.CustodioId == null)
                 .SumAsync(x => x.NroAcciones);
             return sum ?? 0;
         }
 
-        public async Task<List<int>> GetCustodiosIdBySociedadAsync(int sociedadId)
+        public async Task<List<int>> GetCustodiosIdBySociedadAsync(int sociedadId, int estatusId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<AccionistaSociedad>()
-                .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId != null && x.EstatusAccionista.Id == 1)
+                .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId != null && x.EstatusAccionista.Id == estatusId)
                 .Select(x => x.CustodioId.Value)
                 .Distinct()
                 .ToListAsync();
         }
 
-        public async Task<List<AccionistaSociedad>> GetCustodiadosAsync(int sociedadId, int custodioId)
+        public async Task<List<AccionistaSociedad>> GetCustodiadosAsync(int sociedadId, int custodioId, int estatusId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<AccionistaSociedad>()
                 .Include(b => b.Accionista).ThenInclude(a => a!.TipoAccionista)
                 .Include(b => b.EstatusAccionista)
-                .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId == custodioId && x.EstatusAccionista.Id == 1)
+                .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId == custodioId && x.EstatusAccionista.Id == estatusId)
                 .OrderBy(x => x.Accionista.Nombre)
                 .ToListAsync();
         }
@@ -401,14 +401,34 @@ namespace SociePolar.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalAccionistasBySociedadIdAsync(int sociedadId)
+        public async Task<int> GetTotalAccionistasBySociedadIdAsync(int sociedadId, int estatusId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             var count = await context.Set<AccionistaSociedad>()
-                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == 1)
+                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == estatusId && x.CustodioId == null)
                 .CountAsync();
             return count;
         }
 
+        public async Task<int> GetTotalCustodiadosCountBySociedadIdAsync(int sociedadId, int estatusId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Where(x => x.Sociedad.Id == sociedadId && x.EstatusAccionista.Id == estatusId && x.CustodioId != null)
+                .CountAsync();
+        }
+
+        public async Task<List<Sociedad>> GetAllSociedadesAsync(int estatusId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            return await context.Set<Sociedad>()
+                .Include(s => s.Empresa)
+                .Include(s => s.EstatusSociedad)
+                // Filtramos directamente en la base de datos si existe alguna relación en AccionistaSociedad con ese estatus
+                .Where(s => context.Set<AccionistaSociedad>()
+                    .Any(a => a.Sociedad.Id == s.Id && a.EstatusAccionista!.Id == estatusId))
+                .ToListAsync();
+        }
     }
 }

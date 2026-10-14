@@ -55,6 +55,10 @@
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Nombre Dividendos</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Ruta Acta</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="width: 15%; font-size: 0.85rem;">Observaciones</th>
+                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Total pagado según Tesorería</th>
+                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Total pagado según Accionistas</th>
+                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Diferencia Tesorería - Accionistas</th>
+                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Monto Total a Repartir</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
                             <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
                         </tr>
@@ -84,6 +88,10 @@
                                 </button>
                             </td>
                             <td class="text-start text-secondary small" style="width: 15%;">@(p.Observaciones?.Length > 25 ? $"{p.Observaciones.Substring(0, 25)}..." : p.Observaciones)</td>
+                            <td class="text-center text-secondary small">@((p.MontoPagadoTesoreria ?? 0).ToString("N2"))</td>
+                            <td class="text-center text-secondary small">@((p.MontoPagadoAccionistas ?? 0).ToString("N2"))</td>
+                            <td class="text-center text-secondary small">@(((p.MontoPagadoTesoreria ?? 0) - (p.MontoPagadoAccionistas ?? 0)).ToString("N2"))</td>
+                            <td class="text-center text-secondary small">@((p.MontoTotalRepartir ?? 0).ToString("N2"))</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
                             <td class="text-end pe-3 text-nowrap" style="width: 120px;">
                                 @if (idRol == 1 || idRol == 2)

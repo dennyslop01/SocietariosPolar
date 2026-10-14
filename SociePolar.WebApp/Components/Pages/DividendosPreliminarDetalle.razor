@@ -67,6 +67,18 @@
                             <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Porción 3 Monto</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 3 %</th>
                             <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 3 Fecha Pago</th>
+                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Porción 4 Monto</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 4 %</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Porción 4 Fecha Pago</th>
+                            <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Observaciones</th>
+                            <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Soporte Enviado 1</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Fecha Soporte 1</th>
+                            <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Soporte Enviado 2</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Fecha Soporte 2</th>
+                            <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Soporte Enviado 3</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Fecha Soporte 3</th>
+                            <th class="py-3 text-secondary fw-bold" style="font-size: 0.85rem;">Soporte Enviado 4</th>
+                            <th class="py-3 text-secondary fw-bold text-center" style="font-size: 0.85rem;">Fecha Soporte 4</th>
                             <th class="py-3 text-secondary fw-bold text-end pe-3" style="font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
@@ -95,6 +107,34 @@
                             <td class="text-end text-secondary small">@p.Porcion3Monto.ToString("N2")</td>
                             <td class="text-center text-secondary small">@p.Porcion3Porcentaje.ToString("N2")%</td>
                             <td class="text-center text-secondary small">@(p.Porcion3FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td class="text-end text-secondary small">@p.Porcion4Monto.ToString("N2")</td>
+                            <td class="text-center text-secondary small">@p.Porcion4Porcentaje.ToString("N2")%</td>
+                            <td class="text-center text-secondary small">@(p.Porcion4FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.Observaciones) ? "-" : p.Observaciones)</td>
+                            <td class="text-center small">
+                                <span class="badge @(p.SoporteEnviadoP1 ? "bg-success" : "bg-light text-secondary border")">
+                                    @(p.SoporteEnviadoP1 ? "Sí" : "No")
+                                </span>
+                            </td>
+                            <td class="text-center text-secondary small">@(p.SoporteFechaP1?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td class="text-center small">
+                                <span class="badge @(p.SoporteEnviadoP2 ? "bg-success" : "bg-light text-secondary border")">
+                                    @(p.SoporteEnviadoP2 ? "Sí" : "No")
+                                </span>
+                            </td>
+                            <td class="text-center text-secondary small">@(p.SoporteFechaP2?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td class="text-center small">
+                                <span class="badge @(p.SoporteEnviadoP3 ? "bg-success" : "bg-light text-secondary border")">
+                                    @(p.SoporteEnviadoP3 ? "Sí" : "No")
+                                </span>
+                            </td>
+                            <td class="text-center text-secondary small">@(p.SoporteFechaP3?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td class="text-center small">
+                                <span class="badge @(p.SoporteEnviadoP4 ? "bg-success" : "bg-light text-secondary border")">
+                                    @(p.SoporteEnviadoP4 ? "Sí" : "No")
+                                </span>
+                            </td>
+                            <td class="text-center text-secondary small">@(p.SoporteFechaP4?.ToString("dd/MM/yyyy") ?? "-")</td>
                             <td class="text-end pe-3">
                                 @if (idRol == 1 || idRol == 2)
                                 {

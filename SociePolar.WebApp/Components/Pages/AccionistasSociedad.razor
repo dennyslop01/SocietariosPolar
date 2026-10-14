@@ -16,7 +16,7 @@
                         <h5 class="mb-0 fw-bold text-dark">
                             Accionistas - Sociedades Activas
                         </h5>
-                        <small class="text-muted">Vista agrupada estilo Lotus Notes (@gruposFiltrados.Count sociedades)</small>
+                        <small class="text-muted">Total Sociedades: (@gruposFiltrados.Count sociedades), Total Acciones: (@gruposSociedades.Sum(g => g.GranTotalAccionistas) acciones)</small>
                     </div>
                 </div>
 
@@ -107,7 +107,7 @@
                                         <i class="bi @(grupo.IsExpanded ? "bi-chevron-down" : "bi-chevron-right") me-2 text-primary fw-bold"></i>
                                         <strong>🏢 @grupo.SociedadNombre</strong>
                                         <span class="float-end badge bg-white text-dark border shadow-sm me-3 mt-1" style="font-size: 0.75rem;">
-                                            Gran Total Empresa: @UtilClass.FormatearMiles(grupo.GranTotalAcciones) acciones y @UtilClass.FormatearMiles(grupo.GranTotalAccionistas) accionistas
+                                            @UtilClass.FormatearMiles(grupo.GranTotalAcciones) Acciones | @UtilClass.FormatearMiles(grupo.GranTotalAccionistas) Accionistas | 
                                         </span>
                                     </td>
                                 </tr>

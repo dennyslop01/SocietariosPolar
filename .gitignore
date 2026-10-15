@@ -420,3 +420,5 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /FactorPolar.WebApp/Polar_Azure.cer
+/SociePolar.WebApp/web.config
+/.gitignore

@@ -1,4 +1,4 @@
-﻿@page "/sociedadesinactivas"
+@page "/sociedadesinactivas"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -52,58 +52,71 @@
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="Sociedad" Items="Listgral" DefaultPageSize="50">
+                <PaginationComponent TItem="Sociedad" Items="Listgral" DefaultPageSize="50" TableClass="polar-table-compact" ContainerStyle="max-height: calc(100vh - 280px);">
                     <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Sociedad</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Ejercicio</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Duración</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Objeto</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 5%; font-size: 0.85rem;">Fecha creación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 5%; font-size: 0.85rem;">Última modificación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                        <tr class="table-light border-bottom text-nowrap">
+                            <!-- Columna Sociedad Fija (Sticky) con sombra divisoria -->
+                            <th class="polar-sticky-col-direct text-start" style="min-width: 240px; max-width: 280px;">Sociedad</th>
+                            <th class="text-center" style="width: 85px; min-width: 85px;">Tipo Doc.</th>
+                            <th class="text-start" style="min-width: 125px;">Documento</th>
+                            <th class="text-start" style="min-width: 220px; max-width: 260px;">Ejercicio Económico</th>
+                            <th class="text-center" style="width: 90px; min-width: 90px;">Duración</th>
+                            <th class="text-start" style="min-width: 220px; max-width: 300px;">Objeto</th>
+                            <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Creación</th>
+                            <th class="polar-date" style="width: 110px; min-width: 110px;">Últ. Modificación</th>
+                            <th class="text-end pe-3" style="width: 140px; min-width: 140px;">Acciones</th>
                         </tr>
                     </ChildContentHeader>
                     <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Empresa?.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.TipoDocumento1?.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Documento1</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.EjercicioEconomico</td>
-                            <td class="text-start text-secondary small" style="width: 5%;">@(p.Duracion != null ? $"{p.Duracion} años" : "")</td>
-                            <td class="text-start text-secondary small" style="width: 20%;">
-                                @(p.Objeto?.Length > 25 ? $"{p.Objeto.Substring(0, 25)}..." : p.Objeto)
+                        <tr class="align-middle border-bottom text-nowrap">
+                            <td class="polar-sticky-col-direct text-start text-dark fw-semibold">
+                                <span class="polar-truncate" style="max-width: 260px;" title="@p.Empresa?.Nombre">
+                                    @p.Empresa?.Nombre
+                                </span>
                             </td>
-                            <td class="text-center text-secondary small" style="width: 5%;">@p.CreateDate.ToShortDateString()</td>
-                            <td class="text-center text-secondary small" style="width: 5%;">@p.UpdateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3" style="width: 10%;">
+                            <td class="text-center text-secondary small">
+                                <span class="badge bg-light text-secondary border px-2 py-1">
+                                    @(string.IsNullOrEmpty(p.TipoDocumento1?.Nombre) ? "-" : p.TipoDocumento1.Nombre)
+                                </span>
+                            </td>
+                            <td class="text-start text-secondary small fw-semibold text-nowrap">
+                                @(string.IsNullOrEmpty(p.Documento1) ? "-" : p.Documento1)
+                            </td>
+                            <td class="text-start text-secondary small">
+                                <span class="polar-truncate" style="max-width: 200px;" title="@p.EjercicioEconomico">
+                                    @(p.EjercicioEconomico?.Length > 30 ? $"{p.EjercicioEconomico.Substring(0, 30)}..." : (string.IsNullOrEmpty(p.EjercicioEconomico) ? "-" : p.EjercicioEconomico))
+                                </span>
+                            </td>
+                            <td class="text-center text-secondary small text-nowrap">
+                                @(p.Duracion != null ? $"{p.Duracion} años" : "-")
+                            </td>
+                            <td class="text-start text-secondary small">
+                                <span class="polar-truncate" style="max-width: 220px;" title="@p.Objeto">
+                                    @(p.Objeto?.Length > 30 ? $"{p.Objeto.Substring(0, 30)}..." : (string.IsNullOrEmpty(p.Objeto) ? "-" : p.Objeto))
+                                </span>
+                            </td>
+                            <td class="polar-date text-secondary small">@p.CreateDate.ToString("dd/MM/yyyy")</td>
+                            <td class="polar-date text-secondary small">@p.UpdateDate.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end pe-3 text-nowrap">
                                 @if (idRol == 1 || idRol == 2 || idRol == 3)
                                 {
-                                    <button class="btn btn-link btn-sm text-primary p-0 me-1" @onclick="() => Editar(p)">
+                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
                                         <i class="bi bi-pencil-square fs-6"></i>
                                     </button>
-                                    <button class="btn btn-link btn-sm text-danger p-0 me-1"
-                                    @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                    <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                         <i class="bi bi-trash3 fs-6"></i>
                                     </button>
                                 }
-                                <button class="btn btn-link btn-sm text-secondary p-0 ms-1"
-                                        @onclick="() => Detalle(p)" title="Detalle Sociedad">
+                                <button class="btn btn-link btn-sm text-secondary p-0 me-2" @onclick="() => Detalle(p)" title="Detalle Sociedad">
                                     <i class="bi bi-file-earmark-text fs-6"></i>
                                 </button>
                                 @if (idRol == 1 || idRol == 2 || idRol == 3)
                                 {
-                                    <button class="btn btn-link btn-sm text-secondary p-0 ms-1"
-                                        @onclick="() => VerificarActivar(p)" title="Activar Sociedad">
+                                    <button class="btn btn-link btn-sm text-success p-0 me-2" @onclick="() => VerificarActivar(p)" title="Activar Sociedad">
                                         <i class="bi bi-check2-circle fs-6"></i>
                                     </button>
-                                    <button class="btn btn-link btn-sm text-secondary p-0  me-1"
-                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
-                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    <button class="btn btn-link btn-sm text-secondary p-0" @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                        <i class="bi bi-file-earmark-pdf fs-6"></i>
                                     </button>
                                 }
                             </td>

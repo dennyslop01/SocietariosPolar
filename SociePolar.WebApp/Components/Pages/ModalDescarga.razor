@@ -3,48 +3,54 @@
 @rendermode InteractiveServer
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px; margin: auto;">
         <EditForm EditContext="editContext" OnSubmit="GuardarEntidad">
             <DataAnnotationsValidator />
 
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
+                    <h5 class="modal-title fs-6 fw-bold mb-0">
                         <i class="bi bi-filetype-csv me-2"></i> Descargar Datos
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
 
+                @if (mostrarAlerta)
+                {
+                    <div class="alert @claseAlerta d-flex align-items-center m-3 mb-0 py-2 px-3 border-0 shadow-sm" role="alert">
+                        <i class="bi @iconoAlerta me-2 fs-5"></i>
+                        <div class="small fw-semibold">
+                            @mensajeAlerta
+                        </div>
+                    </div>
+                }
+
                 <div class="modal-body py-4">
                     @if (cargando)
                     {
-                        <div class="d-flex flex-column justify-content-center align-items-center py-5">
+                        <div class="d-flex flex-column justify-content-center align-items-center py-4">
                             <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
                                 <span class="visually-hidden">Cargando...</span>
                             </div>
-                            <span class="text-secondary fw-semibold">Generando archivo de descarga...</span>
+                            <span class="text-secondary fw-semibold small">Generando archivo de descarga...</span>
                         </div>
                     }
                     else
                     {
-                        <!-- Iniciamos la grilla de filas y columnas -->
-                        <div class="row">
-                            <div class="col-md-10 mb-3">
-                                <label class="form-label fw-bold text-secondary small">Separador</label>
-                                <InputSelect class="form-select form-select-sm" @bind-Value="entidadActual.TipoSeparador">
-                                    <option value="-1">-- Seleccione uno --</option>
-                                    <option value="1">Coma</option>
-                                    <option value="2">Punto y Coma</option>
-                                    @* <option value="3">Tabulador</option> *@
-                                </InputSelect>
-                                <ValidationMessage For="@(() => entidadActual.TipoSeparador)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
-                            </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold text-secondary small">Formato del Separador</label>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="entidadActual.TipoSeparador">
+                                <option value="-1">-- Seleccione uno --</option>
+                                <option value="2">Punto y Coma (;) - Recomendado para Excel</option>
+                                <option value="1">Coma (,)</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => entidadActual.TipoSeparador)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                     }
                 </div>
 
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal">Cancelar</button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" @onclick="CerrarModal" disabled="@cargando">Cancelar</button>
                     <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" disabled="@cargando">
                         <i class="bi bi-download me-1"></i> Descargar
                     </button>
@@ -54,23 +60,19 @@
     </div>
 </div>
 
-@code
-{
+@code {
     [Parameter] public string idModulo { get; set; } = "";
     [Parameter] public string idEstado { get; set; } = "";
-
-    [Parameter]
-    public EventCallback<bool> OnFinalizado { get; set; }
+    [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
 
     private MatrizCSV entidadActual = new();
     private bool cargando = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
-    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string claseAlerta = "alert-success";
     private string iconoAlerta = "bi-check-circle-fill";
 
     private EditContext? editContext;
-    private ValidationMessageStore? mensajeStore;
 
     public class Modulos
     {
@@ -87,7 +89,7 @@
         new Modulos { Id = 5, Nombre = "Certificaciones" },
         new Modulos { Id = 6, Nombre = "Libros" },
         new Modulos { Id = 7, Nombre = "Accionistas" },
-        new Modulos { Id = 8, Nombre = "Títulos" },
+        new Modulos { Id = 8, Nombre = "Titulos" },
     };
 
     [Inject] private ISociedad repository { get; set; } = null!;
@@ -98,126 +100,91 @@
     [Inject] private IAccionista repoaccionista { get; set; } = null!;
     [Inject] private ITitulo repotitulo { get; set; } = null!;
 
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        cargando = true;
-        try
+        entidadActual.TipoSeparador = 2; // Por defecto Punto y Coma para Excel en español
+        editContext = new EditContext(entidadActual);
+    }
+
+    private static string EscaparCsv(object? valor, string separador)
+    {
+        if (valor == null) return string.Empty;
+        string texto = valor.ToString() ?? string.Empty;
+        texto = texto.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+        if (texto.Contains(separador) || texto.Contains('"'))
         {
-            entidadActual.TipoSeparador = -1;
-            editContext = new EditContext(entidadActual);
-            mensajeStore = new ValidationMessageStore(editContext);
+            string escapado = texto.Replace("\"", "\"\"");
+            return "\"" + escapado + "\"";
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            Console.WriteLine($"Error al inicializar el formulario: {ex.Message}");
-            await MostrarNotificacion("Error al preparar el formulario", true);
-        }
-        cargando = false;
-        StateHasChanged();
+        return texto;
     }
 
     private async Task GuardarEntidad()
     {
-        bool formularioValido = editContext.Validate();
-        cargando = true;
-
+        bool formularioValido = editContext?.Validate() ?? false;
         if (!formularioValido)
         {
-            StateHasChanged();
-            cargando = false;
-            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
-            await jsRuntime.InvokeVoidAsync("eval", @"
-                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
-                if (m) {
-                    m.scrollTop = 0;
-                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
-                }
-                var firstInput = document.querySelector('.modal select, .modal input');
-                if (firstInput) {
-                    try { firstInput.focus(); } catch(e) {}
-                    firstInput.classList.remove('pulse-invalid-field');
-                    void firstInput.offsetWidth;
-                    firstInput.classList.add('pulse-invalid-field');
-                }
-            ");
+            await MostrarNotificacion("Por favor seleccione un separador válido", true);
             return;
         }
 
+        cargando = true;
+        StateHasChanged();
+
         try
         {
-            string separador = string.Empty;
-
-            switch (entidadActual.TipoSeparador)
+            string separador = entidadActual.TipoSeparador switch
             {
-                case 1:
-                    separador = ",";
-                    break;
-                case 2:
-                    separador = ";";
-                    break;
-                case 3:
-                    separador = @"\t";
-                    break;
-            }
+                1 => ",",
+                2 => ";",
+                3 => "\t",
+                _ => ";"
+            };
 
-            await ExportarCsv(separador);
+            bool exito = await ExportarCsv(separador);
             cargando = false;
             StateHasChanged();
-            await OnFinalizado.InvokeAsync(true);
+
+            if (exito)
+            {
+                await OnFinalizado.InvokeAsync(true);
+            }
         }
         catch (Exception ex)
         {
             cargando = false;
             StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+            await MostrarNotificacion("Error al generar descarga: " + ex.Message, true);
         }
     }
 
-    private async Task ExportarCsv(string separador)
+    private async Task<bool> ExportarCsv(string separador)
     {
-        try
+        string modulo = ListModulos.FirstOrDefault(m => m.Id == int.Parse(idModulo))?.Nombre ?? "Datos";
+        string csvString = idModulo switch
         {
-            string modulo = ListModulos.Where(m => m.Id == int.Parse(idModulo)).Select(m => m.Nombre).FirstOrDefault() ?? "Desconocido";
-            string csvString = string.Empty;
+            "1" => await GenerarSociedadCsv(separador),
+            "2" => await GenerarAutoridadCsv(separador),
+            "3" => await GenerarAsambleaCsv(separador, 0),
+            "4" => await GenerarAsambleaCsv(separador, 1),
+            "5" => await GenerarCertificacionCsv(separador),
+            "6" => await GenerarLibrosCsv(separador),
+            "7" => await GenerarAccionistaCsv(separador),
+            "8" => await GenerarTituloCsv(separador),
+            _ => string.Empty
+        };
 
-            switch (idModulo)
-            {
-                case "1": // Sociedades
-                    csvString = await GenerarSociedadCsv(separador);
-                    break;
-                case "2": // Autoridades
-                    csvString = await GenerarAutoridadCsv(separador);
-                    break;
-                case "3": // Asambleas
-                    csvString = await GenerarAsambleaCsv(separador, 0);
-                    break;
-                case "4": // Reformas
-                    csvString = await GenerarAsambleaCsv(separador, 1);
-                    break;
-                case "5": // Certificaciones
-                    csvString = await GenerarCertificacionCsv(separador);
-                    break;
-                case "6": // Libros
-                    csvString = await GenerarLibrosCsv(separador);
-                    break;
-                case "7": // Accionistas
-                    csvString = await GenerarAccionistaCsv(separador);
-                    break;
-                case "8": // Títulos
-                    csvString = await GenerarTituloCsv(separador);
-                    break;
-            }
-            await jsRuntime.InvokeVoidAsync("downloadFileFromStream", $"Data-{modulo}-{(idEstado == "1" ? "Activo" : "Inactivo")}.csv", csvString);
-        }
-        catch (Exception ex)
+        if (string.IsNullOrWhiteSpace(csvString))
         {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
+            await MostrarNotificacion("No se encontraron registros para exportar en este módulo", true);
+            return false;
         }
+
+        string sufijo = idModulo == "8" ? $"Accionista-{idEstado}" : (idEstado == "1" ? "Activo" : "Inactivo");
+        string fileName = $"Data-{modulo}-{sufijo}.csv";
+
+        await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csvString);
+        return true;
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)
@@ -229,287 +196,406 @@
         mostrarAlerta = true;
         StateHasChanged();
 
-        await Task.Delay(4000); // 4 segundos para errores es mejor
+        await Task.Delay(4000);
         mostrarAlerta = false;
         StateHasChanged();
     }
 
     private async Task<string> GenerarSociedadCsv(string separador)
     {
-        try
+        var sb = new StringBuilder();
+        var listSociedades = await repository.GetAllAsync();
+        int.TryParse(idEstado, out int targetEstado);
+
+        var listGral = listSociedades
+            .Where(x => x.EstatusSociedad?.Id == targetEstado)
+            .OrderBy(x => x.Empresa?.Nombre ?? string.Empty)
+            .ToList();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Id", "Region", "UnidadNegocio", "Empresa", "NumeroSap", "EstatusSociedad",
+            "TipoSociedadActiva", "Objeto", "Domicilio", "DireccionFiscal", "DatosConstitucion",
+            "FechaConstitucion", "FechaVencimiento", "Duracion", "NumeroAcciones", "AplicaCapital",
+            "Moneda", "CapitalSuscrito", "CapitalPagado", "ClaseAcciones", "FormaAdministracion",
+            "EjercicioEconomico", "NumeroExpediente", "Observaciones", "Documento1", "Nit",
+            "CreateDate", "UpdateDate", "ValorAccion", "AnoPublicacion", "NumeroPublicacion",
+            "FechaPublicacion", "NombreDiario", "ValorPatrimonial", "Documento2", "Documento3",
+            "TipoDocumento1", "TipoDocumento2", "TipoDocumento3"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listSociedades = await repository.GetAllAsync();
-            List<Sociedad> Listgral = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.EstatusSociedad.Id == int.Parse(idEstado)).ToList();
-
-            encabezado += $"Id{separador}Region{separador}UnidadNegocio{separador}Empresa{separador}NumeroSap{separador}EstatusSociedad{separador}TipoSociedadActiva{separador}Objeto{separador}Domicilio{separador}DireccionFiscal{separador}DatosConstitucion{separador}FechaConstitucion{separador}FechaVencimiento{separador}Duracion{separador}";
-            encabezado += $"NumeroAcciones{separador}AplicaCapital{separador}Moneda{separador}CapitalSuscrito{separador}CapitalPagado{separador}ClaseAcciones{separador}FormaAdministracion{separador}EjercicioEconomico{separador}NumeroExpediente{separador}Observaciones{separador}Documento1{separador}Nit{separador}CreateDate{separador}";
-            encabezado += $"UpdateDate{separador}ValorAccion{separador}AnoPublicacion{separador}NumeroPublicacion{separador}FechaPublicacion{separador}NombreDiario{separador}ValorPatrimonial{separador}Documento2{separador}Documento3{separador}TipoDocumento1{separador}TipoDocumento2{separador}TipoDocumento3";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.Region.Nombre}{separador}{item.UnidadNegocio.Nombre}{separador}{item.Empresa.Nombre}{separador}{item.NumeroSap}{separador}{item.EstatusSociedad.Nombre}{separador}{item.TipoSociedadActiva.Nombre}{separador}{item.Objeto}{separador}{item.Domicilio}{separador}{item.DireccionFiscal}{separador}{item.DatosConstitucion}{separador}{item.FechaConstitucion}{separador}{item.FechaVencimiento}{separador}{item.Duracion}{separador}";
-                linea += $"{item.NumeroAcciones}{separador}{item.AplicaCapital}{separador}{item.Moneda.Nombre}{separador}{item.CapitalSuscrito}{separador}{item.CapitalPagado}{separador}{item.ClaseAcciones}{separador}{item.FormaAdministracion}{separador}{item.EjercicioEconomico}{separador}{item.NumeroExpediente}{separador}{item.Observaciones}{separador}{item.Documento1}{separador}{item.Nit}{separador}{item.CreateDate}{separador}";
-                linea += $"{item.UpdateDate}{separador}{item.ValorAccion}{separador}{item.AnoPublicacion}{separador}{item.NumeroPublicacion}{separador}{item.FechaPublicacion}{separador}{item.NombreDiario}{separador}{item.ValorPatrimonial}{separador}{item.Documento2}{separador}{item.Documento3}{separador}{item.TipoDocumento1}{separador}{item.TipoDocumento2}{separador}{item.TipoDocumento3}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.Region?.Nombre, separador),
+                EscaparCsv(item.UnidadNegocio?.Nombre, separador),
+                EscaparCsv(item.Empresa?.Nombre, separador),
+                EscaparCsv(item.NumeroSap, separador),
+                EscaparCsv(item.EstatusSociedad?.Nombre, separador),
+                EscaparCsv(item.TipoSociedadActiva?.Nombre ?? item.TipoSociedadInactiva?.Nombre, separador),
+                EscaparCsv(item.Objeto, separador),
+                EscaparCsv(item.Domicilio, separador),
+                EscaparCsv(item.DireccionFiscal, separador),
+                EscaparCsv(item.DatosConstitucion, separador),
+                EscaparCsv(item.FechaConstitucion?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimiento?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.Duracion, separador),
+                EscaparCsv(item.NumeroAcciones, separador),
+                EscaparCsv(item.AplicaCapital, separador),
+                EscaparCsv(item.Moneda?.Nombre, separador),
+                EscaparCsv(item.CapitalSuscrito, separador),
+                EscaparCsv(item.CapitalPagado, separador),
+                EscaparCsv(item.ClaseAcciones, separador),
+                EscaparCsv(item.FormaAdministracion, separador),
+                EscaparCsv(item.EjercicioEconomico, separador),
+                EscaparCsv(item.NumeroExpediente, separador),
+                EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.Documento1, separador),
+                EscaparCsv(item.Nit, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.ValorAccion, separador),
+                EscaparCsv(item.AnoPublicacion, separador),
+                EscaparCsv(item.NumeroPublicacion, separador),
+                EscaparCsv(item.FechaPublicacion?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.NombreDiario?.Nombre, separador),
+                EscaparCsv(item.ValorPatrimonial, separador),
+                EscaparCsv(item.Documento2, separador),
+                EscaparCsv(item.Documento3, separador),
+                EscaparCsv(item.TipoDocumento1?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento2?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento3?.Nombre, separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+
+        return sb.ToString();
     }
 
     private async Task<string> GenerarAutoridadCsv(string separador)
     {
-        try
+        var sb = new StringBuilder();
+        var listaGral = await repoautoridad.GetAllAsync();
+        int.TryParse(idEstado, out int targetEstado);
+
+        var listGral = listaGral
+            .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado)
+            .OrderBy(x => x.Nombre ?? string.Empty)
+            .ToList();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Id", "Sociedad", "Cargo", "Nombre", "TipoDocumento1", "TipoDocumento2",
+            "Documento1", "Documento2", "Duracion", "CreateDate", "UpdateDate"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listaGral = await repoautoridad.GetAllAsync();
-            List<Autoridad> Listgral = listaGral.OrderBy(x => x.Nombre).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
-
-            encabezado += $"Id{separador}Sociedad{separador}Cargo{separador}Nombre{separador}TipoDocumento1{separador}TipoDocumento2{separador}Documento1{separador}Documento2{separador}Duracion{separador}";
-            encabezado += $"CreateDate{separador}UpdateDate";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.Cargo?.Nombre}{separador}{item.Nombre}{separador}{item.TipoDocumento1?.Nombre}{separador}{item.TipoDocumento2?.Nombre}{separador}{item.Documento1}{separador}{item.Documento2}{separador}{item.Duracion}{separador}";
-                linea += $"{item.CreateDate}{separador}{item.UpdateDate}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.Sociedad?.Empresa?.Nombre, separador),
+                EscaparCsv(item.Cargo?.Nombre, separador),
+                EscaparCsv(item.Nombre, separador),
+                EscaparCsv(item.TipoDocumento1?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento2?.Nombre, separador),
+                EscaparCsv(item.Documento1, separador),
+                EscaparCsv(item.Documento2, separador),
+                EscaparCsv(item.Duracion, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+        return sb.ToString();
     }
 
     private async Task<string> GenerarAsambleaCsv(string separador, int reforma)
     {
-        try
+        var sb = new StringBuilder();
+        var listaGral = await repoasamblea.GetAllAsync();
+        int.TryParse(idEstado, out int targetEstado);
+
+        var listGral = listaGral
+            .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado &&
+                        (x.IndicadorAsamblea == 0 ||
+                         ((reforma == 1 && x.TipoReforma != null) || (reforma != 1 && x.TipoReforma == null))))
+            .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .ToList();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Id", "Sociedad", "TipoAsamblea", "FechaCelebracion", "NumeroActa", "FechaRegistro",
+            "Registro", "NumeroRegistro", "Tomo", "AnoPublicacion", "FechaPublicacion",
+            "NumeroPublicacion", "NombreDiario", "IndicadorAsamblea", "AplicaReforma",
+            "TipoReforma", "CreateDate", "UpdateDate", "Observacion"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listaGral = await repoasamblea.GetAllAsync();
-            List<Asamblea> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Id).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado) && (x.IndicadorAsamblea == 0 ||
-                            ((reforma == 1 && x.TipoReforma != null) || (reforma != 1 && x.TipoReforma == null)))).ToList();
-
-            encabezado += $"Id{separador}Sociedad{separador}TipoAsamblea{separador}FechaCelebracion{separador}NumeroActa{separador}FechaRegistro{separador}Registro{separador}NumeroRegistro{separador}Tomo{separador}";
-            encabezado += $"AnoPublicacion{separador}FechaPublicacion{separador}NumeroPublicacion{separador}NombreDiario{separador}IndicadorAsamblea{separador}AplicaReforma{separador}TipoReforma{separador}CreateDate{separador}";
-            encabezado += $"UpdateDate{separador}Observacion";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.TipoAsamblea?.Nombre}{separador}{item.FechaCelebracion}{separador}{item.NumeroActa}{separador}{item.FechaRegistro}{separador}{item.Registro?.Nombre}{separador}{item.NumeroRegistro}{separador}{item.Tomo}{separador}";
-                linea += $"{item.AnoPublicacion}{separador}{item.FechaPublicacion}{separador}{item.NumeroPublicacion}{separador}{item.NombreDiario?.Nombre}{separador}{item.IndicadorAsamblea}{separador}{item.AplicaReforma}{separador}{item.TipoReforma?.Nombre}{separador}{item.CreateDate}{separador}";
-                linea += $"{item.UpdateDate}{separador}{item.Observacion}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.Sociedad?.Empresa?.Nombre, separador),
+                EscaparCsv(item.TipoAsamblea?.Nombre, separador),
+                EscaparCsv(item.FechaCelebracion?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.NumeroActa, separador),
+                EscaparCsv(item.FechaRegistro?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.Registro?.Nombre, separador),
+                EscaparCsv(item.NumeroRegistro, separador),
+                EscaparCsv(item.Tomo, separador),
+                EscaparCsv(item.AnoPublicacion, separador),
+                EscaparCsv(item.FechaPublicacion?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.NumeroPublicacion, separador),
+                EscaparCsv(item.NombreDiario?.Nombre, separador),
+                EscaparCsv(item.IndicadorAsamblea, separador),
+                EscaparCsv(item.AplicaReforma, separador),
+                EscaparCsv(item.TipoReforma?.Nombre, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.Observacion, separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+        return sb.ToString();
     }
 
     private async Task<string> GenerarCertificacionCsv(string separador)
     {
-        try
+        var sb = new StringBuilder();
+        var listaGral = await repocertificacion.GetAllAsync();
+        int.TryParse(idEstado, out int targetEstado);
+
+        var listGral = listaGral
+            .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado)
+            .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .ToList();
+
+        string encabezado = string.Join(separador, new string[] { "Id", "Sociedad", "Cargo", "Fecha", "CreateDate", "UpdateDate" });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listaGral = await repocertificacion.GetAllAsync();
-            List<Certificacion> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Nombre).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
-
-            encabezado += $"Id{separador}Sociedad{separador}Cargo{separador}Fecha{separador}CreateDate{separador}";
-            encabezado += $"UpdateDate";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.Cargo?.Nombre}{separador}{item.Fecha}{separador}{item.CreateDate}{separador}";
-                linea += $"{item.UpdateDate}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.Sociedad?.Empresa?.Nombre, separador),
+                EscaparCsv(item.Cargo?.Nombre, separador),
+                EscaparCsv(item.Fecha?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+        return sb.ToString();
     }
 
     private async Task<string> GenerarLibrosCsv(string separador)
     {
-        try
+        var sb = new StringBuilder();
+        var listaGral = await repolibros.GetAllAsync();
+        int.TryParse(idEstado, out int targetEstado);
+
+        var listGral = listaGral
+            .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado)
+            .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .ToList();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Id", "Sociedad", "ClaseLibro", "TipoLibro", "TomoUso", "Folios",
+            "LibrosSellados", "Observaciones", "CreateDate", "UpdateDate",
+            "FechaDesde", "FechaHasta", "FechaSello", "Vacio", "Ubicacion"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listaGral = await repolibros.GetAllAsync();
-            List<LibroSocietario> Listgral = listaGral.OrderBy(x => x.Sociedad?.Empresa?.Nombre).Where(x => x.Sociedad?.EstatusSociedad?.Id == int.Parse(idEstado)).ToList();
-
-            encabezado += $"Id{separador}Sociedad{separador}ClaseLibro{separador}ClaseLibro{separador}TipoLibro{separador}TomoUso{separador}Folios{separador}LibrosSellados{separador}Observaciones{separador}CreateDate{separador}";
-            encabezado += $"UpdateDate{separador}FechaDesde{separador}FechaHasta{separador}FechaSello{separador}Vacio{separador}Ubicacion";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.Sociedad?.Empresa?.Nombre}{separador}{item.ClaseLibro?.Nombre}{separador}{item.TipoLibro?.Nombre}{separador}{item.TomoUso}{separador}{item.Folios}{separador}{item.LibrosSellados}{separador}{item.Observaciones}{separador}{item.CreateDate}{separador}";
-                linea += $"{item.UpdateDate}{separador}{item.FechaDesde}{separador}{item.FechaHasta}{separador}{item.FechaSello}{separador}{item.Vacio}{separador}{item.Ubicacion}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.Sociedad?.Empresa?.Nombre, separador),
+                EscaparCsv(item.ClaseLibro?.Nombre, separador),
+                EscaparCsv(item.TipoLibro?.Nombre, separador),
+                EscaparCsv(item.TomoUso, separador),
+                EscaparCsv(item.Folios, separador),
+                EscaparCsv(item.LibrosSellados, separador),
+                EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.FechaDesde?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaHasta?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaSello?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.Vacio, separador),
+                EscaparCsv(item.Ubicacion, separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+        return sb.ToString();
     }
 
     private async Task<string> GenerarAccionistaCsv(string separador)
     {
-        try
+        var sb = new StringBuilder();
+        var listaGral = await repoaccionista.GetAllAsync();
+        var listGral = listaGral.OrderBy(x => x.Nombre ?? string.Empty).ToList();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Id", "TipoAccionista", "Nombre", "TipoDocumento1", "TipoDocumento2", "TipoDocumento3", "TipoDocumento4",
+            "Documento1", "Documento2", "Documento3", "Documento4", "FechaEmision1", "FechaVencimiento1",
+            "FechaEmision2", "FechaVencimiento2", "FechaEmision3", "FechaVencimiento3", "FechaEmision4", "FechaVencimiento4",
+            "DirigidoA", "EstadoCivil", "NombreConyuge", "TipoDocumentoConyugeId1", "TipoDocumentoConyugeId2",
+            "TipoDocumentoConyugeId3", "DocumentoConyuge1", "FechaEmisionConyuge1", "FechaVencimientoConyuge1",
+            "DocumentoConyuge2", "FechaEmisionConyuge2", "FechaVencimientoConyuge2", "DocumentoConyuge3",
+            "FechaEmisionConyuge3", "FechaVencimientoConyuge3", "SeparacionBienes", "FechaNacimiento", "FechaIngreso",
+            "Email1", "Email2", "Email3", "TelefonoMovil", "Telefono1", "Telefono2", "Telefono3", "Telefono4",
+            "Direccion1", "Direccion2", "GrupoFamiliar", "Nacionalidad", "DomiciliadoEn", "Banco", "NumeroCuenta",
+            "TipoCuenta", "NombreTitularCuenta", "UltimaActualizacion", "AnoActualizacion", "FaltaActualizar",
+            "TieneApoderado", "NombreApoderado", "DatosPoder", "TipoDocumentoApoderadoId1", "TipoDocumentoApoderadoId2",
+            "TipoDocumentoApoderadoId3", "DocumentoApoderado1", "FechaEmisionApoderado1", "FechaVencimientoApoderado1",
+            "DocumentoApoderado2", "FechaEmisionApoderado2", "FechaVencimientoApoderado2", "DocumentoApoderado3",
+            "FechaEmisionApoderado3", "FechaVencimientoApoderado3", "NombreContacto", "TelefonoContacto", "EmailContacto",
+            "CondicionEspecial", "Observaciones", "DocumentosRelacionados", "AnoDuracion", "JuntaDirectiva",
+            "VigenciaJunta", "FechaVencimientoJunta", "RegistradaEn", "NombreSusesion", "CedulaSusesion",
+            "FechaEmisionSucesion", "FechaVencimientoSucesion", "OtroDocumentoSucesion", "FechaEmisionOtroSucesion",
+            "FechaVencimientoOtroSucesion", "CreateDate", "UpdateDate"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listaGral = await repoaccionista.GetAllAsync();
-            List<Accionista> Listgral = listaGral.OrderBy(x => x.Nombre).ToList();
-
-            encabezado += $"Id{separador}TipoAccionista{separador}Nombre{separador}TipoDocumento1{separador}TipoDocumento2{separador}TipoDocumento3{separador}TipoDocumento4{separador}Documento1{separador}Documento2{separador}Documento3{separador}Documento4{separador}FechaEmision1{separador}FechaVencimiento1{separador}FechaEmision2{separador}FechaVencimiento2{separador}";
-            encabezado += $"FechaEmision3{separador}FechaVencimiento3{separador}FechaEmision4{separador}FechaVencimiento4{separador}DirigidoA{separador}EstadoCivil{separador}NombreConyuge{separador}TipoDocumentoConyugeId1{separador}TipoDocumentoConyugeId2{separador}TipoDocumentoConyugeId3{separador}DocumentoConyuge1{separador}FechaEmisionConyuge1{separador}FechaVencimientoConyuge1{separador}";
-            encabezado += $"DocumentoConyuge2{separador}FechaEmisionConyuge2{separador}FechaVencimientoConyuge2{separador}DocumentoConyuge3{separador}FechaEmisionConyuge3{separador}FechaVencimientoConyuge3{separador}SeparacionBienes{separador}FechaNacimiento{separador}FechaIngreso{separador}Email1{separador}Email2{separador}Email3{separador}TelefonoMovil{separador}Telefono1{separador}Telefono2{separador}";
-            encabezado += $"Telefono3{separador}Telefono4{separador}Direccion1{separador}Direccion2{separador}GrupoFamiliar{separador}Nacionalidad{separador}DomiciliadoEn{separador}Banco{separador}NumeroCuenta{separador}TipoCuenta{separador}NombreTitularCuenta{separador}UltimaActualizacion{separador}AnoActualizacion{separador}FaltaActualizar{separador}";
-            encabezado += $"TieneApoderado{separador}NombreApoderado{separador}DatosPoder{separador}TipoDocumentoApoderadoId1{separador}TipoDocumentoApoderadoId2{separador}TipoDocumentoApoderadoId3{separador}DocumentoApoderado1{separador}FechaEmisionApoderado1{separador}FechaVencimientoApoderado1{separador}DocumentoApoderado2{separador}FechaEmisionApoderado2{separador}";
-            encabezado += $"FechaVencimientoApoderado2{separador}DocumentoApoderado3{separador}FechaEmisionApoderado3{separador}FechaVencimientoApoderado3{separador}NombreContacto{separador}TelefonoContacto{separador}EmailContacto{separador}CondicionEspecial{separador}Observaciones{separador}DocumentosRelacionados{separador}AnoDuracion{separador}";
-            encabezado += $"JuntaDirectiva{separador}VigenciaJunta{separador}FechaVencimientoJunta{separador}RegistradaEn{separador}NombreSusesion{separador}CedulaSusesion{separador}FechaEmisionSucesion{separador}FechaVencimientoSucesion{separador}OtroDocumentoSucesion{separador}FechaEmisionOtroSucesion{separador}FechaVencimientoOtroSucesion{separador}";
-            encabezado += $"CreateDate{separador}UpdateDate";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.TipoAccionista?.Nombre}{separador}{item.Nombre}{separador}{item.TipoDocumento1?.Nombre}{separador}{item.TipoDocumento2?.Nombre}{separador}{item.TipoDocumento3?.Nombre}{separador}{item.TipoDocumento4?.Nombre}{separador}{item.Documento1}{separador}{item.Documento2}{separador}{item.Documento3}{separador}{item.Documento4}{separador}{item.FechaEmision1}{separador}{item.FechaVencimiento1}{separador}{item.FechaEmision2}{separador}{item.FechaVencimiento2}{separador}";
-                linea += $"{item.FechaEmision3}{separador}{item.FechaVencimiento3}{separador}{item.FechaEmision4}{separador}{item.FechaVencimiento4}{separador}{item.DirigidoA?.Nombre}{separador}{item.EstadoCivil?.Nombre}{separador}{item.NombreConyuge}{separador}{item.TipoDocumentoConyugeId1}{separador}{item.TipoDocumentoConyugeId2}{separador}{item.TipoDocumentoConyugeId3}{separador}{item.DocumentoConyuge1}{separador}{item.FechaEmisionConyuge1}{separador}{item.FechaVencimientoConyuge1}{separador}";
-                linea += $"{item.DocumentoConyuge2}{separador}{item.FechaEmisionConyuge2}{separador}{item.FechaVencimientoConyuge2}{separador}{item.DocumentoConyuge3}{separador}{item.FechaEmisionConyuge3}{separador}{item.FechaVencimientoConyuge3}{separador}{item.SeparacionBienes}{separador}{item.FechaNacimiento}{separador}{item.FechaIngreso}{separador}{item.Email1}{separador}{item.Email2}{separador}{item.Email3}{separador}{item.TelefonoMovil}{separador}{item.Telefono1}{separador}{item.Telefono2}{separador}";
-                linea += $"{item.Telefono3}{separador}{item.Telefono4}{separador}{item.Direccion1}{separador}{item.Direccion2}{separador}{item.GrupoFamiliar}{separador}{item.Nacionalidad}{separador}{item.DomiciliadoEn}{separador}{item.Banco?.Nombre}{separador}{item.NumeroCuenta}{separador}{item.TipoCuenta?.Nombre}{separador}{item.NombreTitularCuenta}{separador}{item.UltimaActualizacion}{separador}{item.AnoActualizacion}{separador}{item.FaltaActualizar}{separador}";
-                linea += $"{item.TieneApoderado}{separador}{item.NombreApoderado}{separador}{item.DatosPoder}{separador}{item.TipoDocumentoApoderadoId1}{separador}{item.TipoDocumentoApoderadoId2}{separador}{item.TipoDocumentoApoderadoId3}{separador}{item.DocumentoApoderado1}{separador}{item.FechaEmisionApoderado1}{separador}{item.FechaVencimientoApoderado1}{separador}{item.DocumentoApoderado2}{separador}{item.FechaEmisionApoderado2}{separador}";
-                linea += $"{item.FechaVencimientoApoderado2}{separador}{item.DocumentoApoderado3}{separador}{item.FechaEmisionApoderado3}{separador}{item.FechaVencimientoApoderado3}{separador}{item.NombreContacto}{separador}{item.TelefonoContacto}{separador}{item.EmailContacto}{separador}{item.CondicionEspecial?.Nombre}{separador}{item.Observaciones}{separador}{item.DocumentosRelacionados}{separador}{item.AnoDuracion}{separador}";
-                linea += $"{item.JuntaDirectiva}{separador}{item.VigenciaJunta}{separador}{item.FechaVencimientoJunta}{separador}{item.RegistradaEn}{separador}{item.NombreSusesion}{separador}{item.CedulaSusesion}{separador}{item.FechaEmisionSucesion}{separador}{item.FechaVencimientoSucesion}{separador}{item.OtroDocumentoSucesion}{separador}{item.FechaEmisionOtroSucesion}{separador}{item.FechaVencimientoOtroSucesion}{separador}";
-                linea += $"{item.CreateDate}{separador}{item.UpdateDate}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.TipoAccionista?.Nombre, separador),
+                EscaparCsv(item.Nombre, separador),
+                EscaparCsv(item.TipoDocumento1?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento2?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento3?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento4?.Nombre, separador),
+                EscaparCsv(item.Documento1, separador),
+                EscaparCsv(item.Documento2, separador),
+                EscaparCsv(item.Documento3, separador),
+                EscaparCsv(item.Documento4, separador),
+                EscaparCsv(item.FechaEmision1?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimiento1?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaEmision2?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimiento2?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaEmision3?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimiento3?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaEmision4?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimiento4?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.DirigidoA?.Nombre, separador),
+                EscaparCsv(item.EstadoCivil?.Nombre, separador),
+                EscaparCsv(item.NombreConyuge, separador),
+                EscaparCsv(item.TipoDocumentoConyugeId1, separador),
+                EscaparCsv(item.TipoDocumentoConyugeId2, separador),
+                EscaparCsv(item.TipoDocumentoConyugeId3, separador),
+                EscaparCsv(item.DocumentoConyuge1, separador),
+                EscaparCsv(item.FechaEmisionConyuge1?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimientoConyuge1?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.DocumentoConyuge2, separador),
+                EscaparCsv(item.FechaEmisionConyuge2?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimientoConyuge2?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.DocumentoConyuge3, separador),
+                EscaparCsv(item.FechaEmisionConyuge3?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimientoConyuge3?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.SeparacionBienes, separador),
+                EscaparCsv(item.FechaNacimiento?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaIngreso?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.Email1, separador),
+                EscaparCsv(item.Email2, separador),
+                EscaparCsv(item.Email3, separador),
+                EscaparCsv(item.TelefonoMovil, separador),
+                EscaparCsv(item.Telefono1, separador),
+                EscaparCsv(item.Telefono2, separador),
+                EscaparCsv(item.Telefono3, separador),
+                EscaparCsv(item.Telefono4, separador),
+                EscaparCsv(item.Direccion1, separador),
+                EscaparCsv(item.Direccion2, separador),
+                EscaparCsv(item.GrupoFamiliar, separador),
+                EscaparCsv(item.Nacionalidad, separador),
+                EscaparCsv(item.DomiciliadoEn, separador),
+                EscaparCsv(item.Banco?.Nombre, separador),
+                EscaparCsv(item.NumeroCuenta, separador),
+                EscaparCsv(item.TipoCuenta?.Nombre, separador),
+                EscaparCsv(item.NombreTitularCuenta, separador),
+                EscaparCsv(item.UltimaActualizacion, separador),
+                EscaparCsv(item.AnoActualizacion, separador),
+                EscaparCsv(item.FaltaActualizar, separador),
+                EscaparCsv(item.TieneApoderado, separador),
+                EscaparCsv(item.NombreApoderado, separador),
+                EscaparCsv(item.DatosPoder, separador),
+                EscaparCsv(item.TipoDocumentoApoderadoId1, separador),
+                EscaparCsv(item.TipoDocumentoApoderadoId2, separador),
+                EscaparCsv(item.TipoDocumentoApoderadoId3, separador),
+                EscaparCsv(item.DocumentoApoderado1, separador),
+                EscaparCsv(item.FechaEmisionApoderado1?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimientoApoderado1?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.DocumentoApoderado2, separador),
+                EscaparCsv(item.FechaEmisionApoderado2?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimientoApoderado2?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.DocumentoApoderado3, separador),
+                EscaparCsv(item.FechaEmisionApoderado3?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimientoApoderado3?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.NombreContacto, separador),
+                EscaparCsv(item.TelefonoContacto, separador),
+                EscaparCsv(item.EmailContacto, separador),
+                EscaparCsv(item.CondicionEspecial?.Nombre, separador),
+                EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.DocumentosRelacionados, separador),
+                EscaparCsv(item.AnoDuracion, separador),
+                EscaparCsv(item.JuntaDirectiva, separador),
+                EscaparCsv(item.VigenciaJunta, separador),
+                EscaparCsv(item.FechaVencimientoJunta?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.RegistradaEn, separador),
+                EscaparCsv(item.NombreSusesion, separador),
+                EscaparCsv(item.CedulaSusesion, separador),
+                EscaparCsv(item.FechaEmisionSucesion, separador),
+                EscaparCsv(item.FechaVencimientoSucesion, separador),
+                EscaparCsv(item.OtroDocumentoSucesion, separador),
+                EscaparCsv(item.FechaEmisionOtroSucesion, separador),
+                EscaparCsv(item.FechaVencimientoOtroSucesion, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+        return sb.ToString();
     }
 
     private async Task<string> GenerarTituloCsv(string separador)
     {
-        try
+        var sb = new StringBuilder();
+        var listaGral = await repotitulo.GetAllAsync();
+        int.TryParse(idEstado, out int targetId);
+
+        var listGral = listaGral
+            .Where(x => x.AccionistaSociedad?.Id == targetId)
+            .OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .ToList();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Id", "AccionistaSociedad", "Numero", "Acciones", "Preferente", "Ubicacion",
+            "Anulado", "Endosado", "Fecha", "Observaciones", "CreateDate", "UpdateDate"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in listGral)
         {
-            // Lógica para construir la cadena CSV
-            var sb = new StringBuilder();
-
-            int i = 0;
-            string encabezado = string.Empty;
-
-            var listaGral = await repotitulo.GetAllAsync();
-            List<Titulo> Listgral = listaGral.OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre).Where(x => x.AccionistaSociedad?.Id == int.Parse(idEstado)).ToList();
-
-            encabezado += $"Id{separador}AccionistaSociedad{separador}Numero{separador}Acciones{separador}Preferente{separador}Ubicacion{separador}Anulado{separador}Endosado{separador}Fecha{separador}Observaciones{separador}";
-            encabezado += $"CreateDate{separador}UpdateDate";
-
-            sb.AppendLine(encabezado); // Encabezados
-
-            string linea = string.Empty;
-            foreach (var item in Listgral)
-            {
-                linea = $"{item.Id}{separador}{item.AccionistaSociedad?.Sociedad?.Empresa?.Nombre}{separador}{item.Numero}{separador}{item.Acciones}{separador}{item.Preferente}{separador}{item.Ubicacion}{separador}{item.Anulado}{separador}{item.Endosado}{separador}{item.Fecha}{separador}{item.Observaciones}{separador}";
-                linea += $"{item.CreateDate}{separador}{item.UpdateDate}";
-
-                sb.AppendLine(linea);
-            }
-            return sb.ToString();
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Id, separador),
+                EscaparCsv(item.AccionistaSociedad?.Sociedad?.Empresa?.Nombre, separador),
+                EscaparCsv(item.Numero, separador),
+                EscaparCsv(item.Acciones, separador),
+                EscaparCsv(item.Preferente, separador),
+                EscaparCsv(item.Ubicacion, separador),
+                EscaparCsv(item.Anulado, separador),
+                EscaparCsv(item.Endosado, separador),
+                EscaparCsv(item.Fecha?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
+            });
+            sb.AppendLine(linea);
         }
-        catch (Exception ex)
-        {
-            cargando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Error " + ex.Message.ToString(), true);
-        }
-        return null;
+        return sb.ToString();
     }
-
 
     private async Task Cancelar()
     {
@@ -521,16 +607,3 @@
         await OnFinalizado.InvokeAsync(false);
     }
 }
-
-<script>
-    function downloadFileFromStream(fileName, content) {
-        // Añadimos el BOM ( \ufeff ) al inicio del contenido
-        const blob = new Blob(["\ufeff", content], { type: "text/csv;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-</script>

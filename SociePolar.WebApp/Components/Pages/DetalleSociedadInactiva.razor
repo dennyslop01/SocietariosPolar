@@ -1,4 +1,4 @@
-﻿@page "/detallesociedadinactiva/{id}"
+@page "/detallesociedadinactiva/{id}"
 @rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
@@ -10,9 +10,14 @@
                     <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
                         <i class="bi bi-bezier text-white fs-5"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-dark">
-                        Detalle Sociedad Inactiva
-                    </h5>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            @(string.IsNullOrEmpty(entidadActual.Empresa?.Nombre) ? "Detalle Sociedad Inactiva" : entidadActual.Empresa.Nombre)
+                        </h5>
+                        <span class="text-secondary small fw-semibold">
+                            @(string.IsNullOrEmpty(entidadActual.Empresa?.Nombre) ? "Ficha informativa" : "Detalle de Sociedad Inactiva")
+                        </span>
+                    </div>
                 </div>
 
                 <div class="d-flex gap-2">
@@ -31,6 +36,24 @@
                 </div>
             </div>
         </div>
+
+        @if (mostrarAlerta)
+        {
+            <div class="alert @claseAlerta d-flex align-items-center justify-content-between m-3 mb-0 py-2 px-3 border-0 shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi @iconoAlerta me-2 fs-5"></i>
+                    <div class="small fw-semibold">
+                        @mensajeAlerta
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(urlPdfGenerado))
+                {
+                    <a href="@urlPdfGenerado" target="_blank" class="btn btn-sm btn-outline-primary ms-3 fw-semibold">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir PDF en pantalla
+                    </a>
+                }
+            </div>
+        }
 
         <div class="card-body">
             <!-- Navegación de Pestañas Estilizada -->
@@ -69,15 +92,20 @@
                             id="tab-5" data-bs-toggle="tab" data-bs-target="#panel-5"
                             type="button" role="tab">
                         <span class="fw-semibold">Certificaciones</span>
-                        <small class="d-block opacity-75"></small>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link rounded-pill"
                             id="tab-6" data-bs-toggle="tab" data-bs-target="#panel-6"
                             type="button" role="tab">
+                        <span class="fw-semibold">Libros Societarios</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill"
+                            id="tab-7" data-bs-toggle="tab" data-bs-target="#panel-7"
+                            type="button" role="tab">
                         <span class="fw-semibold">Accionistas</span>
-                        <small class="d-block opacity-75"></small>
                     </button>
                 </li>
             </ul>
@@ -303,145 +331,65 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-content" id="talentTabsContent">
+                <!-- Panel 2: Autoridades -->
                 <div class="tab-pane fade" id="panel-2" role="tabpanel">
                     <div class="table-responsive">
-                        <PaginationComponent TItem="Autoridad" Items="ListAutoridadGral" DefaultPageSize="50">
+                        <PaginationComponent TItem="Autoridad" Items="ListAutoridadGral" DefaultPageSize="50" TableClass="polar-table-compact">
                             <ChildContentHeader>
                                 <tr class="table-light border-bottom">
-                                    <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Cargo</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nombre</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Documento</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">Duración</th>
-                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
-                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
+                                    <th class="ps-3 text-start" style="min-width: 160px;">Cargo</th>
+                                    <th class="text-start" style="min-width: 220px;">Nombre</th>
+                                    <th class="text-start" style="min-width: 140px;">Documento</th>
+                                    <th class="text-start" style="min-width: 100px;">Duración</th>
+                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
+                                    <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
-                                @{
-                                    var index = ListAutoridadGral.IndexOf(p);
-
-                                    // 1. Ruptura para Sociedad
-                                    bool esNuevaSociedad = index == 0 ||
-                                    ListAutoridadGral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
-
-                                    // 2. Ruptura para Cargo (Se dispara si es una nueva sociedad O si dentro de la misma sociedad cambia el cargo)
-                                    bool esNuevoCargo = index == 0 ||
-                                    esNuevaSociedad ||
-                                    ListAutoridadGral[index - 1].Cargo?.Nombre != p.Cargo?.Nombre;
-                                }
-
-                                @if (esNuevaSociedad)
-                                {
-                                    <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
-                                    <tr class="table-secondary fw-bold text-primary border-bottom">
-                                        <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                            🏢 @p.Sociedad?.Empresa?.Nombre
-                                        </td>
-                                    </tr>
-                                }
-
-                                @if (esNuevoCargo)
-                                {
-                                    <!-- Fila divisoria de Cargo alineada estrictamente en su columna -->
-                                    <tr class="align-middle border-bottom fw-bold" style="background-color: #fcfcfc;">
-                                        <!-- Celda vacía para mantener el espacio de la columna Sociedad -->
-                                        <td style="width: 20%;"></td>
-
-                                        <!-- Celda del cargo que hereda el ancho exacto (15%) y se resalta -->
-                                        <td class="text-start text-dark py-2" style="width: 15%; font-size: 0.85rem; letter-spacing: 0.3px;">
-                                            📌 @p.Cargo?.Nombre
-                                        </td>
-
-                                        <!-- Celdas vacías para rellenar las 6 columnas restantes de la cuadrícula -->
-                                        <td colspan="6"></td>
-                                    </tr>
-                                }
-
                                 <tr class="align-middle border-bottom">
-                                    <td class="text-muted small ps-3" style="width: 20%;">-</td>
-                                    <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
-                                    <td class="text-start text-muted small" style="width: 15%; font-style: italic;">↳</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@UtilClass.FormatearStringMiles(p.Documento1)</td>
-                                    <td class="text-start text-secondary small" style="width: 5%;">@(p.Duracion != null ? $"{p.Duracion} años" : "")</td>
-                                    <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="ps-3 text-start">
+                                        <span class="badge bg-light text-dark border">@(p.Cargo?.Nombre ?? "-")</span>
+                                    </td>
+                                    <td class="text-start fw-semibold text-dark">@p.Nombre</td>
+                                    <td class="text-start text-secondary">
+                                        @(p.TipoDocumento1 != null ? $"{p.TipoDocumento1.Nombre}: " : "")@(p.Documento1 ?? "-")
+                                    </td>
+                                    <td class="text-start text-secondary">@(p.Duracion != null ? $"{p.Duracion} años" : "-")</td>
+                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                    <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
                     </div>
                 </div>
-            </div>
-            <div class="tab-content" id="talentTabsContent">
+
+                <!-- Panel 3: Asambleas -->
                 <div class="tab-pane fade" id="panel-3" role="tabpanel">
                     <div class="table-responsive">
-                        <PaginationComponent TItem="Asamblea" Items="ListAsambleaGral" DefaultPageSize="50">
+                        <PaginationComponent TItem="Asamblea" Items="ListAsambleaGral" DefaultPageSize="50" TableClass="polar-table-compact">
                             <ChildContentHeader>
                                 <tr class="table-light border-bottom">
-                                    <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Asamblea</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha Celebración</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha Registro</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Registro</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Número</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tomo</th>
-                                    <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                                    <th class="ps-3 text-start" style="min-width: 160px;">Tipo Asamblea</th>
+                                    <th class="polar-date" style="min-width: 120px;">Fecha Celebración</th>
+                                    <th class="polar-date" style="min-width: 120px;">Fecha Registro</th>
+                                    <th class="text-start" style="min-width: 200px;">Registro</th>
+                                    <th class="text-start" style="min-width: 90px;">Número</th>
+                                    <th class="text-start" style="min-width: 90px;">Tomo</th>
+                                    <th class="text-end pe-3" style="min-width: 80px;">Acciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
-                                @{
-                                    var index = ListAsambleaGral.IndexOf(p);
-
-                                    // 1. Ruptura para Sociedad
-                                    bool esNuevaSociedad = index == 0 ||
-                                    ListAsambleaGral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
-
-                                    // 2. Ruptura para Cargo (Se dispara si es una nueva sociedad O si dentro de la misma sociedad cambia el cargo)
-                                    bool esNuevoCargo = index == 0 ||
-                                    esNuevaSociedad ||
-                                    ListAsambleaGral[index - 1].TipoAsamblea?.Nombre != p.TipoAsamblea?.Nombre;
-                                }
-
-                                @if (esNuevaSociedad)
-                                {
-                                    <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
-                                    <tr class="table-secondary fw-bold text-primary border-bottom">
-                                        <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                            🏢 @p.Sociedad?.Empresa?.Nombre
-                                        </td>
-                                    </tr>
-                                }
-
-                                @if (esNuevoCargo)
-                                {
-                                    <!-- Fila divisoria de Cargo alineada estrictamente en su columna -->
-                                    <tr class="align-middle border-bottom fw-bold" style="background-color: #fcfcfc;">
-                                        <!-- Celda vacía para mantener el espacio de la columna Sociedad -->
-                                        <td style="width: 20%;"></td>
-
-                                        <!-- Celda del cargo que hereda el ancho exacto (15%) y se resalta -->
-                                        <td class="text-start text-dark py-2" style="width: 15%; font-size: 0.85rem; letter-spacing: 0.3px;">
-                                            📌 @p.TipoAsamblea?.Nombre
-                                        </td>
-
-                                        <!-- Celdas vacías para rellenar las 6 columnas restantes de la cuadrícula -->
-                                        <td colspan="6"></td>
-                                    </tr>
-                                }
-
                                 <tr class="align-middle border-bottom">
-                                    <td class="text-muted small ps-3" style="width: 20%;">-</td>
-                                    <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
-                                    <td class="text-start text-muted small" style="width: 10%; font-style: italic;">↳</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-start text-secondary small" style="width: 20%;">@p.Registro.Nombre</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.NumeroRegistro</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.Tomo</td>
-                                    <td class="text-end pe-3" style="width: 10%;">
-                                        <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
+                                    <td class="ps-3 text-start">
+                                        <span class="badge bg-light text-dark border">@(p.TipoAsamblea?.Nombre ?? "-")</span>
+                                    </td>
+                                    <td class="polar-date text-secondary">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
+                                    <td class="polar-date text-secondary">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-start text-secondary">@(p.Registro?.Nombre ?? "-")</td>
+                                    <td class="text-start text-secondary">@p.NumeroRegistro</td>
+                                    <td class="text-start text-secondary">@p.Tomo</td>
+                                    <td class="text-end pe-3">
+                                        <button class="btn btn-link btn-sm text-primary p-0"
                                                 @onclick="() => Detalle(p)" title="Detalle Asamblea">
                                             <i class="bi bi-file-earmark-text fs-6"></i>
                                         </button>
@@ -451,75 +399,34 @@
                         </PaginationComponent>
                     </div>
                 </div>
-            </div>
-            <div class="tab-content" id="talentTabsContent">
+
+                <!-- Panel 4: Reformas -->
                 <div class="tab-pane fade" id="panel-4" role="tabpanel">
                     <div class="table-responsive">
-                        <PaginationComponent TItem="Asamblea" Items="ListReformaGral" DefaultPageSize="50">
+                        <PaginationComponent TItem="Asamblea" Items="ListReformaGral" DefaultPageSize="50" TableClass="polar-table-compact">
                             <ChildContentHeader>
                                 <tr class="table-light border-bottom">
-                                    <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tipo Reforma</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha Celebración</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Fecha Registro</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Registro</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Número</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Tomo</th>
-                                    <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                                    <th class="ps-3 text-start" style="min-width: 160px;">Tipo Reforma</th>
+                                    <th class="polar-date" style="min-width: 120px;">Fecha Celebración</th>
+                                    <th class="polar-date" style="min-width: 120px;">Fecha Registro</th>
+                                    <th class="text-start" style="min-width: 200px;">Registro</th>
+                                    <th class="text-start" style="min-width: 90px;">Número</th>
+                                    <th class="text-start" style="min-width: 90px;">Tomo</th>
+                                    <th class="text-end pe-3" style="min-width: 80px;">Acciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
-                                @{
-                                    var index = ListReformaGral.IndexOf(p);
-
-                                    // 1. Ruptura para Sociedad
-                                    bool esNuevaSociedad = index == 0 ||
-                                    ListReformaGral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
-
-                                    // 2. Ruptura para Cargo (Se dispara si es una nueva sociedad O si dentro de la misma sociedad cambia el cargo)
-                                    bool esNuevoCargo = index == 0 ||
-                                    esNuevaSociedad ||
-                                    ListReformaGral[index - 1].TipoReforma?.Nombre != p.TipoReforma?.Nombre;
-                                }
-
-                                @if (esNuevaSociedad)
-                                {
-                                    <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
-                                    <tr class="table-secondary fw-bold text-primary border-bottom">
-                                        <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                            🏢 @p.Sociedad?.Empresa?.Nombre
-                                        </td>
-                                    </tr>
-                                }
-
-                                @if (esNuevoCargo)
-                                {
-                                    <!-- Fila divisoria de Cargo alineada estrictamente en su columna -->
-                                    <tr class="align-middle border-bottom fw-bold" style="background-color: #fcfcfc;">
-                                        <!-- Celda vacía para mantener el espacio de la columna Sociedad -->
-                                        <td style="width: 20%;"></td>
-
-                                        <!-- Celda del cargo que hereda el ancho exacto (15%) y se resalta -->
-                                        <td class="text-start text-dark py-2" style="width: 15%; font-size: 0.85rem; letter-spacing: 0.3px;">
-                                            📌 @p.TipoReforma?.Nombre
-                                        </td>
-
-                                        <!-- Celdas vacías para rellenar las 6 columnas restantes de la cuadrícula -->
-                                        <td colspan="6"></td>
-                                    </tr>
-                                }
-
                                 <tr class="align-middle border-bottom">
-                                    <td class="text-muted small ps-3" style="width: 20%;">-</td>
-                                    <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
-                                    <td class="text-start text-muted small" style="width: 10%; font-style: italic;">↳</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-start text-secondary small" style="width: 20%;">@p.Registro.Nombre</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.NumeroRegistro</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.Tomo</td>
-                                    <td class="text-end pe-3" style="width: 10%;">
-                                        <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
+                                    <td class="ps-3 text-start">
+                                        <span class="badge bg-light text-dark border">@(p.TipoReforma?.Nombre ?? "-")</span>
+                                    </td>
+                                    <td class="polar-date text-secondary">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
+                                    <td class="polar-date text-secondary">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-start text-secondary">@(p.Registro?.Nombre ?? "-")</td>
+                                    <td class="text-start text-secondary">@p.NumeroRegistro</td>
+                                    <td class="text-start text-secondary">@p.Tomo</td>
+                                    <td class="text-end pe-3">
+                                        <button class="btn btn-link btn-sm text-primary p-0"
                                                 @onclick="() => Detalle(p)" title="Detalle Reforma">
                                             <i class="bi bi-file-earmark-text fs-6"></i>
                                         </button>
@@ -528,113 +435,97 @@
                             </ChildContentRow>
                         </PaginationComponent>
                     </div>
-
                 </div>
-            </div>
-            <div class="tab-content" id="talentTabsContent">
+
+                <!-- Panel 5: Certificaciones -->
                 <div class="tab-pane fade" id="panel-5" role="tabpanel">
                     <div class="table-responsive">
-                        <PaginationComponent TItem="Certificacion" Items="ListCertificacionGral" DefaultPageSize="50">
+                        <PaginationComponent TItem="Certificacion" Items="ListCertificacionGral" DefaultPageSize="50" TableClass="polar-table-compact">
                             <ChildContentHeader>
                                 <tr class="table-light border-bottom">
-                                    <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Ejercicio</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Cargo</th>
-                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
-                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
+                                    <th class="ps-3 text-start" style="min-width: 180px;">Cargo</th>
+                                    <th class="text-start" style="min-width: 140px;">Ejercicio</th>
+                                    <th class="polar-date" style="min-width: 110px;">Fecha</th>
+                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
+                                    <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
-                                @{
-                                    var index = ListCertificacionGral.IndexOf(p);
-
-                                    // 1. Ruptura para Sociedad
-                                    bool esNuevaSociedad = index == 0 ||
-                                    ListCertificacionGral[index - 1].Sociedad?.Empresa?.Nombre != p.Sociedad?.Empresa?.Nombre;
-                                }
-
-                                @if (esNuevaSociedad)
-                                {
-                                    <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
-                                    <tr class="table-secondary fw-bold text-primary border-bottom">
-                                        <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                            🏢 @p.Sociedad?.Empresa?.Nombre
-                                        </td>
-                                    </tr>
-                                }
-
                                 <tr class="align-middle border-bottom">
-                                    <td class="text-muted small ps-3" style="width: 20%;">-</td>
-                                    <!-- Dejamos la celda del registro vacía o con una marca suave ya que el título del cargo se muestra arriba -->
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Sociedad.EjercicioEconomico</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Fecha?.ToString("dd/MM/yyyy")</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Cargo?.Nombre</td>
-                                    <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="ps-3 text-start">
+                                        <span class="badge bg-light text-dark border">@(p.Cargo?.Nombre ?? "-")</span>
+                                    </td>
+                                    <td class="text-start text-secondary">@(p.Sociedad?.EjercicioEconomico ?? "-")</td>
+                                    <td class="polar-date text-secondary">@p.Fecha?.ToString("dd/MM/yyyy")</td>
+                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                    <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
                     </div>
                 </div>
-            </div>
-            <div class="tab-content" id="talentTabsContent">
+
+                <!-- Panel 6: Libros Societarios -->
                 <div class="tab-pane fade" id="panel-6" role="tabpanel">
                     <div class="table-responsive">
-                        <PaginationComponent TItem="AccionistaSociedadVerDto" Items="ListAccionistasGral" DefaultPageSize="50">
+                        <PaginationComponent TItem="LibroSocietario" Items="ListLibrosgral" DefaultPageSize="50" TableClass="polar-table-compact">
                             <ChildContentHeader>
                                 <tr class="table-light border-bottom">
-                                    <!-- Columna 1: Sociedad -->
-                                    <th class="py-3 ps-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;">
-                                        Sociedad
-                                    </th>
-                                    <!-- Columna 3: Tipo Accionista -->
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;">
-                                        Tipo Accionista
-                                    </th>
-                                    <!-- Columna 2: Nombre y Apellido -->
-                                    <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem; cursor: pointer; user-select: none;">
-                                        Nombre y Apellido
-                                    </th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Nro. Acciones</th>
-                                    <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">% Participación</th>
-                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
-                                    <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Última modificación</th>
+                                    <th class="ps-3 text-start" style="min-width: 140px;">Clase</th>
+                                    <th class="text-start" style="min-width: 140px;">Tipo</th>
+                                    <th class="text-center" style="min-width: 90px;">Tomo en Uso</th>
+                                    <th class="text-center" style="min-width: 90px;">Folio</th>
+                                    <th class="polar-date" style="min-width: 120px;">Último Asiento</th>
+                                    <th class="text-center pe-3" style="min-width: 110px;">Libros Sellados</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
-                                @{
-                                    var index = ListAccionistasGral.IndexOf(p);
-
-                                    // 1. Ruptura para Sociedad
-                                    bool esNuevaSociedad = index == 0 ||
-                                                           ListAccionistasGral[index - 1].SociedadNombre != p.SociedadNombre;
-                                }
-
-                                @if (esNuevaSociedad)
-                                {
-                                    <!-- Fila divisoria de Sociedad (Abarca las 8 columnas completas) -->
-                                    <tr class="table-secondary fw-bold text-primary border-bottom">
-                                        <td colspan="8" class="ps-3 py-2 bg-light text-uppercase font-monospace" style="font-size: 0.9rem; letter-spacing: 0.5px;">
-                                            🏢 @p.SociedadNombre
-                                        </td>
-                                    </tr>
-                                }
-
                                 <tr class="align-middle border-bottom">
-                                    <td class="text-muted small ps-3" style="width: 15%;">-</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.TipoAccionistaNombre</td>
-                                    <td class="text-start text-secondary small" style="width: 15%;">@p.AccionistaNombre</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@UtilClass.FormatearMiles(p.NroAcciones)</td>
-                                    <td class="text-start text-secondary small" style="width: 10%;">@p.Participacion</td>
-                                    <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="text-center text-secondary small" style="width: 10%;">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="ps-3 text-start text-secondary">@(p.ClaseLibro?.Nombre ?? "-")</td>
+                                    <td class="text-start text-secondary">@(p.TipoLibro?.Nombre ?? "-")</td>
+                                    <td class="text-center text-secondary">@p.TomoUso</td>
+                                    <td class="text-center text-secondary">@p.Folios</td>
+                                    <td class="polar-date text-secondary">@p.FechaDesde?.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-center pe-3">
+                                        <span class="badge @(p.LibrosSellados == "Sí" || p.LibrosSellados == "SI" || p.LibrosSellados == "Si" ? "bg-success" : "bg-light text-secondary border")">
+                                            @p.LibrosSellados
+                                        </span>
+                                    </td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
                     </div>
                 </div>
-            </div>
+
+                <!-- Panel 7: Accionistas -->
+                <div class="tab-pane fade" id="panel-7" role="tabpanel">
+                    <div class="table-responsive">
+                        <PaginationComponent TItem="AccionistaSociedadVerDto" Items="ListAccionistasGral" DefaultPageSize="50" TableClass="polar-table-compact">
+                            <ChildContentHeader>
+                                <tr class="table-light border-bottom">
+                                    <th class="ps-3 text-start" style="min-width: 240px;">Nombre y Apellido</th>
+                                    <th class="text-start" style="min-width: 160px;">Tipo Accionista</th>
+                                    <th class="polar-num" style="min-width: 130px;">Nro. Acciones</th>
+                                    <th class="polar-num" style="min-width: 130px;">% Participación</th>
+                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
+                                    <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
+                                </tr>
+                            </ChildContentHeader>
+                            <ChildContentRow Context="p">
+                                <tr class="align-middle border-bottom">
+                                    <td class="ps-3 text-start fw-semibold text-dark">@p.AccionistaNombre</td>
+                                    <td class="text-start">
+                                        <span class="badge bg-light text-dark border">@p.TipoAccionistaNombre</span>
+                                    </td>
+                                    <td class="polar-num">@UtilClass.FormatearMiles(p.NroAcciones)</td>
+                                    <td class="polar-num">@((p.Participacion ?? 0).ToString("N4"))%</td>
+                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                    <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                </tr>
+                            </ChildContentRow>
+                        </PaginationComponent>
+                    </div>
+                </div>
         </div>
     </div>
 
@@ -669,6 +560,7 @@
     private bool cargando = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
+    private string urlPdfGenerado = "";
     private string claseAlerta = "alert-success"; // Por defecto verde
     private string iconoAlerta = "bi-check-circle-fill";
     private Sociedad entidadActual = new();
@@ -676,6 +568,7 @@
     private List<Asamblea> ListAsambleaGral = new();
     private List<Asamblea> ListReformaGral = new();
     private List<Certificacion> ListCertificacionGral = new();
+    private List<LibroSocietario> ListLibrosgral = new();
     private List<AccionistaSociedadVerDto> ListAccionistasGral = new();
 
     int idAsamblea = 0;
@@ -685,6 +578,7 @@
     [Inject] private IAutoridad repoAutoridad { get; set; } = null!;
     [Inject] private IAsamblea repoAsamblea { get; set; } = null!;
     [Inject] private ICertificacion repoCertificacion { get; set; } = null!;
+    [Inject] private ILibroSocietario repoLibros { get; set; } = null!;
     [Inject] private IAccionistaSociedad repoaccionista { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
@@ -715,21 +609,23 @@
                 return;
             }
             var listAutoridad = await repoAutoridad.GetAllAsync();
-            ListAutoridadGral = listAutoridad.Where(x => x.Sociedad.Id == int.Parse(id)).OrderBy(x => x.Sociedad.Empresa.Id).ToList();
+            ListAutoridadGral = listAutoridad.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id)).OrderBy(x => x.Cargo?.Nombre).ToList();
 
             var listAsamblea = await repoAsamblea.GetAllAsync();
-            ListAsambleaGral = listAsamblea.OrderBy(x => x.Sociedad?.Empresa?.Id)
-                                           .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1 && x.Sociedad.Id == int.Parse(id)).ToList();
+            ListAsambleaGral = listAsamblea.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id) && x.IndicadorAsamblea == 1)
+                                           .OrderByDescending(x => x.FechaCelebracion).ToList();
 
-            ListReformaGral = listAsamblea.OrderBy(x => x.Sociedad?.Empresa?.Id)
-                                          .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == int.Parse(id) && (x.IndicadorAsamblea == 0 || x.TipoReforma != null)).ToList();
-
+            ListReformaGral = listAsamblea.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id) && (x.IndicadorAsamblea == 0 || x.TipoReforma != null))
+                                          .OrderByDescending(x => x.FechaCelebracion).ToList();
 
             var listCertificaciones = await repoCertificacion.GetAllAsync();
-            ListCertificacionGral = listCertificaciones.OrderBy(x => x.Sociedad.Empresa.Id)
-                                    .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == int.Parse(id))
-                                    .ToList();
-           List<AccionistaSociedadVerDto> listNewAccionista = new();
+            ListCertificacionGral = listCertificaciones.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id))
+                                                      .OrderByDescending(x => x.Fecha).ToList();
+
+            var listLibros = await repoLibros.GetAllAsync();
+            ListLibrosgral = listLibros.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id)).ToList();
+
+            List<AccionistaSociedadVerDto> listNewAccionista = new();
 
             var listAaccionista = await repoaccionista.GetBySociedadIdAsync(int.Parse(id));
             foreach (var item in listAaccionista)
@@ -742,11 +638,11 @@
                     accionesaux = (Int64)item.NroAcciones;
                 }
 
-                if (item.Sociedad != null)
+                if (item.Sociedad != null && !string.IsNullOrWhiteSpace(item.Sociedad.NumeroAcciones))
                 {
-                    if (item.Sociedad.NumeroAcciones != null)
+                    if (Int64.TryParse(item.Sociedad.NumeroAcciones, out long totalAcciones) && totalAcciones > 0)
                     {
-                        porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / Int64.Parse(item.Sociedad.NumeroAcciones) * 100, 8);
+                        porcparticipa = Math.Round((decimal)((nroacciones != 0) ? nroacciones : accionesaux) / totalAcciones * 100, 8);
                     }
                 }
 
@@ -806,9 +702,10 @@
         try
         {
             cargando = true;
+            urlPdfGenerado = "";
             StateHasChanged();
 
-            await ReportService.GenerarYDescargarReporteSociedadAsync(int.Parse(id));
+            urlPdfGenerado = await ReportService.GenerarYDescargarReporteSociedadAsync(int.Parse(id));
 
             cargando = false;
             StateHasChanged();

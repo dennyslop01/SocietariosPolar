@@ -16,7 +16,7 @@
                         <h5 class="mb-0 fw-bold text-dark">
                             Accionistas - Sociedades Inactivas
                         </h5>
-                        <small class="text-muted">Total Sociedades: (@gruposFiltrados.Count sociedades), Total Acciones: (@gruposSociedades.Sum(g => g.GranTotalAccionistas) acciones)</small>
+                        <small class="text-muted">@SubtituloAccionistasGlobal</small>
                     </div>
                 </div>
 
@@ -32,13 +32,25 @@
         <div class="card-body">
             <!-- Controles Superiores: Expandir/Colapsar y Buscador -->
             <div class="row mb-3 align-items-center">
-                <div class="col-md-6 d-flex align-items-center">
-                    <button class="btn btn-outline-secondary btn-sm me-2 shadow-sm" @onclick="ExpandirTodo" title="Expandir todas las sociedades">
+                <div class="col-md-6 d-flex align-items-center flex-wrap gap-2">
+                    <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick="ExpandirTodo" title="Expandir todas las sociedades">
                         <i class="bi bi-arrows-angle-expand me-1"></i> Expandir Todo
                     </button>
                     <button class="btn btn-outline-secondary btn-sm shadow-sm" @onclick="ColapsarTodo" title="Colapsar todas las sociedades">
                         <i class="bi bi-arrows-angle-contract me-1"></i> Colapsar Todo
                     </button>
+                    @if (ControlesCabeceraHabilitados)
+                    {
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small fw-semibold">
+                            <i class="bi bi-sliders me-1"></i> Filtros y orden activos para la sociedad
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-muted border px-2 py-1 small fw-normal" title="@MensajeTooltipCabecera">
+                            <i class="bi bi-lock me-1"></i> Filtros de columna en espera (abre 1 sociedad)
+                        </span>
+                    }
                 </div>
                 <div class="col-md-4 ms-auto">
                     <div class="input-group input-group-sm shadow-sm">
@@ -64,16 +76,88 @@
             <!-- Tabla Agrupada Estilo Lotus Notes -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0 border">
-                    <thead class="table-light border-bottom">
+                    <thead class="table-light border-bottom sticky-top" style="position: sticky; top: 0; z-index: 5; background-color: #f8fafc;">
                         <tr>
-                            <th class="py-3 ps-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Sociedad</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Accionista</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Nombre y Apellido</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 12%; font-size: 0.85rem;">Nro. Acciones</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 8%; font-size: 0.85rem;">% Part.</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 8%; font-size: 0.85rem;">Fecha Creación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 8%; font-size: 0.85rem;">Modificación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 9%; font-size: 0.85rem;">Acciones</th>
+                            <th class="py-2 ps-3 text-secondary fw-bold" style="width: 18%; font-size: 0.85rem;">Sociedad</th>
+                            
+                            <!-- Columna Tipo Accionista con Filtro Dropdown -->
+                            <th class="py-2 text-secondary fw-bold" style="width: 17%; font-size: 0.85rem;">
+                                <div class="d-flex align-items-center gap-1" title="@MensajeTooltipCabecera">
+                                    <span>Tipo</span>
+                                    <select class="form-select form-select-sm py-0 ps-1 pe-4 border-0 text-secondary fw-semibold shadow-none"
+                                            style="font-size: 0.8rem; cursor: pointer; max-width: 135px; background-color: transparent; @(ControlesCabeceraHabilitados ? "" : "opacity: 0.55; pointer-events: none;")"
+                                            disabled="@(!ControlesCabeceraHabilitados)"
+                                            @bind="filtroTipoAccionista"
+                                            @bind:after="AplicarFiltrosYOrdenamiento">
+                                        <option value="">(Todos)</option>
+                                        <option value="Natural">Persona Natural</option>
+                                        <option value="Juridica">Persona Jurídica</option>
+                                        <option value="Sucesion">Sucesión</option>
+                                        <option value="Custodio">🏦 Solo Custodios</option>
+                                    </select>
+                                </div>
+                            </th>
+
+                            <!-- Columna Nombre y Apellido con Orden A-Z / Z-A -->
+                            <th class="py-2 text-secondary fw-bold" style="width: 22%; font-size: 0.85rem;">
+                                <button class="btn btn-sm btn-link p-0 text-decoration-none text-secondary fw-bold d-inline-flex align-items-center gap-1 border-0"
+                                        disabled="@(!ControlesCabeceraHabilitados)"
+                                        @onclick='() => CambiarOrden("Nombre")'
+                                        title="@(ControlesCabeceraHabilitados ? (columnaOrden == "Nombre" && ordenAscendente ? "Orden: A → Z (clic para Z → A)" : "Ordenar Alfabéticamente") : MensajeTooltipCabecera)"
+                                        style="@(ControlesCabeceraHabilitados ? "cursor: pointer;" : "opacity: 0.55; cursor: not-allowed;")">
+                                    <span>Nombre y Apellido</span>
+                                    @if (columnaOrden == "Nombre" && ControlesCabeceraHabilitados)
+                                    {
+                                        <i class="bi @(ordenAscendente ? "bi-sort-alpha-down text-primary fw-bold" : "bi-sort-alpha-up-alt text-primary fw-bold")"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-arrow-down-up text-muted" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                                    }
+                                </button>
+                            </th>
+
+                            <!-- Columna Nro. Acciones con Orden Numérico -->
+                            <th class="py-2 text-secondary fw-bold" style="width: 13%; font-size: 0.85rem;">
+                                <button class="btn btn-sm btn-link p-0 text-decoration-none text-secondary fw-bold d-inline-flex align-items-center gap-1 border-0"
+                                        disabled="@(!ControlesCabeceraHabilitados)"
+                                        @onclick='() => CambiarOrden("NroAcciones")'
+                                        title="@(ControlesCabeceraHabilitados ? (columnaOrden == "NroAcciones" && !ordenAscendente ? "Orden: Mayor a Menor (clic para Menor a Mayor)" : "Ordenar por Nro. Acciones") : MensajeTooltipCabecera)"
+                                        style="@(ControlesCabeceraHabilitados ? "cursor: pointer;" : "opacity: 0.55; cursor: not-allowed;")">
+                                    <span>Nro. Acciones</span>
+                                    @if (columnaOrden == "NroAcciones" && ControlesCabeceraHabilitados)
+                                    {
+                                        <i class="bi @(ordenAscendente ? "bi-sort-numeric-down text-primary fw-bold" : "bi-sort-numeric-up-alt text-primary fw-bold")"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-arrow-down-up text-muted" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                                    }
+                                </button>
+                            </th>
+
+                            <!-- Columna % Part. con Orden Numérico -->
+                            <th class="py-2 text-secondary fw-bold" style="width: 8%; font-size: 0.85rem;">
+                                <button class="btn btn-sm btn-link p-0 text-decoration-none text-secondary fw-bold d-inline-flex align-items-center gap-1 border-0"
+                                        disabled="@(!ControlesCabeceraHabilitados)"
+                                        @onclick='() => CambiarOrden("Participacion")'
+                                        title="@(ControlesCabeceraHabilitados ? (columnaOrden == "Participacion" && !ordenAscendente ? "Orden: Mayor a Menor (clic para Menor a Mayor)" : "Ordenar por % Participación") : MensajeTooltipCabecera)"
+                                        style="@(ControlesCabeceraHabilitados ? "cursor: pointer;" : "opacity: 0.55; cursor: not-allowed;")">
+                                    <span>% Part.</span>
+                                    @if (columnaOrden == "Participacion" && ControlesCabeceraHabilitados)
+                                    {
+                                        <i class="bi @(ordenAscendente ? "bi-sort-numeric-down text-primary fw-bold" : "bi-sort-numeric-up-alt text-primary fw-bold")"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-arrow-down-up text-muted" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                                    }
+                                </button>
+                            </th>
+
+                            <th class="py-2 text-secondary fw-bold text-center" style="width: 7%; font-size: 0.85rem;">Creación</th>
+                            <th class="py-2 text-secondary fw-bold text-center" style="width: 7%; font-size: 0.85rem;">Modif.</th>
+                            <th class="py-2 pe-3 text-secondary fw-bold text-end" style="width: 8%; font-size: 0.85rem;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,8 +190,8 @@
                                     <td colspan="8" class="ps-3 py-2 text-uppercase font-monospace text-dark" style="text-align: left !important; font-size: 0.9rem; letter-spacing: 0.5px;">
                                         <i class="bi @(grupo.IsExpanded ? "bi-chevron-down" : "bi-chevron-right") me-2 text-primary fw-bold"></i>
                                         <strong>🏢 @grupo.SociedadNombre</strong>
-                                        <span class="float-end badge bg-white text-dark border shadow-sm me-3 mt-1" style="font-size: 0.75rem;">
-                                            @UtilClass.FormatearMiles(grupo.GranTotalAcciones) Acciones | @UtilClass.FormatearMiles(grupo.GranTotalAccionistas) Accionistas | 
+                                        <span class="float-end badge bg-white text-secondary border shadow-sm me-3 mt-1" style="font-size: 0.75rem; text-transform: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: normal; font-weight: 500;">
+                                            @grupo.EtiquetaDescriptiva
                                         </span>
                                     </td>
                                 </tr>
@@ -212,10 +296,52 @@
                                                                     <thead class="table-light border-bottom text-secondary">
                                                                         <tr>
                                                                             <th class="ps-3 py-2" style="width: 14%;">Cédula / RIF</th>
-                                                                            <th class="py-2" style="width: 26%;">Sub-Accionista (Beneficiario / Casa de Bolsa)</th>
+                                                                            <th class="py-2" style="width: 26%;">
+                                                                                <button class="btn btn-sm btn-link p-0 text-decoration-none text-secondary fw-bold d-inline-flex align-items-center gap-1 border-0"
+                                                                                        @onclick='() => { p.CambiarSubOrden("Nombre"); StateHasChanged(); }'
+                                                                                        title="Ordenar sub-accionistas alfabéticamente">
+                                                                                    <span>Sub-Accionista (Beneficiario / Casa de Bolsa)</span>
+                                                                                    @if (p.SubColumnaOrden == "Nombre")
+                                                                                    {
+                                                                                        <i class="bi @(p.SubOrdenAscendente ? "bi-sort-alpha-down text-primary fw-bold" : "bi-sort-alpha-up-alt text-primary fw-bold")"></i>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <i class="bi bi-arrow-down-up text-muted" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                                                                                    }
+                                                                                </button>
+                                                                            </th>
                                                                             <th class="py-2" style="width: 12%;">Tipo</th>
-                                                                            <th class="py-2 text-end" style="width: 12%;">Nro. Acciones</th>
-                                                                            <th class="py-2 text-end" style="width: 8%;">% Part.</th>
+                                                                            <th class="py-2 text-end" style="width: 12%;">
+                                                                                <button class="btn btn-sm btn-link p-0 text-decoration-none text-secondary fw-bold d-inline-flex align-items-center gap-1 border-0 ms-auto"
+                                                                                        @onclick='() => { p.CambiarSubOrden("NroAcciones"); StateHasChanged(); }'
+                                                                                        title="Ordenar por número de acciones">
+                                                                                    <span>Nro. Acciones</span>
+                                                                                    @if (p.SubColumnaOrden == "NroAcciones")
+                                                                                    {
+                                                                                        <i class="bi @(p.SubOrdenAscendente ? "bi-sort-numeric-down text-primary fw-bold" : "bi-sort-numeric-up-alt text-primary fw-bold")"></i>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <i class="bi bi-arrow-down-up text-muted" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                                                                                    }
+                                                                                </button>
+                                                                            </th>
+                                                                            <th class="py-2 text-end" style="width: 8%;">
+                                                                                <button class="btn btn-sm btn-link p-0 text-decoration-none text-secondary fw-bold d-inline-flex align-items-center gap-1 border-0 ms-auto"
+                                                                                        @onclick='() => { p.CambiarSubOrden("Participacion"); StateHasChanged(); }'
+                                                                                        title="Ordenar por % de participación">
+                                                                                    <span>% Part.</span>
+                                                                                    @if (p.SubColumnaOrden == "Participacion")
+                                                                                    {
+                                                                                        <i class="bi @(p.SubOrdenAscendente ? "bi-sort-numeric-down text-primary fw-bold" : "bi-sort-numeric-up-alt text-primary fw-bold")"></i>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <i class="bi bi-arrow-down-up text-muted" style="font-size: 0.75rem; opacity: 0.5;"></i>
+                                                                                    }
+                                                                                </button>
+                                                                            </th>
                                                                             <th class="py-2 text-center" style="width: 9%;">Fecha Creación</th>
                                                                             <th class="py-2 text-center" style="width: 9%;">Modificación</th>
                                                                             <th class="pe-3 py-2 text-end" style="width: 10%;">Acciones</th>
@@ -411,6 +537,10 @@
         public int GranTotalAccionistas { get; set; }
         public int TotalSubCustodiados { get; set; } = 0;
         public int TotalGeneralAccionistas => GranTotalAccionistas + TotalSubCustodiados;
+        public decimal? CapitalSocial { get; set; }
+        public decimal? ValorNominal { get; set; }
+        public decimal? ValorPatrimonial { get; set; }
+        public string MonedaSimbolo { get; set; } = "Bs.";
         public bool IsExpanded { get; set; } = false;
         public bool IsLoading { get; set; } = false;
         public int CurrentPage { get; set; } = 1;
@@ -422,6 +552,54 @@
 
         public IEnumerable<AccionistaSociedadVerDto> AccionistasPaginados =>
             AccionistasFiltrados.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+
+        public string EtiquetaDescriptiva
+        {
+            get
+            {
+                var culture = System.Globalization.CultureInfo.GetCultureInfo("es-VE");
+                string sim = string.IsNullOrWhiteSpace(MonedaSimbolo)
+                    ? "Bs."
+                    : (MonedaSimbolo.Trim().Equals("Bs", StringComparison.OrdinalIgnoreCase)
+                        ? "Bs."
+                        : MonedaSimbolo.Trim());
+
+                long accionesSociedad = 0;
+                if (!string.IsNullOrWhiteSpace(NumeroAccionesSociedad) &&
+                    long.TryParse(NumeroAccionesSociedad.Replace(".", "").Replace(",", "").Trim(), out var parsed))
+                {
+                    accionesSociedad = parsed;
+                }
+
+                long totalAccionesMostrar = GranTotalAcciones > 0 ? GranTotalAcciones : accionesSociedad;
+                string accionesTexto = $"{totalAccionesMostrar.ToString("N0", culture)} Acciones";
+                string accionistasTexto = TotalSubCustodiados > 0
+                    ? $"{TotalGeneralAccionistas.ToString("N0", culture)} Accionistas ({TotalSubCustodiados.ToString("N0", culture)} en custodia)"
+                    : $"{TotalGeneralAccionistas.ToString("N0", culture)} Accionistas";
+                string csTexto = $"CS: {(CapitalSocial ?? 0).ToString("N2", culture)} {sim}";
+                string vnTexto = $"VN: {(ValorNominal ?? 0).ToString("N2", culture)} {sim}";
+                string vpTexto = $"VP: {(ValorPatrimonial ?? 0).ToString("N2", culture)} {sim}";
+
+                return $"{accionesTexto} | {accionistasTexto} | {csTexto} | {vnTexto} | {vpTexto}";
+            }
+        }
+    }
+
+    private int TotalDirectosGlobal => gruposFiltrados.Sum(g => g.GranTotalAccionistas);
+    private int TotalCustodiadosGlobal => gruposFiltrados.Sum(g => g.TotalSubCustodiados);
+    private int TotalAccionistasGlobal => TotalDirectosGlobal + TotalCustodiadosGlobal;
+
+    private string SubtituloAccionistasGlobal
+    {
+        get
+        {
+            var culture = System.Globalization.CultureInfo.GetCultureInfo("es-VE");
+            if (TotalCustodiadosGlobal > 0)
+            {
+                return $"Total: {TotalAccionistasGlobal.ToString("N0", culture)} Accionistas ({TotalDirectosGlobal.ToString("N0", culture)} directos + {TotalCustodiadosGlobal.ToString("N0", culture)} en custodia) ({gruposFiltrados.Count} sociedades)";
+            }
+            return $"Total: {TotalAccionistasGlobal.ToString("N0", culture)} Accionistas ({gruposFiltrados.Count} sociedades)";
+        }
     }
 
     private List<SociedadGrupoModel> gruposSociedades = new();
@@ -442,6 +620,49 @@
     // Control de rendimiento y Debounce para búsqueda
     private CancellationTokenSource? _searchCts;
     private bool _busquedaPreviaAplicada = false;
+
+    // Filtros y Ordenamiento de Cabecera Condicional
+    private string filtroTipoAccionista = "";
+    private string columnaOrden = "NroAcciones"; // "NroAcciones", "Nombre", "Participacion"
+    private bool ordenAscendente = false; // false = mayor a menor / Z-A; true = menor a mayor / A-Z
+
+    private bool ControlesCabeceraHabilitados =>
+        (gruposFiltrados.Count == 1) ||
+        (!string.IsNullOrWhiteSpace(searchTerm) && searchTerm.Trim().Length >= 3) ||
+        (gruposFiltrados.Count(g => g.IsExpanded) == 1);
+
+    private string MensajeTooltipCabecera => ControlesCabeceraHabilitados
+        ? "Filtro/Orden disponible para la sociedad en foco"
+        : "Para ordenar o filtrar por columna, acota en el buscador o abre una sola sociedad";
+
+    private void CambiarOrden(string columna)
+    {
+        if (!ControlesCabeceraHabilitados) return;
+
+        if (columnaOrden == columna)
+        {
+            ordenAscendente = !ordenAscendente;
+        }
+        else
+        {
+            columnaOrden = columna;
+            ordenAscendente = (columna == "Nombre");
+        }
+
+        AplicarFiltrosYOrdenamiento();
+    }
+
+    private void AplicarFiltrosYOrdenamiento()
+    {
+        foreach (var grupo in gruposFiltrados)
+        {
+            if (grupo.Accionistas.Any())
+            {
+                FiltrarAccionistasEnGrupo(grupo);
+            }
+        }
+        StateHasChanged();
+    }
 
     [Inject] private IAccionistaSociedad repository { get; set; } = null!;
     [Inject] private ITitulo repotitulo { get; set; } = null!;
@@ -493,6 +714,10 @@
                         GranTotalAcciones = totalAcciones,
                         GranTotalAccionistas = totalAccionistas,
                         TotalSubCustodiados = totalCustodiados,
+                        CapitalSocial = soc.CapitalSuscrito,
+                        ValorNominal = soc.ValorAccion,
+                        ValorPatrimonial = soc.ValorPatrimonial,
+                        MonedaSimbolo = soc.Moneda?.Simbolo ?? "Bs.",
                         IsExpanded = false
                     });
                 }
@@ -521,8 +746,7 @@
             await CargarAccionistasDeGrupoAsync(grupo);
         }
 
-        FiltrarAccionistasEnGrupo(grupo);
-        StateHasChanged();
+        AplicarFiltrosYOrdenamiento();
     }
 
     private async Task CargarAccionistasDeGrupoAsync(SociedadGrupoModel grupo)
@@ -591,7 +815,7 @@
             gruposFiltrados = gruposSociedades;
             foreach (var g in gruposFiltrados)
             {
-                g.AccionistasFiltrados = g.Accionistas;
+                FiltrarAccionistasEnGrupo(g);
                 g.CurrentPage = 1;
             }
         }
@@ -617,25 +841,61 @@
 
     private void FiltrarAccionistasEnGrupo(SociedadGrupoModel grupo)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
+        IEnumerable<AccionistaSociedadVerDto> lista = grupo.Accionistas;
+
+        // 1. Filtro por término de búsqueda (si aplica)
+        if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            grupo.AccionistasFiltrados = grupo.Accionistas;
+            var term = searchTerm.Trim().ToLowerInvariant();
+            if (!grupo.SociedadNombre.ToLowerInvariant().Contains(term))
+            {
+                lista = lista.Where(a => (a.AccionistaNombre ?? "").ToLowerInvariant().Contains(term));
+            }
+        }
+
+        // 2. Filtro por Tipo de Accionista (solo si controles de cabecera habilitados)
+        if (ControlesCabeceraHabilitados && !string.IsNullOrWhiteSpace(filtroTipoAccionista))
+        {
+            switch (filtroTipoAccionista)
+            {
+                case "Natural":
+                    lista = lista.Where(a => (a.TipoAccionistaNombre ?? "").ToLowerInvariant().Contains("natural"));
+                    break;
+                case "Juridica":
+                    lista = lista.Where(a => (a.TipoAccionistaNombre ?? "").ToLowerInvariant().Contains("jurídica") || (a.TipoAccionistaNombre ?? "").ToLowerInvariant().Contains("juridica"));
+                    break;
+                case "Sucesion":
+                    lista = lista.Where(a => (a.TipoAccionistaNombre ?? "").ToLowerInvariant().Contains("sucesión") || (a.TipoAccionistaNombre ?? "").ToLowerInvariant().Contains("sucesion"));
+                    break;
+                case "Custodio":
+                    lista = lista.Where(a => a.EsCustodio);
+                    break;
+            }
+        }
+
+        // 3. Ordenamiento por Columna (si controles de cabecera habilitados)
+        if (ControlesCabeceraHabilitados)
+        {
+            lista = columnaOrden switch
+            {
+                "Nombre" => ordenAscendente
+                    ? lista.OrderBy(a => a.AccionistaNombre)
+                    : lista.OrderByDescending(a => a.AccionistaNombre),
+                "Participacion" => ordenAscendente
+                    ? lista.OrderBy(a => a.Participacion ?? 0)
+                    : lista.OrderByDescending(a => a.Participacion ?? 0),
+                _ => ordenAscendente
+                    ? lista.OrderBy(a => a.NroAcciones ?? 0)
+                    : lista.OrderByDescending(a => a.NroAcciones ?? 0),
+            };
         }
         else
         {
-            var term = searchTerm.Trim().ToLowerInvariant();
-            // Si la búsqueda coincide con la sociedad, mostramos todos; si no, filtramos por nombre de accionista
-            if (grupo.SociedadNombre.ToLowerInvariant().Contains(term))
-            {
-                grupo.AccionistasFiltrados = grupo.Accionistas;
-            }
-            else
-            {
-                grupo.AccionistasFiltrados = grupo.Accionistas
-                    .Where(a => (a.AccionistaNombre ?? "").ToLowerInvariant().Contains(term))
-                    .ToList();
-            }
+            // Orden por defecto: mayor número de acciones primero
+            lista = lista.OrderByDescending(a => a.NroAcciones ?? 0);
         }
+
+        grupo.AccionistasFiltrados = lista.ToList();
         grupo.CurrentPage = 1;
     }
 
@@ -702,9 +962,9 @@
             {
                 await CargarAccionistasDeGrupoAsync(grupo);
             }
-            FiltrarAccionistasEnGrupo(grupo);
         }
 
+        AplicarFiltrosYOrdenamiento();
         cargando = false;
         StateHasChanged();
     }
@@ -715,6 +975,7 @@
         {
             grupo.IsExpanded = false;
         }
+        AplicarFiltrosYOrdenamiento();
         StateHasChanged();
     }
 

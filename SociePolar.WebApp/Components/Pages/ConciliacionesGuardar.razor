@@ -111,7 +111,7 @@
                                                             class="dropdown-item @(custodioId == custodio.Id ? "active bg-primary text-white" : "")"
                                                             style="font-size: 0.8rem;"
                                                             @onclick="() => SeleccionarCustodio(custodio.Id)">
-                                                        @(custodio.Accionista?.Nombre) - (Acciones: @custodio.NroAcciones)
+                                                        @(custodio.Accionista?.Nombre) - (Acciones: @(custodio.NroAcciones?.ToString("N0") ?? "0"))
                                                     </button>
                                                 </li>
                                             }
@@ -710,7 +710,13 @@
 
         if (id > 0)
         {
-            listaCustodios = await repoaccionistasocie.GetBySociedadIdAsync(id);
+            var accionistas = await repoaccionistasocie.GetBySociedadIdAsync(id);
+            listaCustodios = accionistas
+                .Where(x => (x.EstatusAccionista?.Id == 1) 
+                         && (x.NroAcciones ?? 0) > 0 
+                         && x.CustodioId == null)
+                .OrderBy(x => x.Accionista?.Nombre)
+                .ToList();
         }
         else
         {

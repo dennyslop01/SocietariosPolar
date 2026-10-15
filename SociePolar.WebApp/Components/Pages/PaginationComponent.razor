@@ -1,20 +1,22 @@
 @typeparam TItem
 
-<div class="polar-table-container">
-    <table class="table">
-        <thead class="table-light">
-            @ChildContentHeader
-        </thead>
-        <tbody>
-            @foreach (var item in PaginatedData)
-            {
-                @ChildContentRow(item)
-            }
-        </tbody>
-    </table>
+<div class="polar-table-container d-flex flex-column" style="min-height: 0; @ContainerStyle">
+    <div class="table-responsive flex-grow-1" style="overflow: auto; min-height: 0;">
+        <table class="table table-hover align-middle mb-0 @TableClass">
+            <thead class="table-light sticky-top" style="position: sticky; top: 0; z-index: 5; background-color: #F8FAFC;">
+                @ChildContentHeader
+            </thead>
+            <tbody>
+                @foreach (var item in PaginatedData)
+                {
+                    @ChildContentRow(item)
+                }
+            </tbody>
+        </table>
+    </div>
 
-    <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 gap-3 bg-white border-top">
-        <div class="d-flex align-items-center">
+    <div class="polar-pagination-bar d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 gap-3 bg-white border-top flex-shrink-0" style="position: sticky; bottom: 0; z-index: 10;">
+        <div class="d-flex align-items-center flex-wrap gap-2">
             <!-- Selector de Tamaño -->
             <label class="me-2 text-muted small fw-semibold">Filas por página:</label>
             <select @bind="PageSize" class="form-select form-select-sm polar-pagination-select">
@@ -25,7 +27,7 @@
             </select>
 
             <!-- Botones de Navegación -->
-            <div class="ms-3 d-flex align-items-center gap-1">
+            <div class="ms-3 d-flex align-items-center gap-1 flex-wrap">
                 <button class="polar-page-btn"
                         @onclick="PreviousPage" 
                         disabled="@IsPreviousDisabled" 
@@ -33,12 +35,19 @@
                     <i class="bi bi-chevron-left"></i>
                 </button>
 
-                @foreach (var pageNumber in Enumerable.Range(1, TotalPages))
+                @foreach (var pageNumber in GetVisiblePages())
                 {
-                    <button @onclick="() => GoToPage(pageNumber)"
-                            class="polar-page-btn @(CurrentPage == pageNumber ? "active" : "")">
-                        @pageNumber
-                    </button>
+                    if (pageNumber == -1)
+                    {
+                        <span class="px-2 text-muted small">...</span>
+                    }
+                    else
+                    {
+                        <button @onclick="() => GoToPage(pageNumber)"
+                                class="polar-page-btn @(CurrentPage == pageNumber ? "active" : "")">
+                            @pageNumber
+                        </button>
+                    }
                 }
 
                 <button class="polar-page-btn" 
@@ -64,6 +73,8 @@
     [Parameter] public int DefaultPageSize { get; set; } = 50;
     [Parameter] public RenderFragment ChildContentHeader { get; set; }
     [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
+    [Parameter] public string TableClass { get; set; } = "";
+    [Parameter] public string ContainerStyle { get; set; } = "max-height: calc(100vh - 250px);";
 
     private int CurrentPage { get; set; } = 1;
     private readonly int[] PageSizes = new[] { 5, 10, 20, 50, 100 };
@@ -115,12 +126,138 @@
 
     private bool IsPreviousDisabled => CurrentPage == 1;
     private bool IsNextDisabled => CurrentPage >= TotalPages;
+
+    private IEnumerable<int> GetVisiblePages()
+    {
+        var pages = new List<int>();
+        if (TotalPages <= 7)
+        {
+            for (int i = 1; i <= TotalPages; i++) pages.Add(i);
+        }
+        else
+        {
+            if (CurrentPage <= 4)
+            {
+                for (int i = 1; i <= 5; i++) pages.Add(i);
+                pages.Add(-1);
+                pages.Add(TotalPages);
+            }
+            else if (CurrentPage >= TotalPages - 3)
+            {
+                pages.Add(1);
+                pages.Add(-1);
+                for (int i = TotalPages - 4; i <= TotalPages; i++) pages.Add(i);
+            }
+            else
+            {
+                pages.Add(1);
+                pages.Add(-1);
+                pages.Add(CurrentPage - 1);
+                pages.Add(CurrentPage);
+                pages.Add(CurrentPage + 1);
+                pages.Add(-1);
+                pages.Add(TotalPages);
+            }
+        }
+        return pages;
+    }
 }
 
 <style>
     .polar-table-container {
         border-radius: 8px;
         overflow: hidden;
+    }
+
+    .polar-table-container thead th {
+        background-color: #F8FAFC !important;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        border-bottom: 2px solid #E2E8F0 !important;
+    }
+
+    /* Columna Congelada 1 (Ej. ID) */
+    .polar-sticky-col-1 {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 8 !important;
+        background-color: #FFFFFF !important;
+    }
+    thead .polar-sticky-col-1 {
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 15 !important;
+        background-color: #F8FAFC !important;
+    }
+
+    /* Columna Congelada 2 (Ej. Sociedad tras ID) */
+    .polar-sticky-col-2 {
+        position: sticky !important;
+        left: 45px !important;
+        z-index: 8 !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
+    }
+    thead .polar-sticky-col-2 {
+        position: sticky !important;
+        top: 0 !important;
+        left: 45px !important;
+        z-index: 15 !important;
+        background-color: #F8FAFC !important;
+        box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* Columna Congelada Directa en el borde izquierdo (Ej. Nombre Accionista en Detalle) */
+    .polar-sticky-col-direct {
+        position: sticky !important;
+        left: 0 !important;
+        z-index: 8 !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
+    }
+    thead .polar-sticky-col-direct {
+        position: sticky !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 15 !important;
+        background-color: #F8FAFC !important;
+        box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* Modo Compacto / Densidad Optimizada */
+    .polar-table-compact th {
+        padding: 0.45rem 0.5rem !important;
+        font-size: 0.80rem !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+    }
+
+    .polar-table-compact td {
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.81rem !important;
+        vertical-align: middle !important;
+    }
+
+    .polar-num {
+        font-variant-numeric: tabular-nums !important;
+        text-align: right !important;
+        white-space: nowrap !important;
+    }
+
+    .polar-date {
+        white-space: nowrap !important;
+        text-align: center !important;
+    }
+
+    .polar-truncate {
+        display: inline-block !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        vertical-align: middle !important;
     }
 
     .polar-pagination-select {

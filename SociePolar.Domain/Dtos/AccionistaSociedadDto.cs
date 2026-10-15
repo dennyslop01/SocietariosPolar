@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SociePolar.Domain.Dtos
 {
@@ -44,17 +44,53 @@ namespace SociePolar.Domain.Dtos
         public int SubCurrentPage { get; set; } = 1;
         public int SubPageSize { get; set; } = 25;
 
+        public string SubColumnaOrden { get; set; } = "NroAcciones";
+        public bool SubOrdenAscendente { get; set; } = false;
+
+        public void CambiarSubOrden(string columna)
+        {
+            if (SubColumnaOrden == columna)
+            {
+                SubOrdenAscendente = !SubOrdenAscendente;
+            }
+            else
+            {
+                SubColumnaOrden = columna;
+                SubOrdenAscendente = (columna == "Nombre");
+            }
+            SubCurrentPage = 1;
+        }
+
         public IEnumerable<AccionistaSociedadVerDto> SubCustodiadosFiltrados
         {
             get
             {
+                IEnumerable<AccionistaSociedadVerDto> query = SubCustodiados;
+
                 // Optimización: si el término está vacío o tiene menos de 2 caracteres, no filtra la lista en memoria
-                if (string.IsNullOrWhiteSpace(SubSearchTerm) || SubSearchTerm.Trim().Length < 2)
-                    return SubCustodiados;
-                var term = SubSearchTerm.Trim().ToLowerInvariant();
-                return SubCustodiados.Where(x =>
-                    (x.AccionistaNombre ?? "").ToLowerInvariant().Contains(term) ||
-                    (x.DocumentoIdentidad ?? "").ToLowerInvariant().Contains(term));
+                if (!string.IsNullOrWhiteSpace(SubSearchTerm) && SubSearchTerm.Trim().Length >= 2)
+                {
+                    var term = SubSearchTerm.Trim().ToLowerInvariant();
+                    query = query.Where(x =>
+                        (x.AccionistaNombre ?? "").ToLowerInvariant().Contains(term) ||
+                        (x.DocumentoIdentidad ?? "").ToLowerInvariant().Contains(term));
+                }
+
+                // Ordenamiento interno por columna
+                query = SubColumnaOrden switch
+                {
+                    "Nombre" => SubOrdenAscendente
+                        ? query.OrderBy(x => x.AccionistaNombre)
+                        : query.OrderByDescending(x => x.AccionistaNombre),
+                    "Participacion" => SubOrdenAscendente
+                        ? query.OrderBy(x => x.Participacion ?? 0)
+                        : query.OrderByDescending(x => x.Participacion ?? 0),
+                    _ => SubOrdenAscendente
+                        ? query.OrderBy(x => x.NroAcciones ?? 0)
+                        : query.OrderByDescending(x => x.NroAcciones ?? 0),
+                };
+
+                return query;
             }
         }
 

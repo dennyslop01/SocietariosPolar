@@ -18,90 +18,235 @@
         </div>
 
         <div class="card-body">
-            <!-- Buscador Global por Nombre -->
-            <div class="row mb-3">
-                <div class="col-md-4 ms-auto">
+            <!-- Barra de Filtros Rápidos, Búsqueda y Conteo -->
+            <div class="row g-2 align-items-center mb-3">
+                <!-- Filtro por Sociedad -->
+                <div class="col-md-3">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-building"></i>
+                        </span>
+                        <select class="form-select border-start-0" @bind="filtroSociedadId" @bind:after="AplicarFiltrosYOrden">
+                            <option value="0">Todas las Sociedades (@listaSociedadesFiltro.Count)</option>
+                            @foreach (var soc in listaSociedadesFiltro)
+                            {
+                                <option value="@soc.Id">@soc.Empresa?.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filtro por Año -->
+                <div class="col-md-2">
+                    <div class="input-group input-group-sm shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-secondary">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+                        <select class="form-select border-start-0" @bind="filtroAno" @bind:after="AplicarFiltrosYOrden">
+                            <option value="0">Todos los Años</option>
+                            @foreach (var ano in listaAnosFiltro)
+                            {
+                                <option value="@ano">Año @ano</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Buscador Multicriterio -->
+                <div class="col-md-4">
                     <div class="input-group input-group-sm shadow-sm">
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
                         <input type="text"
                                class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
+                               placeholder="Buscar por sociedad, explicación, año..."
+                               value="@searchTerm"
                                @oninput="FiltrarBusqueda" />
+                        @if (!string.IsNullOrWhiteSpace(searchTerm))
+                        {
+                            <button class="btn btn-outline-secondary border-start-0" type="button" @onclick="() => { searchTerm = string.Empty; AplicarFiltrosYOrden(); }">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        }
                     </div>
                 </div>
+
+                <!-- Botón Limpiar y Conteo -->
+                <div class="col-md-3 text-end d-flex align-items-center justify-content-end gap-2">
+                    @if (filtroSociedadId > 0 || filtroAno > 0 || !string.IsNullOrWhiteSpace(searchTerm))
+                    {
+                        <button class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" @onclick="LimpiarFiltros" title="Restablecer filtros">
+                            <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+                        </button>
+                    }
+                    <span class="badge bg-light text-dark border px-2 py-1 small">
+                        @Listgral.Count de @ListgralBuscar.Count decretos
+                    </span>
+                </div>
             </div>
-            <div class="table-responsive">
-                <PaginationComponent TItem="DividendoDefinitivo" Items="Listgral" DefaultPageSize="50">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="py-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 10%; font-size: 0.85rem;">Sociedad</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 20%; font-size: 0.85rem;">Explicación</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Nombre Dividendos</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 10%; font-size: 0.85rem;">Ruta Acta</th>
-                            <th class="py-3 text-secondary fw-bold text-center" style="width: 20%; font-size: 0.85rem;">Observaciones</th>
-                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Total pagado según Tesorería</th>
-                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Total pagado según Accionistas</th>
-                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Diferencia Tesorería - Accionistas</th>
-                            <th class="py-3 text-secondary fw-bold text-end" style="font-size: 0.85rem;">Monto Total a Repartir</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Fecha creación</th>
-                            <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 5%; font-size: 0.85rem;">Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="text-start text-secondary small" style="width: 5%;">@p.Id</td>
-                            <td class="text-start text-secondary small" style="width: 10%;">@p.Sociedad?.Empresa?.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@p.Explicacion</td>
-                            <td class="text-start text-secondary align-middle" style="width: 10%;">
-                                @if (string.IsNullOrEmpty(p.RutaDividendos))
-                                {
-                                    @(p.NombreDividendos?.Length > 25 ? $"{p.NombreDividendos.Substring(0, 25)}..." : p.NombreDividendos)
-                                }
-                                else
-                                {
-                                    <button type="button"
-                                    class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent text-start"
-                                    style="font-size: 0.999em;"
-                                    @onclick="() => VisualizarExcelAsync(p.RutaDividendos, p.NombreDividendos)"
-                                    @onclick:preventDefault>
-                                        @(p.NombreDividendos?.Length > 25 ? $"{p.NombreDividendos.Substring(0, 25)}..." : p.NombreDividendos)
-                                    </button>
-                                }
-                            </td>
-                            <td class="text-start text-secondary align-middle" style="width: 10%;">
+
+            <PaginationComponent TItem="DividendoDefinitivo" Items="Listgral" DefaultPageSize="50" TableClass="polar-table-compact">
+                <ChildContentHeader>
+                    <tr class="table-light border-bottom text-nowrap">
+                        <th class="polar-sticky-col-1 text-center user-select-none" style="width: 50px; min-width: 50px; cursor: pointer;" @onclick='() => OrdenarPor("Id")' title="Ordenar por #">
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <span>#</span>
+                                <i class="bi @(columnaOrden == "Id" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="polar-sticky-col-2 text-start user-select-none" style="min-width: 250px; max-width: 290px; cursor: pointer;" @onclick='() => OrdenarPor("Sociedad")' title="Ordenar por Sociedad">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span>Sociedad</span>
+                                <i class="bi @(columnaOrden == "Sociedad" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="text-start" style="min-width: 180px;">Explicación</th>
+                        <th class="text-start" style="min-width: 160px;">Nombre Dividendos</th>
+                        <th class="text-start" style="min-width: 160px;">Ruta Acta</th>
+                        <th class="text-start" style="min-width: 160px;">Doc. Secundario</th>
+                        <th class="text-start" style="min-width: 150px;">Observaciones</th>
+                        <th class="polar-num user-select-none" style="min-width: 130px; cursor: pointer;" @onclick='() => OrdenarPor("Tesoreria")' title="Ordenar por Tesorería">
+                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                <span>Tesorería</span>
+                                <i class="bi @(columnaOrden == "Tesoreria" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="polar-num user-select-none" style="min-width: 130px; cursor: pointer;" @onclick='() => OrdenarPor("Accionistas")' title="Ordenar por Accionistas">
+                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                <span>Accionistas</span>
+                                <i class="bi @(columnaOrden == "Accionistas" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="polar-num user-select-none" style="min-width: 130px; cursor: pointer;" @onclick='() => OrdenarPor("Diferencia")' title="Ordenar por Diferencia">
+                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                <span>Diferencia</span>
+                                <i class="bi @(columnaOrden == "Diferencia" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="polar-num user-select-none" style="min-width: 140px; cursor: pointer;" @onclick='() => OrdenarPor("TotalRepartir")' title="Ordenar por Total a Repartir">
+                            <div class="d-flex align-items-center justify-content-end gap-1">
+                                <span>Total a Repartir</span>
+                                <i class="bi @(columnaOrden == "TotalRepartir" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="polar-date user-select-none" style="min-width: 110px; cursor: pointer;" @onclick='() => OrdenarPor("Fecha")' title="Ordenar por Fecha">
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <span>Fecha</span>
+                                <i class="bi @(columnaOrden == "Fecha" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
+                            </div>
+                        </th>
+                        <th class="text-end pe-3" style="width: 80px; min-width: 80px;">Acciones</th>
+                    </tr>
+                </ChildContentHeader>
+                <ChildContentRow Context="p">
+                    <tr class="align-middle border-bottom">
+                        <td class="polar-sticky-col-1 text-center fw-semibold text-secondary">@p.Id</td>
+                        <td class="polar-sticky-col-2 text-start fw-semibold text-dark">
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="polar-truncate" style="max-width: 185px;" title="@p.Sociedad?.Empresa?.Nombre">
+                                    @p.Sociedad?.Empresa?.Nombre
+                                </span>
+                                <span class="badge bg-light text-secondary border small px-1 py-0" style="font-size: 0.72rem;" title="Año del Decreto: @p.CreateDate.Year">
+                                    @p.CreateDate.Year
+                                </span>
+                            </div>
+                        </td>
+                        <td class="text-start text-secondary">
+                            <span class="polar-truncate" style="max-width: 220px;" title="@p.Explicacion">
+                                @p.Explicacion
+                            </span>
+                        </td>
+                        <td class="text-start align-middle">
+                            @if (!string.IsNullOrWhiteSpace(p.RutaDividendos))
+                            {
                                 <button type="button"
-                                        class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent text-start"
-                                        style="font-size: 0.999em;"
-                                        @onclick="() => VisualizarDocumentoAsync(p.RutaActa, p.NombreActa)"
-                                        @onclick:preventDefault>
-                                    @(p.NombreActa?.Length > 25 ? $"{p.NombreActa.Substring(0, 25)}..." : p.NombreActa)
+                                        class="btn btn-link text-primary small p-0 border-0 bg-transparent text-start d-inline-flex align-items-center gap-1"
+                                        @onclick="() => VisualizarExcelAsync(p.RutaDividendos, p.NombreDividendos)"
+                                        @onclick:preventDefault
+                                        title="Abrir archivo: @p.NombreDividendos">
+                                    <i class="bi bi-file-earmark-excel text-success"></i>
+                                    <span class="polar-truncate text-decoration-underline" style="max-width: 140px;">
+                                        @p.NombreDividendos
+                                    </span>
                                 </button>
-                            </td>
-                            <td class="text-start text-secondary small" style="width: 20%;">@(p.Observaciones?.Length > 25 ? $"{p.Observaciones.Substring(0, 25)}..." : p.Observaciones)</td>
-                            <td class="text-center text-secondary small">@((p.MontoPagadoTesoreria ?? 0).ToString("N2"))</td>
-                            <td class="text-center text-secondary small">@((p.MontoPagadoAccionistas ?? 0).ToString("N2"))</td>
-                            <td class="text-center text-secondary small">@(((p.MontoPagadoTesoreria ?? 0) - (p.MontoPagadoAccionistas ?? 0)).ToString("N2"))</td>
-                            <td class="text-center text-secondary small">@((p.MontoTotalRepartir ?? 0).ToString("N2"))</td>
-                            <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3 text-nowrap" style="width: 120px;">
-                                @if (idRol == 1 || idRol == 2)
-                                {
-                                    <button class="btn btn-link btn-sm text-secondary p-0"
-                                            @onclick="() => Detalle(p)" title="Detalle Archivo">
-                                        <i class="bi bi-file-earmark-text fs-6"></i>
-                                    </button>
-                                    <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                        <i class="bi bi-trash3 fs-6"></i>
-                                    </button>
-                                }
-                            </td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
-            </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted small polar-truncate" style="max-width: 150px;" title="@p.NombreDividendos">
+                                    @(string.IsNullOrWhiteSpace(p.NombreDividendos) ? "-" : p.NombreDividendos)
+                                </span>
+                            }
+                        </td>
+                        <td class="text-start align-middle">
+                            @if (!string.IsNullOrWhiteSpace(p.RutaActa))
+                            {
+                                <button type="button"
+                                        class="btn btn-link text-primary small p-0 border-0 bg-transparent text-start d-inline-flex align-items-center gap-1"
+                                        @onclick="() => VisualizarDocumentoAsync(p.RutaActa, p.NombreActa)"
+                                        @onclick:preventDefault
+                                        title="Abrir acta: @p.NombreActa">
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                    <span class="polar-truncate text-decoration-underline" style="max-width: 140px;">
+                                        @p.NombreActa
+                                    </span>
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted small polar-truncate" style="max-width: 150px;" title="@p.NombreActa">
+                                    @(string.IsNullOrWhiteSpace(p.NombreActa) ? "-" : p.NombreActa)
+                                </span>
+                            }
+                        </td>
+                        <td class="text-start align-middle">
+                            @if (!string.IsNullOrWhiteSpace(p.RutaDocumento))
+                            {
+                                <button type="button"
+                                        class="btn btn-link text-primary small p-0 border-0 bg-transparent text-start d-inline-flex align-items-center gap-1"
+                                        @onclick="() => VisualizarDocumentoAsync(p.RutaDocumento, p.NombreDocumento)"
+                                        @onclick:preventDefault
+                                        title="Abrir soporte: @p.NombreDocumento">
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                    <span class="polar-truncate text-decoration-underline" style="max-width: 140px;">
+                                        @p.NombreDocumento
+                                    </span>
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted small polar-truncate" style="max-width: 150px;" title="@p.NombreDocumento">
+                                    @(string.IsNullOrWhiteSpace(p.NombreDocumento) ? "-" : p.NombreDocumento)
+                                </span>
+                            }
+                        </td>
+                        <td class="text-start text-secondary">
+                            <span class="polar-truncate" style="max-width: 160px;" title="@p.Observaciones">
+                                @(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)
+                            </span>
+                        </td>
+                        <td class="polar-num text-secondary">@((p.MontoPagadoTesoreria ?? 0).ToString("N2"))</td>
+                        <td class="polar-num text-secondary">@((p.MontoPagadoAccionistas ?? 0).ToString("N2"))</td>
+                        <td class="polar-num fw-semibold @(((p.MontoPagadoTesoreria ?? 0) - (p.MontoPagadoAccionistas ?? 0)) != 0 ? "text-danger" : "text-muted")">
+                            @(((p.MontoPagadoTesoreria ?? 0) - (p.MontoPagadoAccionistas ?? 0)).ToString("N2"))
+                        </td>
+                        <td class="polar-num text-dark fw-bold">@((p.MontoTotalRepartir ?? 0).ToString("N2"))</td>
+                        <td class="polar-date text-secondary">@p.CreateDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end pe-3 text-nowrap">
+                            @if (idRol == 1 || idRol == 2)
+                            {
+                                <button class="btn btn-link btn-sm text-secondary p-0 me-2"
+                                        @onclick="() => Detalle(p)" title="Detalle Archivo">
+                                    <i class="bi bi-file-earmark-text fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-danger p-0" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                    <i class="bi bi-trash3 fs-6"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                </ChildContentRow>
+            </PaginationComponent>
         </div>
     </div>
 
@@ -156,7 +301,8 @@
 
     private List<DividendoDefinitivo> Listgral = new();
     private List<DividendoDefinitivo> ListgralBuscar = new();
-    private string searchTerm = ""; private bool cargando = false;
+    private string searchTerm = "";
+    private bool cargando = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
@@ -166,6 +312,14 @@
     private int idRol = 0;
     private bool mostrarDetalle = false;
     private Int32 idDividendo = 0;
+
+    // Estados para Filtros y Ordenamiento
+    private int filtroSociedadId = 0;
+    private int filtroAno = 0;
+    private string columnaOrden = "Fecha";
+    private bool ordenAscendente = false; // Más recientes primero por defecto
+    private List<Sociedad> listaSociedadesFiltro = new();
+    private List<int> listaAnosFiltro = new();
 
     [Inject] private IDividendoDefinitivo repository { get; set; } = null!;
 
@@ -177,6 +331,10 @@
             if (!string.IsNullOrEmpty(userrolaux.Value))
             {
                 idRol = int.Parse(userrolaux.Value);
+            }
+            else
+            {
+                idRol = 1;
             }
         }
         catch (Exception ex)
@@ -191,9 +349,27 @@
         cargando = true;
         try
         {
-            Listgral = await repository.GetAllAsync();
-            Listgral = Listgral.OrderBy(x => x.Sociedad?.Empresa?.Nombre).ToList();
-            ListgralBuscar = Listgral;
+            var data = await repository.GetAllAsync();
+            ListgralBuscar = data;
+
+            // Extraer sociedades únicas para el dropdown
+            listaSociedadesFiltro = data
+                .Where(x => x.Sociedad?.Empresa != null)
+                .Select(x => x.Sociedad!)
+                .GroupBy(s => s.Id)
+                .Select(g => g.First())
+                .OrderBy(s => s.Empresa?.Nombre)
+                .ToList();
+
+            // Extraer años únicos para el dropdown
+            listaAnosFiltro = data
+                .Select(x => x.CreateDate.Year)
+                .Where(y => y > 1900)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
+
+            AplicarFiltrosYOrden();
         }
         catch (Exception ex)
         {
@@ -207,19 +383,89 @@
         }
     }
 
+    private void AplicarFiltrosYOrden()
+    {
+        IEnumerable<DividendoDefinitivo> consulta = ListgralBuscar;
+
+        // 1. Filtro por Sociedad
+        if (filtroSociedadId > 0)
+        {
+            consulta = consulta.Where(x => x.Sociedad?.Id == filtroSociedadId);
+        }
+
+        // 2. Filtro por Año
+        if (filtroAno > 0)
+        {
+            consulta = consulta.Where(x => x.CreateDate.Year == filtroAno);
+        }
+
+        // 3. Buscador Multicriterio
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+            consulta = consulta.Where(x =>
+                (x.Sociedad?.Empresa?.Nombre != null && x.Sociedad.Empresa.Nombre.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (x.Explicacion != null && x.Explicacion.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (x.NombreDividendos != null && x.NombreDividendos.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                (x.Observaciones != null && x.Observaciones.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                x.CreateDate.ToString("yyyy").Contains(term) ||
+                x.CreateDate.ToString("dd/MM/yyyy").Contains(term) ||
+                x.Id.ToString().Contains(term)
+            );
+        }
+
+        // 4. Ordenamiento por Columna
+        consulta = (columnaOrden, ordenAscendente) switch
+        {
+            ("Id", true) => consulta.OrderBy(x => x.Id),
+            ("Id", false) => consulta.OrderByDescending(x => x.Id),
+            ("Sociedad", true) => consulta.OrderBy(x => x.Sociedad?.Empresa?.Nombre).ThenByDescending(x => x.CreateDate),
+            ("Sociedad", false) => consulta.OrderByDescending(x => x.Sociedad?.Empresa?.Nombre).ThenByDescending(x => x.CreateDate),
+            ("Fecha", true) => consulta.OrderBy(x => x.CreateDate),
+            ("Fecha", false) => consulta.OrderByDescending(x => x.CreateDate),
+            ("TotalRepartir", true) => consulta.OrderBy(x => x.MontoTotalRepartir ?? 0),
+            ("TotalRepartir", false) => consulta.OrderByDescending(x => x.MontoTotalRepartir ?? 0),
+            ("Tesoreria", true) => consulta.OrderBy(x => x.MontoPagadoTesoreria ?? 0),
+            ("Tesoreria", false) => consulta.OrderByDescending(x => x.MontoPagadoTesoreria ?? 0),
+            ("Accionistas", true) => consulta.OrderBy(x => x.MontoPagadoAccionistas ?? 0),
+            ("Accionistas", false) => consulta.OrderByDescending(x => x.MontoPagadoAccionistas ?? 0),
+            ("Diferencia", true) => consulta.OrderBy(x => (x.MontoPagadoTesoreria ?? 0) - (x.MontoPagadoAccionistas ?? 0)),
+            ("Diferencia", false) => consulta.OrderByDescending(x => (x.MontoPagadoTesoreria ?? 0) - (x.MontoPagadoAccionistas ?? 0)),
+            _ => consulta.OrderByDescending(x => x.CreateDate)
+        };
+
+        Listgral = consulta.ToList();
+        StateHasChanged();
+    }
+
     private void FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
-        if (string.IsNullOrWhiteSpace(searchTerm))
+        AplicarFiltrosYOrden();
+    }
+
+    private void OrdenarPor(string columna)
+    {
+        if (columnaOrden == columna)
         {
-            Listgral = ListgralBuscar;
+            ordenAscendente = !ordenAscendente;
         }
         else
         {
-            Listgral = ListgralBuscar
-                .Where(b => b.Explicacion != null && b.Explicacion.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            columnaOrden = columna;
+            ordenAscendente = (columna == "Sociedad" || columna == "Id");
         }
+        AplicarFiltrosYOrden();
+    }
+
+    private void LimpiarFiltros()
+    {
+        filtroSociedadId = 0;
+        filtroAno = 0;
+        searchTerm = "";
+        columnaOrden = "Fecha";
+        ordenAscendente = false;
+        AplicarFiltrosYOrden();
     }
 
     private async Task MostrarNotificacion(string mensaje, bool esError = false)

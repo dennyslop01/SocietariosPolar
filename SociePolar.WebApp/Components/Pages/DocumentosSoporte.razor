@@ -1,4 +1,4 @@
-﻿@page "/documentossoporte/{idModulo}/{id}"
+@page "/documentossoporte/{idModulo}/{id}"
 
 @rendermode InteractiveServer
 
@@ -68,23 +68,20 @@
                         <tr class="align-middle border-bottom">
                             <td class="text-start text-secondary small" style="width: 5%;">@p.Id</td>
                             <td class="text-start text-secondary small" style="width: 20%;">@p.TipoDocumentoSoporte!.Nombre</td>
-                            <td class="text-start text-secondary align-middle" style="width: 10%;">
-                                <button type="button"
-                                        class="btn btn-link text-primary small text-decoration-underline p-0 border-0 bg-transparent text-start"
-                                        style="font-size: 0.999em;"
-                                        @onclick="() => VisualizarDocumentoAsync(p.RutaGoogle, p.NombreDocumento)"
-                                        @onclick:preventDefault>
-                                    @(p.NombreDocumento?.Length > 25 ? $"{p.NombreDocumento.Substring(0, 25)}..." : p.NombreDocumento)
-                                </button>
+                            <td class="text-start text-secondary small" style="width: 10%;" title="@p.NombreDocumento">
+                                @(p.NombreDocumento?.Length > 25 ? $"{p.NombreDocumento.Substring(0, 25)}..." : p.NombreDocumento)
                             </td>
                             <td class="text-start text-secondary small" style="width: 20%;">@(p.Comentarios?.Length > 25 ? $"{p.Comentarios.Substring(0, 25)}..." : p.Comentarios)</td>
                             <td class="text-center text-secondary small" style="width: 10%;">@p.CreateDate.ToShortDateString()</td>
-                            <td class="text-end pe-3" style="width: 5%;">
+                            <td class="text-end pe-3 text-nowrap" style="width: 80px;">
+                                @if (!string.IsNullOrEmpty(p.RutaGoogle))
+                                {
+                                    <button class="btn btn-link btn-sm text-secondary p-0 me-2" @onclick="() => VisualizarDocumentoAsync(p.RutaGoogle, p.NombreDocumento)" title="Visualizar Documento">
+                                        <i class="bi bi-file-earmark-pdf fs-6"></i>
+                                    </button>
+                                }
                                 @if (idRol == 1 || idRol == 2)
                                 {
-                                    @* <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                    </button> *@
                                     <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
                                         <i class="bi bi-trash3 fs-6"></i>
                                     </button>
@@ -180,6 +177,7 @@
         new Modulos { Id = 6, Nombre = "Libros" },
         new Modulos { Id = 7, Nombre = "Accionistas" },
         new Modulos { Id = 8, Nombre = "Títulos" },
+        new Modulos { Id = 9, Nombre = "Dividendos Accionistas" },
     };
 
     protected override async Task OnInitializedAsync()

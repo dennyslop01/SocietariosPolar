@@ -1,27 +1,29 @@
-﻿function abrirPdfBase64(base64String, nombreArchivo) {
-    const pdfUrl = "data:application/pdf;base64," + base64String;
+function abrirPdfBase64(base64String, nombreArchivo) {
+    try {
+        const byteCharacters = atob(base64String);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
 
-    // Abrimos explícitamente una pestaña limpia e independiente
-    const nuevaPestana = window.open("", "_blank");
-
-    if (nuevaPestana) {
-        nuevaPestana.document.write(
-            `<html>
-                <head>
-                    <title>${nombreArchivo || "Visor de Documento"}</title>
-                    <style>
-                        body { margin: 0; padding: 0; overflow: hidden; background-color: #525659; }
-                        embed { width: 100vw; height: 100vh; border: none; }
-                    </style>
-                </head>
-                <body>
-                    <embed src="${pdfUrl}" type="application/pdf"></embed>
-                </body>
-             </html>`
-        );
-        nuevaPestana.document.close();
-    } else {
-        alert("Por favor, permite las ventanas emergentes (pop-ups) para ver el PDF.");
+        const nuevaPestana = window.open(blobUrl, "_blank");
+        if (!nuevaPestana) {
+            // Si el navegador bloqueó la ventana emergente, crear enlace de descarga de rescate
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = (nombreArchivo || "documento.pdf").replace(/[/\\?%*:|"<>]/g, '_');
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 1000);
+        }
+    } catch (err) {
+        console.error("Error al abrir PDF Base64:", err);
+        // Fallback en caso de string muy grande o formato directo
+        const pdfUrl = "data:application/pdf;base64," + base64String;
+        window.open(pdfUrl, "_blank");
     }
 }
 
@@ -129,14 +131,107 @@ function abrirExcelBase64(base64String, nombreArchivo) {
     }
 }
 
-window.downloadFileFromStream = async (fileName, contentStreamReference) => {
-    const arrayBuffer = await contentStreamReference.arrayBuffer();
-    const blob = new Blob([arrayBuffer]);
-    const url = URL.createObjectURL(blob);
-    const anchorElement = document.createElement('a');
-    anchorElement.href = url;
-    anchorElement.download = fileName ?? '';
-    anchorElement.click();
-    anchorElement.remove();
-    URL.revokeObjectURL(url);
-}
+window.downloadFileFromStream = async (fileName, content) => {
+    try {
+        let cleanName = (fileName || 'archivo').replace(/[/\\?%*:|"<>]/g, '_');
+        let mimeType = 'application/octet-stream';
+
+        if (cleanName.toLowerCase().endsWith('.pdf')) {
+            mimeType = 'application/pdf';
+        } else if (cleanName.toLowerCase().endsWith('.csv')) {
+            mimeType = 'text/csv;charset=utf-8;';
+        } else if (cleanName.toLowerCase().endsWith('.xlsx') || cleanName.toLowerCase().endsWith('.xls')) {
+            mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        }
+
+        let blob;
+        if (content && typeof content.arrayBuffer === 'function') {
+            const arrayBuffer = await content.arrayBuffer();
+            blob = new Blob([arrayBuffer], { type: mimeType });
+        } else if (typeof content === 'string') {
+            // Añadir BOM UTF-8 (\ufeff) para que Microsoft Excel reconozca tildes y caracteres especiales en español
+            blob = new Blob(["\ufeff", content], { type: mimeType });
+        } else if (content instanceof Blob) {
+            blob = content;
+        } else {
+            blob = new Blob([content], { type: mimeType });
+        }
+
+        const url = URL.createObjectURL(blob);
+        const anchorElement = document.createElement('a');
+        anchorElement.href = url;
+        anchorElement.download = cleanName;
+        document.body.appendChild(anchorElement);
+        anchorElement.click();
+        setTimeout(() => {
+            anchorElement.remove();
+            URL.revokeObjectURL(url);
+        }, 1500);
+    } catch (err) {
+        console.error("Error al descargar archivo:", err);
+    }
+};
+
+window.descargarPdfBase64 = function (base64String, nombreArchivo) {
+    try {
+        let cleanName = (nombreArchivo || 'Reporte.pdf').replace(/[/\\?%*:|"<>]/g, '_');
+        if (!cleanName.toLowerCase().endsWith('.pdf')) {
+            cleanName += '.pdf';
+        }
+
+        const byteCharacters = atob(base64String);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = cleanName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        setTimeout(() => {
+            anchor.remove();
+            URL.revokeObjectURL(url);
+        }, 30000);
+    } catch (err) {
+        console.error("Error al descargar PDF Base64:", err);
+    }
+};
+
+window.descargarYAbrirPdf = function (base64String, nombreArchivo, relativeUrl) {
+    try {
+        let cleanName = (nombreArchivo || 'Reporte.pdf').replace(/[/\\?%*:|"<>]/g, '_');
+        if (!cleanName.toLowerCase().endsWith('.pdf')) {
+            cleanName += '.pdf';
+        }
+
+        // 1. Abrir en pestaña nueva con visor nativo
+        if (relativeUrl) {
+            window.open(relativeUrl, '_blank');
+        }
+
+        // 2. Disparar también la descarga automática directa
+        const byteCharacters = atob(base64String);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = cleanName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        setTimeout(() => {
+            anchor.remove();
+            URL.revokeObjectURL(url);
+        }, 30000);
+    } catch (err) {
+        console.error("Error al procesar descarga y apertura de PDF:", err);
+    }
+};

@@ -1,0 +1,195 @@
+@using SociePolar.Domain.Dtos
+@typeparam TItem
+
+<div class="polar-table-container">
+    <table class="table">
+        <thead class="table-light">
+            @ChildContentHeader
+        </thead>
+        <tbody>
+            @foreach (var item in PaginatedData)
+            {
+                @ChildContentRow(item)
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between p-3 gap-3 bg-white border-top">
+        <div class="d-flex align-items-center">
+            <!-- Selector de Tamaño -->
+            <label class="me-2 text-muted small fw-semibold">Filas por página:</label>
+            <select @bind="PageSize" class="form-select form-select-sm polar-pagination-select">
+                @foreach (var size in PageSizes)
+                {
+                    <option value="@size">@size</option>
+                }
+            </select>
+
+            <!-- Botones de Navegación -->
+            <div class="ms-3 d-flex align-items-center gap-1">
+                <button class="polar-page-btn"
+                        @onclick="PreviousPage" 
+                        disabled="@IsPreviousDisabled" 
+                        title="Página anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+
+                @foreach (var pageNumber in Enumerable.Range(1, TotalPages))
+                {
+                    <button @onclick="() => GoToPage(pageNumber)"
+                            class="polar-page-btn @(CurrentPage == pageNumber ? "active" : "")">
+                        @pageNumber
+                    </button>
+                }
+
+                <button class="polar-page-btn" 
+                        @onclick="NextPage" 
+                        disabled="@IsNextDisabled" 
+                        title="Página siguiente">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Info de Registros -->
+        <div class="text-muted small">
+            Mostrando <span class="fw-semibold text-dark">@RecordStart</span> a
+            <span class="fw-semibold text-dark">@RecordEnd</span> de
+            <span class="fw-semibold text-dark">@TotalItems</span> registros
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TItem> Items { get; set; } = Enumerable.Empty<TItem>();
+    [Parameter] public int TotalItems { get; set; } = 0;
+    [Parameter] public int DefaultPageSize { get; set; } = 50;
+    [Parameter] public RenderFragment ChildContentHeader { get; set; }
+    [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
+    [Parameter] public EventCallback<PageRequest> OnPageChanged { get; set; }
+
+    private int CurrentPage { get; set; } = 1;
+    private readonly int[] PageSizes = new[] { 5, 10, 20, 50, 100 };
+    private int _pageSize;
+    private int PageSize
+    {
+        get => _pageSize;
+        set
+        {
+            if (_pageSize != value)
+            {
+                _pageSize = value;
+                CurrentPage = 1; // Reiniciar a página 1 si cambian el tamaño
+                _ = NotifyPageChanged();
+            }
+        }
+    }
+
+    // Lógica de datos paginados ya viene lista del servidor
+    private IEnumerable<TItem> PaginatedData => Items;
+
+    // Propiedades de conteo
+    private int TotalPages => TotalItems > 0 ? (int)Math.Ceiling(TotalItems / (double)PageSize) : 1;
+    private int RecordStart => TotalItems == 0 ? 0 : (CurrentPage - 1) * PageSize + 1;
+    private int RecordEnd => Math.Min(CurrentPage * PageSize, TotalItems);
+
+    protected override void OnInitialized()
+    {
+        _pageSize = DefaultPageSize;
+    }
+
+    private async Task NotifyPageChanged()
+    {
+        if (OnPageChanged.HasDelegate)
+        {
+            await OnPageChanged.InvokeAsync(new PageRequest { PageNumber = CurrentPage, PageSize = PageSize });
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages) 
+        {
+            CurrentPage++;
+            await NotifyPageChanged();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1) 
+        {
+            CurrentPage--;
+            await NotifyPageChanged();
+        }
+    }
+
+    private async Task GoToPage(int pageNumber)
+    {
+        if (CurrentPage != pageNumber)
+        {
+            CurrentPage = pageNumber;
+            await NotifyPageChanged();
+        }
+    }
+
+    private bool IsPreviousDisabled => CurrentPage == 1;
+    private bool IsNextDisabled => CurrentPage >= TotalPages;
+}
+
+<style>
+    .polar-table-container {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .polar-pagination-select {
+        width: 70px !important;
+        height: 32px !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+        border: 1px solid #CBD5E1 !important;
+        background-color: #FFFFFF !important;
+        padding: 2px 8px !important;
+        cursor: pointer;
+    }
+
+    .polar-pagination-select:focus {
+        border-color: #004B87 !important;
+        box-shadow: 0 0 0 2px rgba(0, 75, 135, 0.12) !important;
+    }
+
+    .polar-page-btn {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background-color: transparent;
+        border: 1px solid transparent;
+        color: #475569;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+
+    .polar-page-btn:hover:not(:disabled):not(.active) {
+        background-color: #F1F5F9;
+        color: #0F172A;
+    }
+
+    .polar-page-btn.active {
+        background-color: #004B87;
+        color: #FFFFFF;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 75, 135, 0.2);
+    }
+
+    .polar-page-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+</style>

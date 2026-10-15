@@ -107,3 +107,33 @@
         }
     }
 }
+
+<style>
+    /* Máxima intensidad y tamaño estándar robusto para una lectura clara */
+    .polar-nav-group .mud-nav-link {
+        font-size: 0.88rem !important; /* Tamaño completo y bien definido */
+        color: var(--mud-palette-text-primary) !important;
+        opacity: 1.00 !important; /* Intensidad total al 100% (sin transparencia) */
+        font-weight: 400 !important;
+    }
+
+    /* Íconos a tamaño completo y 100% de intensidad */
+    .polar-nav-group .mud-nav-link .mud-nav-link-icon {
+        font-size: 1.25rem !important; 
+        opacity: 1.00 !important;
+        margin-right: 12px !important;
+    }
+
+    /* Subgrupos (como Tablas Maestras) */
+    .polar-nav-subgroup .mud-nav-group-text {
+        font-size: 0.88rem !important;
+        opacity: 1.00 !important;
+    }
+
+    /* Estado Hover y Activo: Resalta con un cambio de grosor de letra y fondo */
+    .polar-nav-group .mud-nav-link:hover,
+    .polar-nav-group .mud-nav-link.active {
+        font-weight: 600 !important; /* Letra más firme al seleccionarse */
+        background-color: rgba(0, 0, 0, 0.04) !important;
+    }
+</style>

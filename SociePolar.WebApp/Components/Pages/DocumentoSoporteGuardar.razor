@@ -142,6 +142,7 @@
         new Modulos { Id = 6, Nombre = "Libros" },
         new Modulos { Id = 7, Nombre = "Accionistas" },
         new Modulos { Id = 8, Nombre = "Títulos" },
+        new Modulos { Id = 9, Nombre = "Dividendos Accionistas" },
     };
 
     protected override async Task OnInitializedAsync()
@@ -190,7 +191,7 @@
 
     private string ObtenerModulo(int idmodulo)
     {
-        return ListModulos.Where(m => m.Id == idmodulo).Select(m => m.Nombre).FirstOrDefault() ?? "Desconocido";
+        return ListModulos.Where(m => m.Id == idmodulo).Select(m => m.Nombre.Replace(" ", "_")).FirstOrDefault() ?? "Desconocido";
     }
 
     private async Task CerrarModal()

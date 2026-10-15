@@ -1,4 +1,4 @@
-﻿using Microsoft.JSInterop;
+using Microsoft.JSInterop;
 using QuestPDF.Fluent;
 using SociePolar.Application.Interfaces;
 using SociePolar.WebApp.DocumentsClass;
@@ -29,30 +29,47 @@ namespace SociePolar.WebApp.Services
             _env = env;
         }
 
-        public async Task GenerarYDescargarReporteSociedadAsync(int sociedadId)
+        public async Task<string> GenerarYDescargarReporteSociedadAsync(int sociedadId)
         {
             // 1. Extracción de los datos de los repositorios
             var sociedad = await _repository.GetByIdAsync(sociedadId);
+            if (sociedad == null)
+            {
+                throw new Exception($"No se encontró la sociedad con Id {sociedadId}");
+            }
+
             var autoridadesAll = await _repoAutoridad.GetAllAsync();
-            var autoridades = autoridadesAll.Where(x => x.Sociedad.Id == sociedadId).OrderBy(x => x.Sociedad.Empresa.Id).ToList();
+            var autoridades = autoridadesAll
+                .Where(x => x.Sociedad?.Id == sociedadId)
+                .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? "")
+                .ToList();
 
             var asambleasAll = await _repoAsamblea.GetAllAsync();
-            var asambleas = asambleasAll.OrderBy(x => x.Sociedad?.Empresa?.Id)
-                                        .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1 && x.Sociedad.Id == sociedadId).ToList();
+            var asambleas = asambleasAll
+                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1)
+                .OrderBy(x => x.FechaCelebracion)
+                .ToList();
 
-            var reformas = asambleasAll.OrderBy(x => x.Sociedad?.Empresa?.Id)
-                                       .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == sociedadId && (x.IndicadorAsamblea == 0 || x.TipoReforma != null)).ToList();
+            var reformas = asambleasAll
+                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1 && (x.IndicadorAsamblea == 0 || x.TipoReforma != null))
+                .OrderBy(x => x.FechaCelebracion)
+                .ToList();
 
             var certificacionesAll = await _repoCertificacion.GetAllAsync();
-            var certificaciones = certificacionesAll.OrderBy(x => x.Sociedad.Empresa.Id)
-                                                    .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == sociedadId).ToList();
+            var certificaciones = certificacionesAll
+                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1)
+                .OrderBy(x => x.Fecha)
+                .ToList();
 
             var librosAll = await _repoLibros.GetAllAsync();
-            var libros = librosAll.OrderBy(x => x.Sociedad?.Empresa?.Id).Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.Sociedad.Id == sociedadId).ToList();
+            var libros = librosAll
+                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1)
+                .OrderBy(x => x.ClaseLibro?.Nombre ?? "")
+                .ToList();
 
             // 2. Cargar los bytes de la imagen desde wwwroot de manera segura
             byte[] logoBytes = Array.Empty<byte>();
-            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg"); // Asegúrate de colocar tu imagen aquí
+            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg");
 
             if (File.Exists(rutaLogo))
             {
@@ -62,13 +79,31 @@ namespace SociePolar.WebApp.Services
             // 3. Instanciación del documento pasando los bytes del logo
             var document = new SociedadReportDocument(sociedad, autoridades, asambleas, reformas, certificaciones, libros, logoBytes);
 
-            // 4. Renderizado y descarga inmediata del PDF
+            // 4. Renderizado a bytes PDF
             var pdfBytes = document.GeneratePdf();
-            using var stream = new MemoryStream(pdfBytes);
-            var streamRef = new DotNetStreamReference(stream);
 
-            string nombreArchivo = $"Reporte_Sociedad_{sociedad.Empresa?.Nombre ?? sociedadId.ToString()}_{DateTime.Now:yyyyMMdd}.pdf";
-            await _js.InvokeVoidAsync("downloadFileFromStream", nombreArchivo, streamRef);
+            // 5. Nombre de archivo limpio (sin comas ni símbolos que corrompan la extensión en Windows/Chrome)
+            string nombreEmpresa = sociedad.Empresa?.Nombre ?? $"Sociedad_{sociedadId}";
+            string nombreLimpio = System.Text.RegularExpressions.Regex.Replace(nombreEmpresa, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+            if (string.IsNullOrWhiteSpace(nombreLimpio)) nombreLimpio = $"Sociedad_{sociedadId}";
+            string nombreArchivo = $"Reporte_{nombreLimpio}_{DateTime.Now:yyyyMMdd}.pdf";
+
+            // Guardar copia física en wwwroot/reports para acceso y apertura directa
+            string reportsFolder = Path.Combine(_env.WebRootPath, "reports");
+            if (!Directory.Exists(reportsFolder))
+            {
+                Directory.CreateDirectory(reportsFolder);
+            }
+            string physicalPath = Path.Combine(reportsFolder, nombreArchivo);
+            await File.WriteAllBytesAsync(physicalPath, pdfBytes);
+
+            string relativeUrl = $"reports/{nombreArchivo}";
+
+            // 6. Invocar JavaScript para abrir en visor de pestaña y descargar
+            string base64Data = Convert.ToBase64String(pdfBytes);
+            await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
+
+            return relativeUrl;
         }
     }
 }

@@ -1,77 +1,118 @@
-/* Estilos para NavMenu estilo Angular Material / Quorum */
+/* ==========================================================================
+   Estilos NavMenu Polar: Optimizado para Accesibilidad Senior y Alta Legibilidad
+   ========================================================================== */
 
+::deep .polar-nav-menu,
 ::deep .polar-navmenu {
-    font-family: 'Inter', 'Roboto', sans-serif;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+    padding: 8px 10px;
 }
 
+/* Iconos de navegación: Tamaño claro (22px) con visibilidad nítida */
 ::deep .mud-nav-link .mud-nav-link-icon, 
-::deep .mud-nav-group-icon, 
+::deep .mud-nav-group-icon,
+::deep .mud-nav-group-expand-icon,
 ::deep svg {
-    max-width: 20px !important;
-    max-height: 20px !important;
-    width: 20px !important;
-    height: 20px !important;
+    max-width: 22px !important;
+    max-height: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
     display: inline-block !important;
     vertical-align: middle !important;
+    flex-shrink: 0;
 }
 
+/* Encabezados de Grupos (Categorías: Sociedades, Accionistas, etc.) */
+::deep .mud-nav-group {
+    margin-bottom: 6px !important;
+}
+
+::deep .mud-nav-group .mud-nav-group-header {
+    border-radius: 8px !important;
+    min-height: 44px !important; /* Altura recomendada WCAG para fácil clic */
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important; /* Tipografía más grande y legible */
+    font-weight: 700 !important;
+    color: #0F172A !important; /* Alto contraste: Slate 900 */
+    background-color: #F8FAFC !important;
+    border: 1px solid #E2E8F0 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+::deep .mud-nav-group .mud-nav-group-header:hover {
+    background-color: #E2E8F0 !important;
+    color: #00338D !important;
+    border-color: #CBD5E1 !important;
+}
+
+::deep .mud-nav-group .mud-nav-group-icon {
+    color: #004B87 !important; /* Azul corporativo Polar para identificar la sección */
+    margin-right: 12px !important;
+}
+
+/* Flecha de expandir/colapsar bien visible */
+::deep .mud-nav-group-expand-icon {
+    color: #004B87 !important;
+    opacity: 0.85;
+}
+
+/* Contenedor de sub-opciones desplegadas */
+::deep .mud-nav-group-body {
+    padding-left: 8px !important;
+    border-left: 2px solid #004B87 !important; /* Guía vertical azul para conectar visualmente */
+    margin-left: 20px !important;
+    margin-top: 4px !important;
+    margin-bottom: 8px !important;
+}
+
+/* Enlaces directos a pantallas (MudNavLink) */
 ::deep .mud-nav-link {
     border-radius: 8px !important;
-    margin: 2px 0 !important;
-    padding: 8px 12px !important;
-    font-size: 0.85rem !important;
-    font-weight: 500 !important;
-    color: #475569 !important;
+    min-height: 42px !important; /* Fácil de pulsar con el mouse */
+    margin: 3px 0 !important;
+    padding: 10px 14px !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+    color: #1E293B !important; /* Contraste óptimo contra fondo blanco */
     transition: all 0.15s ease-in-out !important;
 }
 
+::deep .mud-nav-link .mud-nav-link-icon {
+    color: #475569 !important;
+    margin-right: 12px !important;
+    font-size: 1.35rem !important;
+    transition: color 0.15s ease;
+}
+
+/* Estado Hover: feedback visual claro */
 ::deep .mud-nav-link:hover {
-    background-color: rgba(0, 75, 135, 0.06) !important;
+    background-color: #F1F5F9 !important;
     color: #004B87 !important;
 }
 
-::deep .mud-nav-link.active:not(.mud-nav-link-disabled) {
-    background-color: rgba(0, 75, 135, 0.1) !important;
+::deep .mud-nav-link:hover .mud-nav-link-icon {
     color: #004B87 !important;
-    font-weight: 600 !important;
+}
+
+/* Estado Activo ("Usted está aquí"): Inconfundible para el usuario */
+::deep .mud-nav-link.active:not(.mud-nav-link-disabled) {
+    background-color: #E6F0FA !important; /* Fondo azul Polar suave */
+    color: #002B7A !important; /* Azul marino profundo */
+    font-weight: 700 !important;
+    border-left: 4px solid #004B87 !important; /* Marcador lateral grueso */
+    box-shadow: 0 1px 3px rgba(0, 75, 135, 0.08) !important;
 }
 
 ::deep .mud-nav-link.active .mud-nav-link-icon {
     color: #004B87 !important;
 }
 
-::deep .mud-nav-link .mud-nav-link-icon {
-    color: #64748B;
-    margin-right: 10px !important;
-    font-size: 1.25rem !important;
-    transition: color 0.15s;
-}
-
-::deep .mud-nav-link:hover .mud-nav-link-icon {
-    color: #004B87;
-}
-
-::deep .mud-nav-group .mud-nav-group-header {
-    border-radius: 8px !important;
-    margin: 3px 0 !important;
-    padding: 8px 12px !important;
-    font-size: 0.85rem !important;
+/* Subgrupo Tablas Maestras */
+::deep .polar-nav-subgroup .mud-nav-group-header {
+    background-color: #FFFFFF !important;
+    font-size: 0.90rem !important;
     font-weight: 600 !important;
     color: #334155 !important;
-    transition: background-color 0.15s !important;
+    border: 1px dashed #CBD5E1 !important;
 }
 
-::deep .mud-nav-group .mud-nav-group-header:hover {
-    background-color: #F1F5F9 !important;
-    color: #004B87 !important;
-}
-
-::deep .mud-nav-group .mud-nav-group-icon {
-    color: #004B87 !important;
-}
-
-::deep .mud-nav-group-body {
-    padding-left: 12px !important;
-    border-left: 1px solid #E2E8F0;
-    margin-left: 18px;
-}

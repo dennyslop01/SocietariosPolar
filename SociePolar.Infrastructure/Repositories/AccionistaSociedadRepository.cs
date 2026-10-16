@@ -130,6 +130,21 @@ namespace SociePolar.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<AccionistaSociedad>> GetBySociedadIdEstatusIdAsync(int sociedadId, int estatusId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                //.ThenInclude(s => s!.Empresa)
+                //.Include(b => b.Sociedad)
+                //.ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.Sociedad!.Id == sociedadId && x.EstatusAccionista!.Id == estatusId)
+                .ToListAsync();
+        }
+
         public async Task AddAsync(AccionistaSociedadDto entity)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
@@ -386,7 +401,7 @@ namespace SociePolar.Infrastructure.Repositories
 
             // 1. Filtramos y agrupamos directamente en la tabla historico para obtener solo los IDs ganadores
             var registrosGanadoresIds = await context.Set<AccionistaSociedadHistorico>()
-                .Where(h => h.Sociedad.Id == sociedadId && h.CreateDate <= endDate)
+                .Where(h => h.Sociedad.Id == sociedadId && h.CreateDate == endDate)
                 .GroupBy(h => h.Accionista.Id)
                 .Select(grupo => grupo.OrderByDescending(g => g.CreateDate).Select(g => g.Id).FirstOrDefault())
                 .ToListAsync();

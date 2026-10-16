@@ -103,11 +103,11 @@ namespace SociePolar.Infrastructure.DataContext
 
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorAccion)
-                .HasPrecision(20, 10); // 10 decimales
+                .HasPrecision(18, 9);
 
             modelBuilder.Entity<Sociedad>()
                 .Property(e => e.ValorPatrimonial)
-                .HasPrecision(20, 10); // 10 decimales
+                .HasPrecision(18, 9);
 
             modelBuilder.Entity<DividendoPreliminar>()
                 .Property(e => e.MontoPagadoTesoreria)

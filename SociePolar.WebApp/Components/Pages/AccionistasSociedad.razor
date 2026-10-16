@@ -577,8 +577,8 @@
                     ? $"{TotalGeneralAccionistas.ToString("N0", culture)} Accionistas ({TotalSubCustodiados.ToString("N0", culture)} en custodia)"
                     : $"{TotalGeneralAccionistas.ToString("N0", culture)} Accionistas";
                 string csTexto = $"CS: {(CapitalSocial ?? 0).ToString("N2", culture)} {sim}";
-                string vnTexto = $"VN: {(ValorNominal ?? 0).ToString("N2", culture)} {sim}";
-                string vpTexto = $"VP: {(ValorPatrimonial ?? 0).ToString("N2", culture)} {sim}";
+                string vnTexto = $"VN: {(ValorNominal ?? 0).ToString("N9", culture)} {sim}";
+                string vpTexto = $"VP: {(ValorPatrimonial ?? 0).ToString("N9", culture)} {sim}";
 
                 return $"{accionesTexto} | {accionistasTexto} | {csTexto} | {vnTexto} | {vpTexto}";
             }

@@ -41,10 +41,11 @@ namespace SociePolar.WebApp.Services
             var autoridadesAll = await _repoAutoridad.GetAllAsync();
             var autoridades = autoridadesAll
                 .Where(x => x.Sociedad?.Id == sociedadId)
-                //.OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? "")
-                .OrderBy(x => x.Cargo?.Nombre ?? "")
+                .OrderBy(x => x.Cargo?.Orden ?? 999)
+                .ThenBy(x => x.Cargo?.Nombre ?? "")
+                .ThenBy(x => x.Nombre ?? "")
                 .ToList();
-
+            
             var asambleasAll = await _repoAsamblea.GetAllAsync();
             var asambleas = asambleasAll
                 .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1)

@@ -177,17 +177,44 @@
         try
         {
             var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
-            if (!string.IsNullOrEmpty(userrolaux.Value))
+            if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
             {
-                idRol = int.Parse(userrolaux.Value);
+                if (int.TryParse(userrolaux.Value, out var rolVal))
+                {
+                    idRol = rolVal;
+                }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+            // Silencioso en prerenderizado SSR: JSInterop (SessionStorage) requiere circuito interactivo
         }
         await LoadGenericDataAsync();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+                if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
+                {
+                    if (int.TryParse(userrolaux.Value, out var rolVal) && idRol != rolVal)
+                    {
+                        idRol = rolVal;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error hidratando rol en AfterRender: {ex.Message}");
+            }
+        }
+    }
+
 
     private async Task LoadGenericDataAsync()
     {

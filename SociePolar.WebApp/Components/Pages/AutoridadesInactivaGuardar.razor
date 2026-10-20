@@ -158,7 +158,8 @@
                                 <input type="date" class="form-control form-control-sm small"
                                        @bind="entidadEditando.VencimientoDocumento2" @bind:format="yyyy-MM-dd" />
                             </div>
-                            <div class="col-md-6 mb-3">
+
+                        <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold text-danger small">@mensajeAlerta</label>
                             </div>
                         </div>
@@ -300,7 +301,13 @@
 
     private async Task LoadGenericDataAsync()
     {
-        listCargos = await GetEntityListAsync("cargos");
+        var cargos = await GetEntityListAsync("cargos");
+        listCargos = cargos
+            .Cast<Cargo>()
+            .OrderBy(c => c.Orden ?? 999)
+            .ThenBy(c => c.Nombre)
+            .Cast<IBaseEntity>()
+            .ToList();
         listTipoDoc = await GetEntityListAsync("tipodocumento");
 
         var listSociedades = await reposociedad.GetAllAsync();

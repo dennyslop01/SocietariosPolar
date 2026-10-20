@@ -623,7 +623,11 @@
             }
 
             var listAutoridad = await repoAutoridad.GetAllAsync();
-            ListAutoridadGral = listAutoridad.Where(x => x.Sociedad.Id == int.Parse(id)).OrderBy(x => x.Cargo?.Nombre).ToList();
+            ListAutoridadGral = listAutoridad.Where(x => x.Sociedad.Id == int.Parse(id))
+                .OrderBy(x => x.Cargo?.Orden ?? 999)
+                .ThenBy(x => x.Cargo?.Nombre ?? "")
+                .ThenBy(x => x.Nombre ?? "")
+                .ToList();
 
             var listAsamblea = await repoAsamblea.GetAllAsync();
             ListAsambleaGral = listAsamblea.OrderBy(x => x.Sociedad?.Empresa?.Id)

@@ -6,6 +6,12 @@ namespace SociePolar.Application.Interfaces
     public interface IAccionista
     {
         Task<List<Accionista>> GetAllAsync();
+        Task<(List<AccionistaMostrarDto> Items, int TotalCount)> GetPagedAsync(
+                int pageNumber,
+                int pageSize,
+                string? searchTerm = null,
+                string? sortColumn = null,
+                bool sortAscending = true);
         Task<List<Accionista>> GetByNameAsync(string name);
         Task<Accionista?> GetByIdAsync(int id);
         Task<Accionista?> GetByRifAsync(string tipoDoc, string rif);

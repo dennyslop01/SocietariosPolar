@@ -1,5 +1,6 @@
 ﻿@page "/accionistas"
 @rendermode InteractiveServer
+@implements IDisposable
 
 <div class="container-fluid mt-4">
     <div class="card shadow-sm border-0 h-auto">
@@ -10,9 +11,15 @@
                     <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
                         <i class="bi bi-person-vcard text-white fs-5"></i>
                     </div>
-                    <h5 class="mb-0 fw-bold text-dark">
-                        Administrar Accionistas
-                    </h5>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            Administrar Accionistas
+                        </h5>
+                        @if (totalRegistros > 0)
+                        {
+                            <small class="text-muted">Total: @totalRegistros.ToString("N0") accionistas registrados</small>
+                        }
+                    </div>
                 </div>
 
                 <!-- Contenedor flex para alinear los botones en línea -->
@@ -45,13 +52,20 @@
                         </span>
                         <input type="text"
                                class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
+                               placeholder="Buscar por nombre o cédula/RIF..."
                                @oninput="FiltrarBusqueda" />
                     </div>
                 </div>
             </div>
             <div class="table-responsive">
-                <PaginationComponent TItem="AccionistaMostrarDto" Items="Listgral" DefaultPageSize="50">
+                <PaginationComponent TItem="AccionistaMostrarDto"
+                                     Items="Listgral"
+                                     DefaultPageSize="50"
+                                     ServerSide="true"
+                                     TotalServerItems="@totalRegistros"
+                                     ServerCurrentPage="@paginaActual"
+                                     OnPageChanged="CambiarPagina"
+                                     OnPageSizeChanged="CambiarTamanoPagina">
                     <ChildContentHeader>
                         <tr class="table-light border-bottom">
                             <!-- Columna 3: Tipo Accionista -->
@@ -89,7 +103,7 @@
                                         <i class="bi bi-trash3 fs-6"></i>
                                     </button>
                                     <button class="btn btn-link btn-sm text-secondary p-0  me-2"
-                                    @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                            @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </button>
                                 }
@@ -155,20 +169,26 @@
 
 @code {
     private List<AccionistaMostrarDto> Listgral = new();
-    private List<AccionistaMostrarDto> ListgralBuscar = new();
-    private string searchTerm = ""; private bool cargando = false;
+    private string searchTerm = "";
+    private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";
     private bool mostrarAlerta = false;
     private bool mostrarModalEliminar = false;
     private AccionistaMostrarDto? entidadParaEliminar;
-    private string claseAlerta = "alert-success"; // Por defecto verde
+    private string claseAlerta = "alert-success";
     private string iconoAlerta = "bi-check-circle-fill";
     int idAccionista = 0;
-    private string columnaActual = "";
+    private string columnaActual = "Nombre";
     private bool ordenAscendente = true;
     private int idRol = 0;
     private bool descarga = false;
+
+    // Control de paginación en servidor (Lazy Loading)
+    private int paginaActual = 1;
+    private int tamanoPagina = 50;
+    private int totalRegistros = 0;
+    private CancellationTokenSource? _searchCts;
 
     [Inject] private IAccionista repository { get; set; } = null!;
 
@@ -177,16 +197,42 @@
         try
         {
             var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
-            if (!string.IsNullOrEmpty(userrolaux.Value))
+            if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
             {
-                idRol = int.Parse(userrolaux.Value);
+                if (int.TryParse(userrolaux.Value, out var rolVal))
+                {
+                    idRol = rolVal;
+                }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+            // Silencioso en prerenderizado SSR: JSInterop (SessionStorage) requiere circuito interactivo
         }
         await LoadGenericDataAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+                if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
+                {
+                    if (int.TryParse(userrolaux.Value, out var rolVal) && idRol != rolVal)
+                    {
+                        idRol = rolVal;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error hidratando rol en AfterRender: {ex.Message}");
+            }
+        }
     }
 
     private async Task LoadGenericDataAsync()
@@ -195,40 +241,35 @@
         StateHasChanged();
         try
         {
-            var listAaccionista = await repository.GetAllAsync();
-            List<AccionistaMostrarDto> accionistas = new();
-
-            foreach (var item in listAaccionista)
-            {
-                accionistas.Add(new AccionistaMostrarDto
-                {
-                    Id = item.Id,
-                    TipoAccionistaV = item.TipoAccionista?.Nombre,
-                    Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
-                    //TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
-                    //Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
-                    TipoDocumentoV = item.TipoDocumento1?.Nombre,
-                    Documento = item.Documento1,
-                    Telefono = item.Telefono1,
-                    CreateDate = item.CreateDate,
-                    UpdateDate = item.UpdateDate
-                });
-            }
-
-            Listgral = accionistas.OrderBy(x => x.Nombre).ToList();
-            ListgralBuscar = Listgral;
+            var (items, totalCount) = await repository.GetPagedAsync(paginaActual, tamanoPagina, searchTerm, columnaActual, ordenAscendente);
+            Listgral = items;
+            totalRegistros = totalCount;
         }
         catch (Exception ex)
         {
             cargando = false;
             StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
         }
         finally
         {
             cargando = false;
             StateHasChanged();
         }
+    }
+
+    private async Task CambiarPagina(int nuevaPagina)
+    {
+        if (paginaActual == nuevaPagina) return;
+        paginaActual = nuevaPagina;
+        await LoadGenericDataAsync();
+    }
+
+    private async Task CambiarTamanoPagina(int nuevoTamano)
+    {
+        tamanoPagina = nuevoTamano;
+        paginaActual = 1;
+        await LoadGenericDataAsync();
     }
 
     private void AbrirModalNuevo()
@@ -240,41 +281,23 @@
     private async Task FiltrarBusqueda(ChangeEventArgs e)
     {
         searchTerm = e.Value?.ToString() ?? "";
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            Listgral = ListgralBuscar;
-        }
-        else
-        {
-            Listgral = ListgralBuscar
-                .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+        paginaActual = 1;
 
-            if(!Listgral.Any())
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        try
+        {
+            await Task.Delay(300, token); // Debounce de 300ms para evitar saturación de consultas al escribir
+            if (!token.IsCancellationRequested)
             {
-                var listAaccionista = await repository.GetByNameAsync(searchTerm);
-                List<AccionistaMostrarDto> accionistas = new();
-
-                foreach (var item in listAaccionista)
-                {
-                    accionistas.Add(new AccionistaMostrarDto
-                    {
-                        Id = item.Id,
-                        TipoAccionistaV = item.TipoAccionista?.Nombre,
-                        Nombre = (item.TipoAccionista?.Id != 3) ? item.Nombre : (item.NombreSusesion?.Length > 50) ? item.NombreSusesion.Substring(0, 50) : item.NombreSusesion,
-                        //TipoDocumentoV = (item.TipoAccionista?.Id != 3) ? item.TipoDocumento1?.Nombre : "--",
-                        //Documento = (item.TipoAccionista?.Id != 3) ? item.Documento1 : (item.CedulaSusesion?.Length > 50) ? item.CedulaSusesion.Substring(0, 50) : item.CedulaSusesion,
-                        TipoDocumentoV = item.TipoDocumento1?.Nombre,
-                        Documento = item.Documento1,
-                        Telefono = item.Telefono1,
-                        CreateDate = item.CreateDate,
-                        UpdateDate = item.UpdateDate
-                    });
-                }
-
-                Listgral = accionistas.OrderBy(x => x.Nombre).ToList();
-                ListgralBuscar = Listgral;
+                await LoadGenericDataAsync();
             }
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignorar cancelación por tecleo rápido
         }
     }
 
@@ -287,7 +310,7 @@
         mostrarAlerta = true;
         StateHasChanged();
 
-        await Task.Delay(4000); // 4 segundos para errores es mejor
+        await Task.Delay(4000);
         mostrarAlerta = false;
         StateHasChanged();
     }
@@ -316,12 +339,12 @@
             repository.Delete(entidadParaEliminar.Id);
             mostrarModalEliminar = false;
             await LoadGenericDataAsync();
-            await MostrarNotificacion($"Accionista eliminado correctamente");
+            await MostrarNotificacion("Accionista eliminado correctamente");
         }
         catch (Exception ex)
         {
             cargando = false;
-            StateHasChanged(); 
+            StateHasChanged();
             Console.WriteLine($"Error al eliminar: {ex.Message}");
             await MostrarNotificacion("No se pudo eliminar el registro", true);
         }
@@ -334,25 +357,20 @@
 
     private async Task ManejarCierreModal(bool guardadoExitoso)
     {
-        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
-        // 1. Cierra el modal en cualquier caso (true o false)
+        cargando = true;
         mostrarModal = false;
 
-        // 2. Si se guardó con éxito, refresca los datos
         if (guardadoExitoso)
         {
-            await LoadGenericDataAsync(); // Tu método que llena 'Listgral' de nuevo
-            await MostrarNotificacion($"Accionista guardada correctamente");
+            await LoadGenericDataAsync();
+            await MostrarNotificacion("Accionista guardada correctamente");
         }
 
-        cargando = false; // Oculta el spinner después de todo
+        cargando = false;
     }
 
-    private void OrdenarPor(string columna)
+    private async Task OrdenarPor(string columna)
     {
-        if (Listgral == null || !Listgral.Any()) return;
-
-        // Si hace clic en la misma columna, invierte el sentido; si es otra, empieza en ascendente
         if (columnaActual == columna)
         {
             ordenAscendente = !ordenAscendente;
@@ -363,29 +381,15 @@
             ordenAscendente = true;
         }
 
-        // Ejecutar el ordenamiento según la columna seleccionada
-        if (columna == "Nombre")
-        {
-            Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.Nombre ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.Nombre ?? "").ToList();
-        }
-        else if (columna == "TipoAccionista")
-        {
-            Listgral = ordenAscendente
-                ? Listgral.OrderBy(x => x.TipoAccionistaV ?? "").ToList()
-                : Listgral.OrderByDescending(x => x.TipoAccionistaV ?? "").ToList();
-        }
-
-        StateHasChanged(); // Forzar el refresco visual de la grilla en Blazor
+        paginaActual = 1;
+        await LoadGenericDataAsync();
     }
 
-    // Método auxiliar para alternar los íconos de Bootstrap Icons (bi)
     private string ObtenerIconoOrden(string columna)
     {
         if (columnaActual != columna)
         {
-            return "bi-arrow-down-up text-muted opacity-50"; // Ícono neutral
+            return "bi-arrow-down-up text-muted opacity-50";
         }
         return ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold";
     }
@@ -402,17 +406,20 @@
 
     private async Task ManejarCierreDescarga(bool guardadoExitoso)
     {
-        cargando = true; // Opcional: muestra el spinner mientras se refrescan los datos
-        // 1. Cierra el modal en cualquier caso (true o false)
+        cargando = true;
         descarga = false;
-        cargando = false; // Oculta el spinner después de todo
+        cargando = false;
 
-        // 2. Si se guardó con éxito, refresca los datos
         if (guardadoExitoso)
         {
-            await MostrarNotificacion($"Archivo generado exitosamente");
+            await MostrarNotificacion("Archivo generado exitosamente");
         }
     }
 
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+    }
 }
 

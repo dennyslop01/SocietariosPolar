@@ -2,6 +2,7 @@
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
+using SociePolar.Domain.Utils;
 using SociePolar.Infrastructure.DataContext;
 
 namespace SociePolar.Infrastructure.Repositories
@@ -14,6 +15,7 @@ namespace SociePolar.Infrastructure.Repositories
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Accionista>()
+                .AsNoTracking()
                 .Include(b => b.TipoAccionista)
                 .Include(b => b.TipoDocumento1)
                 .Include(b => b.TipoDocumento2)
@@ -25,14 +27,79 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.TipoCuenta)
                 .Include(b => b.CondicionEspecial)
                 .Include(b => b.ModalidadPago)
-                .Take(1000)
                 .ToListAsync();
+        }
+
+        public async Task<(List<AccionistaMostrarDto> Items, int TotalCount)> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            string? searchTerm = null,
+            string? sortColumn = null,
+            bool sortAscending = true)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var query = context.Set<Accionista>().AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                query = query.Where(x => (x.Nombre != null && x.Nombre.Contains(term)) ||
+                                         (x.NombreSusesion != null && x.NombreSusesion.Contains(term)) ||
+                                         (x.Documento1 != null && x.Documento1.Contains(term)));
+            }
+
+            int totalCount = await query.CountAsync();
+
+            query = (sortColumn, sortAscending) switch
+            {
+                ("TipoAccionista", true) => query.OrderBy(x => x.TipoAccionista != null ? x.TipoAccionista.Nombre : string.Empty),
+                ("TipoAccionista", false) => query.OrderByDescending(x => x.TipoAccionista != null ? x.TipoAccionista.Nombre : string.Empty),
+                ("Nombre", false) => query.OrderByDescending(x => x.Nombre),
+                _ => query.OrderBy(x => x.Nombre)
+            };
+
+            var rawItems = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new
+                {
+                    x.Id,
+                    TipoAccionistaId = x.TipoAccionista != null ? (int?)x.TipoAccionista.Id : null,
+                    TipoAccionistaNombre = x.TipoAccionista != null ? x.TipoAccionista.Nombre : null,
+                    x.Nombre,
+                    x.NombreSusesion,
+                    TipoDocumento1Nombre = x.TipoDocumento1 != null ? x.TipoDocumento1.Nombre : null,
+                    x.Documento1,
+                    x.Telefono1,
+                    x.CreateDate,
+                    x.UpdateDate
+                })
+                .ToListAsync();
+
+            var items = rawItems.Select(item => new AccionistaMostrarDto
+            {
+                Id = item.Id,
+                TipoAccionistaV = item.TipoAccionistaNombre,
+                Nombre = (item.TipoAccionistaId != 3)
+                    ? item.Nombre
+                    : (!string.IsNullOrEmpty(item.NombreSusesion) && item.NombreSusesion.Length > 50
+                        ? item.NombreSusesion.Substring(0, 50)
+                        : item.NombreSusesion ?? item.Nombre),
+                TipoDocumentoV = item.TipoDocumento1Nombre,
+                Documento = item.Documento1,
+                Telefono = item.Telefono1,
+                CreateDate = item.CreateDate,
+                UpdateDate = item.UpdateDate
+            }).ToList();
+
+            return (items, totalCount);
         }
 
         public async Task<List<Accionista>> GetByNameAsync(string name)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<Accionista>()
+                .AsNoTracking()
                 .Include(b => b.TipoAccionista)
                 .Include(b => b.TipoDocumento1)
                 .Include(b => b.TipoDocumento2)
@@ -45,7 +112,6 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.CondicionEspecial)
                 .Include(b => b.ModalidadPago)
                 .Where(x => x.Nombre.Contains(name) || x.NombreSusesion.Contains(name))
-                .Take(1000)
                 .ToListAsync();
         }
 
@@ -278,7 +344,7 @@ namespace SociePolar.Infrastructure.Repositories
                 FechaEmisionSucesion = entity.FechaEmisionSucesion,
                 FechaVencimientoSucesion = entity.FechaVencimientoSucesion,
                 OtroDocumentoSucesion = entity.OtroDocumentoSucesion,
-                FechaEmisionOtroSucesion= entity.FechaEmisionOtroSucesion,
+                FechaEmisionOtroSucesion = entity.FechaEmisionOtroSucesion,
                 FechaVencimientoOtroSucesion = entity.FechaVencimientoOtroSucesion,
                 CreateDate = DateTime.UtcNow,
                 UpdateDate = DateTime.UtcNow,
@@ -316,28 +382,28 @@ namespace SociePolar.Infrastructure.Repositories
             await context.Set<Accionista>().AddAsync(newAccionista);
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Unchanged;
             if (dirigidoa != null) context.Entry(newAccionista.DirigidoA!).State = EntityState.Unchanged;
-            if(estadocivil != null) context.Entry(newAccionista.EstadoCivil!).State = EntityState.Unchanged;
-            if(banco != null) context.Entry(newAccionista.Banco!).State = EntityState.Unchanged;
-            if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta!).State = EntityState.Unchanged;
-            if(condicionespecial != null) context.Entry(newAccionista.CondicionEspecial!).State = EntityState.Unchanged;
-            if(tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Unchanged;
-            if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Unchanged;
-            if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Unchanged;
-            if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Unchanged;
-            if(modalidad != null) context.Entry(newAccionista.ModalidadPago!).State = EntityState.Unchanged;
+            if (estadocivil != null) context.Entry(newAccionista.EstadoCivil!).State = EntityState.Unchanged;
+            if (banco != null) context.Entry(newAccionista.Banco!).State = EntityState.Unchanged;
+            if (tipocuenta != null) context.Entry(newAccionista.TipoCuenta!).State = EntityState.Unchanged;
+            if (condicionespecial != null) context.Entry(newAccionista.CondicionEspecial!).State = EntityState.Unchanged;
+            if (tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Unchanged;
+            if (tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Unchanged;
+            if (tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Unchanged;
+            if (tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Unchanged;
+            if (modalidad != null) context.Entry(newAccionista.ModalidadPago!).State = EntityState.Unchanged;
 
             await context.SaveChangesAsync();
             context.Entry(newAccionista.TipoAccionista).State = EntityState.Detached;
             if (dirigidoa != null) context.Entry(newAccionista.DirigidoA!).State = EntityState.Detached;
-            if(estadocivil != null) context.Entry(newAccionista.EstadoCivil!).State = EntityState.Detached;
-            if(banco != null) context.Entry(newAccionista.Banco!).State = EntityState.Detached;
-            if(tipocuenta != null) context.Entry(newAccionista.TipoCuenta!).State = EntityState.Detached;
-            if(condicionespecial != null) context.Entry(newAccionista.CondicionEspecial!).State = EntityState.Detached;
-            if(tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Detached;
-            if(tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Detached;
-            if(tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Detached;
-            if(tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Detached;
-            if(modalidad != null) context.Entry(newAccionista.ModalidadPago!).State = EntityState.Detached;
+            if (estadocivil != null) context.Entry(newAccionista.EstadoCivil!).State = EntityState.Detached;
+            if (banco != null) context.Entry(newAccionista.Banco!).State = EntityState.Detached;
+            if (tipocuenta != null) context.Entry(newAccionista.TipoCuenta!).State = EntityState.Detached;
+            if (condicionespecial != null) context.Entry(newAccionista.CondicionEspecial!).State = EntityState.Detached;
+            if (tipodoc1 != null) context.Entry(newAccionista.TipoDocumento1!).State = EntityState.Detached;
+            if (tipodoc2 != null) context.Entry(newAccionista.TipoDocumento2!).State = EntityState.Detached;
+            if (tipodoc3 != null) context.Entry(newAccionista.TipoDocumento3!).State = EntityState.Detached;
+            if (tipodoc4 != null) context.Entry(newAccionista.TipoDocumento4!).State = EntityState.Detached;
+            if (modalidad != null) context.Entry(newAccionista.ModalidadPago!).State = EntityState.Detached;
         }
 
         public async void Update(AccionistaDto entity)
@@ -587,11 +653,43 @@ namespace SociePolar.Infrastructure.Repositories
         public async Task<Accionista?> GetByRifAsync(string tipoDoc, string rif)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
-            return await context.Set<Accionista>()
+
+            var (tipoLimpio, numPuro) = DocumentoNormalizer.Normalizar($"{tipoDoc}{rif}");
+            if (string.IsNullOrEmpty(numPuro))
+            {
+                return null;
+            }
+
+            string opcion1 = rif.Trim();
+            string opcion2 = $"{tipoDoc}{rif}".Trim();
+            string opcion3 = $"{tipoDoc}-{rif}".Trim();
+            string opcion4 = $"{tipoLimpio}{numPuro}".Trim();
+            string opcion5 = $"{tipoLimpio}-{numPuro}".Trim();
+            string opcion6 = numPuro;
+
+            // 1. Búsqueda directa por igualdad exacta en SQL Server
+            var accionista = await context.Set<Accionista>()
                 .Include(b => b.TipoAccionista)
                 .Include(b => b.TipoDocumento1)
-                .Where(x => x.TipoDocumento1.Nombre == tipoDoc && x.Documento1 == rif)
+                .Where(x => x.Documento1 == opcion1
+                         || x.Documento1 == opcion2
+                         || x.Documento1 == opcion3
+                         || x.Documento1 == opcion4
+                         || x.Documento1 == opcion5
+                         || x.Documento1 == opcion6)
                 .FirstOrDefaultAsync();
+
+            if (accionista != null)
+                return accionista;
+
+            // 2. Búsqueda tolerante a ceros a la izquierda heredados (ej. V0000000011742519), puntos o guiones
+            var candidatos = await context.Set<Accionista>()
+                .Include(b => b.TipoAccionista)
+                .Include(b => b.TipoDocumento1)
+                .Where(x => x.Documento1 != null && x.Documento1.Contains(numPuro))
+                .ToListAsync();
+
+            return candidatos.FirstOrDefault(c => DocumentoNormalizer.Normalizar(c.Documento1).NumeroPuro == numPuro);
         }
 
         public async Task<Accionista> AddReturnEntidadAsync(AccionistaDto entity)

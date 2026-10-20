@@ -159,9 +159,25 @@ namespace SociePolar.WebApp.DocumentsClass
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Documento").Bold();
                     });
 
+                    string? ultimoCargo = null;
+
                     foreach (var aut in _autoridades)
                     {
-                        table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(aut.Cargo?.Nombre);
+                        // 1. Obtenemos el nombre del cargo actual (o un string vacío/guion si es nulo)
+                        var cargoActual = aut.Cargo?.Nombre ?? "-";
+
+                        // 2. Si es distinto al anterior, lo mostramos; si es igual, dejamos la celda en blanco
+                        if (cargoActual != ultimoCargo)
+                        {
+                            table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(cargoActual);
+                            ultimoCargo = cargoActual; // Actualizamos el último cargo mostrado
+                        }
+                        else
+                        {
+                            // Celda vacía para mantener la estructura de columnas de la tabla
+                            table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text("");
+                        }
+
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(aut.Nombre);
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(UtilClass.FormatearStringMiles(aut.Documento1));
                     }

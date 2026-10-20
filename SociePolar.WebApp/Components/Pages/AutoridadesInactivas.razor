@@ -79,7 +79,7 @@
                             <td class="text-start fw-semibold text-dark">@p.Nombre</td>
                             <td class="text-start text-secondary">@(p.TipoDocumento1?.Nombre ?? "-")</td>
                             <td class="text-start text-secondary">@(p.Documento1 ?? "-")</td>
-                            <td class="text-start text-secondary">@(p.Duracion != null ? $"{p.Duracion} años" : "-")</td>
+                            <td class="text-start text-secondary">@(p.Duracion != null ? $"{p.Duracion} " : "-")</td>
                             <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
                             <td class="polar-date text-secondary">@p.UpdateDate.ToShortDateString()</td>
                             <td class="text-end pe-3 text-nowrap">

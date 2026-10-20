@@ -29,8 +29,8 @@
             <!-- Botones de Navegación -->
             <div class="ms-3 d-flex align-items-center gap-1 flex-wrap">
                 <button class="polar-page-btn"
-                        @onclick="PreviousPage" 
-                        disabled="@IsPreviousDisabled" 
+                        @onclick="PreviousPage"
+                        disabled="@IsPreviousDisabled"
                         title="Página anterior">
                     <i class="bi bi-chevron-left"></i>
                 </button>
@@ -50,9 +50,9 @@
                     }
                 }
 
-                <button class="polar-page-btn" 
-                        @onclick="NextPage" 
-                        disabled="@IsNextDisabled" 
+                <button class="polar-page-btn"
+                        @onclick="NextPage"
+                        disabled="@IsNextDisabled"
                         title="Página siguiente">
                     <i class="bi bi-chevron-right"></i>
                 </button>
@@ -75,6 +75,11 @@
     [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
     [Parameter] public string TableClass { get; set; } = "";
     [Parameter] public string ContainerStyle { get; set; } = "max-height: calc(100vh - 250px);";
+    [Parameter] public bool ServerSide { get; set; } = false;
+    [Parameter] public int TotalServerItems { get; set; } = 0;
+    [Parameter] public int ServerCurrentPage { get; set; } = 1;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+    [Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
 
     private int CurrentPage { get; set; } = 1;
     private readonly int[] PageSizes = new[] { 5, 10, 20, 50, 100 };
@@ -88,18 +93,21 @@
             {
                 _pageSize = value;
                 CurrentPage = 1; // Reiniciar a página 1 si cambian el tamaño
+                if (ServerSide && OnPageSizeChanged.HasDelegate)
+                {
+                    OnPageSizeChanged.InvokeAsync(value);
+                }
             }
         }
     }
 
     // Lógica de datos paginados
-    private List<TItem> PaginatedData => Items?
-        .Skip((CurrentPage - 1) * PageSize)
-        .Take(PageSize)
-        .ToList() ?? new List<TItem>();
+    private List<TItem> PaginatedData => ServerSide
+        ? (Items?.ToList() ?? new List<TItem>())
+        : (Items?.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList() ?? new List<TItem>());
 
     // Propiedades de conteo
-    private int TotalItems => Items?.Count() ?? 0;
+    private int TotalItems => ServerSide ? TotalServerItems : (Items?.Count() ?? 0);
     private int TotalPages => TotalItems > 0 ? (int)Math.Ceiling(TotalItems / (double)PageSize) : 1;
     private int RecordStart => TotalItems == 0 ? 0 : (CurrentPage - 1) * PageSize + 1;
     private int RecordEnd => Math.Min(CurrentPage * PageSize, TotalItems);
@@ -107,21 +115,51 @@
     protected override void OnInitialized()
     {
         PageSize = DefaultPageSize;
+        if (ServerSide && ServerCurrentPage > 0)
+        {
+            CurrentPage = ServerCurrentPage;
+        }
     }
 
-    private void NextPage()
+    protected override void OnParametersSet()
     {
-        if (CurrentPage < TotalPages) CurrentPage++;
+        if (ServerSide && ServerCurrentPage > 0 && ServerCurrentPage != CurrentPage)
+        {
+            CurrentPage = ServerCurrentPage;
+        }
     }
 
-    private void PreviousPage()
+    private async Task NextPage()
     {
-        if (CurrentPage > 1) CurrentPage--;
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            if (ServerSide && OnPageChanged.HasDelegate)
+            {
+                await OnPageChanged.InvokeAsync(CurrentPage);
+            }
+        }
     }
 
-    private void GoToPage(int pageNumber)
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            if (ServerSide && OnPageChanged.HasDelegate)
+            {
+                await OnPageChanged.InvokeAsync(CurrentPage);
+            }
+        }
+    }
+
+    private async Task GoToPage(int pageNumber)
     {
         CurrentPage = pageNumber;
+        if (ServerSide && OnPageChanged.HasDelegate)
+        {
+            await OnPageChanged.InvokeAsync(CurrentPage);
+        }
     }
 
     private bool IsPreviousDisabled => CurrentPage == 1;
@@ -169,13 +207,13 @@
         overflow: hidden;
     }
 
-    .polar-table-container thead th {
-        background-color: #F8FAFC !important;
-        position: sticky;
-        top: 0;
-        z-index: 5;
-        border-bottom: 2px solid #E2E8F0 !important;
-    }
+        .polar-table-container thead th {
+            background-color: #F8FAFC !important;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            border-bottom: 2px solid #E2E8F0 !important;
+        }
 
     /* Columna Congelada 1 (Ej. ID) */
     .polar-sticky-col-1 {
@@ -184,6 +222,7 @@
         z-index: 8 !important;
         background-color: #FFFFFF !important;
     }
+
     thead .polar-sticky-col-1 {
         position: sticky !important;
         top: 0 !important;
@@ -200,6 +239,7 @@
         background-color: #FFFFFF !important;
         box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
     }
+
     thead .polar-sticky-col-2 {
         position: sticky !important;
         top: 0 !important;
@@ -217,6 +257,7 @@
         background-color: #FFFFFF !important;
         box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
     }
+
     thead .polar-sticky-col-direct {
         position: sticky !important;
         top: 0 !important;
@@ -271,10 +312,10 @@
         cursor: pointer;
     }
 
-    .polar-pagination-select:focus {
-        border-color: #004B87 !important;
-        box-shadow: 0 0 0 2px rgba(0, 75, 135, 0.12) !important;
-    }
+        .polar-pagination-select:focus {
+            border-color: #004B87 !important;
+            box-shadow: 0 0 0 2px rgba(0, 75, 135, 0.12) !important;
+        }
 
     .polar-page-btn {
         min-width: 32px;
@@ -293,20 +334,20 @@
         cursor: pointer;
     }
 
-    .polar-page-btn:hover:not(:disabled):not(.active) {
-        background-color: #F1F5F9;
-        color: #0F172A;
-    }
+        .polar-page-btn:hover:not(:disabled):not(.active) {
+            background-color: #F1F5F9;
+            color: #0F172A;
+        }
 
-    .polar-page-btn.active {
-        background-color: #004B87;
-        color: #FFFFFF;
-        font-weight: 600;
-        box-shadow: 0 1px 2px rgba(0, 75, 135, 0.2);
-    }
+        .polar-page-btn.active {
+            background-color: #004B87;
+            color: #FFFFFF;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0, 75, 135, 0.2);
+        }
 
-    .polar-page-btn:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-    }
+        .polar-page-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
 </style>

@@ -1,4 +1,5 @@
 @using ExcelDataReader
+@using SociePolar.Domain.Utils
 @rendermode InteractiveServer
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
@@ -457,17 +458,28 @@
 
                     foreach (var item in listaArchivo)
                     {
-                        string tipoDoc = item.Rif.Substring(0, 1).ToUpper();
-                        string rif = item.Rif.Substring(1).TrimStart('0').Trim();
+                        var (tipoDoc, rif) = DocumentoNormalizer.Normalizar(item.Rif);
                         string accionreal = "Actualizado";
 
                         Accionista? accionista = await repoAccionistas.GetByRifAsync(tipoDoc, rif);
+
+                        // Fallback de seguridad: buscar por nombre exacto antes de asumir que no existe
+                        if (accionista == null && !string.IsNullOrWhiteSpace(item.NombreAccionista))
+                        {
+                            var porNombre = await repoAccionistas.GetByNameAsync(item.NombreAccionista.Trim());
+                            if (porNombre != null && porNombre.Count == 1)
+                            {
+                                accionista = porNombre.First();
+                            }
+                        }
+
                         if (accionista == null)
                         {
+                            string docFinal = (tipoDoc == "V" || tipoDoc == "E") ? rif : $"{tipoDoc}{rif}";
                             AccionistaDto accionistaDto = new()
                             {
                                 TipoDocumento1Id = listTipoDoc.Where(x => x.Nombre == tipoDoc).Select(x => x.Id).FirstOrDefault(),
-                                Documento1 = rif,
+                                Documento1 = docFinal,
                                 Nombre = item.NombreAccionista,
                                 CreateDate = DateTime.Now,
                                 CreateUserId = userid,
@@ -712,8 +724,8 @@
         {
             var accionistas = await repoaccionistasocie.GetBySociedadIdAsync(id);
             listaCustodios = accionistas
-                .Where(x => (x.EstatusAccionista?.Id == 1) 
-                         && (x.NroAcciones ?? 0) > 0 
+                .Where(x => (x.EstatusAccionista?.Id == 1)
+                         && (x.NroAcciones ?? 0) > 0
                          && x.CustodioId == null)
                 .OrderBy(x => x.Accionista?.Nombre)
                 .ToList();

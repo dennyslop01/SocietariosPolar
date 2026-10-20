@@ -344,17 +344,26 @@
                                     <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
                                     <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
                                 </tr>
+                                @{
+                                    _ultimoCargoId = null;
+                                }
+                                @* Reiniciamos la variable al renderizar la cabecera o antes de las filas *@
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
                                 <tr class="align-middle border-bottom">
                                     <td class="ps-3 text-start">
-                                        <span class="badge bg-light text-dark border">@(p.Cargo?.Nombre ?? "-")</span>
+                                        @if (_ultimoCargoId != p.Cargo?.Id)
+                                        {
+                                            <span class="badge bg-light text-dark border">@(p.Cargo?.Nombre ?? "-")</span>
+                                            _ultimoCargoId = p.Cargo?.Id;
+                                            @* Actualizamos el último ID procesado *@
+                                        }
                                     </td>
                                     <td class="text-start fw-semibold text-dark">@p.Nombre</td>
                                     <td class="text-start text-secondary">
                                         @(p.TipoDocumento1 != null ? $"{p.TipoDocumento1.Nombre}: " : "")@(p.Documento1 ?? "-")
                                     </td>
-                                    <td class="text-start text-secondary">@(p.Duracion != null ? $"{p.Duracion} años" : "-")</td>
+                                    <td class="text-start text-secondary">@(p.Duracion != null ? $"{p.Duracion} " : "-")</td>
                                     <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
                                     <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
                                 </tr>
@@ -573,6 +582,7 @@
 
     int idAsamblea = 0;
     private bool mostrarModal = false;
+    private int? _ultimoCargoId;
 
     [Inject] private ISociedad repository { get; set; } = null!;
     [Inject] private IAutoridad repoAutoridad { get; set; } = null!;

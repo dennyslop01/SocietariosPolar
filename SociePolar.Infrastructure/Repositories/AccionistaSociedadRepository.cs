@@ -252,6 +252,21 @@ namespace SociePolar.Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdCustodioIdAsync(int sociedadId, int accionistaId, int? custodioId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Sociedad)
+                .ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.Sociedad.Id == sociedadId && x.Accionista.Id == accionistaId && x.CustodioId == custodioId)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId, int estatusId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
@@ -336,7 +351,12 @@ namespace SociePolar.Infrastructure.Repositories
 
         public async Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, Int64 nroacciones, int updateUserId, int opcioaudi)
         {
-            using var context = _contextFactory.CreateDbContext();
+            await UpdateNroAccionesCustodioAsync(accionistaid, sociedadid, null, nroacciones, updateUserId, opcioaudi);
+        }
+
+        public async Task UpdateNroAccionesCustodioAsync(int accionistaid, int sociedadid, int? custodioid, Int64 nroacciones, int updateUserId, int opcioaudi)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
 
             var accionista = await context.Set<Accionista>().FindAsync(accionistaid);
             if (accionista == null) throw new Exception($"Accionista con ID {accionistaid} no existe.");
@@ -344,31 +364,49 @@ namespace SociePolar.Infrastructure.Repositories
             var sociedad = await context.Set<Sociedad>().FindAsync(sociedadid);
             if (sociedad == null) throw new Exception($"Sociedad con ID {sociedadid} no existe.");
 
+            AccionistaSociedad? editentidad = await context.AccionistasSociedades
+                .Include(x => x.EstatusAccionista)
+                .FirstOrDefaultAsync(x => x.Accionista.Id == accionistaid
+                                       && x.Sociedad.Id == sociedadid
+                                       && x.CustodioId == custodioid);
 
-            AccionistaSociedad? editentidad = await context.AccionistasSociedades.Where(x => x.Accionista.Id == accionistaid && x.Sociedad.Id == sociedadid).FirstOrDefaultAsync();
-            if (editentidad == null) throw new Exception($"Accionista - Sodiedad con esa clave no existe.");
+            if (editentidad == null && custodioid == null)
+            {
+                editentidad = await context.AccionistasSociedades
+                    .Include(x => x.EstatusAccionista)
+                    .FirstOrDefaultAsync(x => x.Accionista.Id == accionistaid && x.Sociedad.Id == sociedadid && x.CustodioId == null);
+            }
 
-            var estatus = await context.Set<EstatusAccionista>().FindAsync(1);
+            if (editentidad == null) return;
 
-            if (editentidad.NroAcciones != nroacciones)
+            var estatusActivo = await context.Set<EstatusAccionista>().FindAsync(1);
+            long saldoAnterior = editentidad.NroAcciones ?? 0;
+
+            if (saldoAnterior != nroacciones || editentidad.EstatusAccionista?.Id != 1)
             {
                 editentidad.NroAcciones = nroacciones;
-                editentidad.EstatusAccionista = estatus;
+                editentidad.EstatusAccionista = estatusActivo;
                 editentidad.UpdateDate = DateTime.UtcNow;
                 editentidad.UpdateUserId = updateUserId;
 
                 context.Set<AccionistaSociedad>().Update(editentidad);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
 
-                if (opcioaudi == 1)
+                if (opcioaudi == 1 && saldoAnterior != nroacciones)
                 {
+                    long diferencia = nroacciones - saldoAnterior;
+                    string accionAudit = diferencia > 0 ? "Compra" : "Venta";
+                    string desc = diferencia > 0
+                        ? $"Compra de acciones en conciliación: +{diferencia:N0} acciones (Saldo anterior: {saldoAnterior:N0}, Nuevo: {nroacciones:N0})"
+                        : $"Venta de acciones en conciliación: {diferencia:N0} acciones (Saldo anterior: {saldoAnterior:N0}, Nuevo: {nroacciones:N0})";
+
                     AuditoriaNroAccion auditoria = new()
                     {
                         SociedadId = sociedadid,
                         AccionistaId = accionistaid,
                         NroAcciones = nroacciones,
-                        Accion = "Update",
-                        Descripcion = $"Se actualizó el número de acciones del accionista con ID {accionistaid} en la sociedad con ID {sociedadid} a {nroacciones}.",
+                        Accion = accionAudit,
+                        Descripcion = desc,
                         CreateUserId = updateUserId,
                         CreateDate = DateTime.UtcNow
                     };
@@ -386,13 +424,14 @@ namespace SociePolar.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task AccionistasSociedadInactivar(int procesoid)
+        public async Task AccionistasSociedadInactivar(int procesoid, int? custodioId = null)
         {
-            using var context = _contextFactory.CreateDbContext();
+            using var context = await _contextFactory.CreateDbContextAsync();
 
             var paramProcesoId = new SqlParameter("@ProcesoId", procesoid);
+            var paramCustodioId = new SqlParameter("@CustodioId", (object?)custodioId ?? DBNull.Value);
 
-            await context.Database.ExecuteSqlRawAsync("EXEC SP_AccionistasSociedadInactivar @ProcesoId", paramProcesoId);
+            await context.Database.ExecuteSqlRawAsync("EXEC SP_AccionistasSociedadInactivar @ProcesoId, @CustodioId", paramProcesoId, paramCustodioId);
         }
 
         public async Task<List<AccionistaSociedadHistorico>> GetHistoricoBySociedadIdRangeDateAsync(int sociedadId, DateTime endDate)

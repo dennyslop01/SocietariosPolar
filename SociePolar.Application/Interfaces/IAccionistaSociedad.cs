@@ -13,6 +13,7 @@ namespace SociePolar.Application.Interfaces
         Task<List<AccionistaSociedad>> GetBySociedadIdAsync(int sociedadId);
         Task<List<AccionistaSociedad>> GetBySociedadIdEstatusIdAsync(int sociedadId, int estatusId);
         Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
+        Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdCustodioIdAsync(int sociedadId, int accionistaId, int? custodioId);
         Task<long> GetTotalAccionesBySociedadIdAsync(int sociedadId, int estatusId);
         Task<List<AccionistaSociedad>> GetCustodiadosAsync(int sociedadId, int custodioId, int estatusId);
         Task<List<int>> GetCustodiosIdBySociedadAsync(int sociedadId, int estatusId);
@@ -22,8 +23,9 @@ namespace SociePolar.Application.Interfaces
         void Delete(int id);
         void Activar(int id, int estatus);
         Task UpdateNroAccionesAsync(int accionistaid, int sociedadid, Int64 nroacciones, int updateUserId, int opcioaudi);
+        Task UpdateNroAccionesCustodioAsync(int accionistaid, int sociedadid, int? custodioid, Int64 nroacciones, int updateUserId, int opcioaudi);
         Task<List<AuditoriaNroAccion>?> GetAuditoriaBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
-        Task AccionistasSociedadInactivar(int procesoid);
+        Task AccionistasSociedadInactivar(int procesoid, int? custodioId = null);
         Task<List<AccionistaSociedadHistorico>> GetHistoricoBySociedadIdRangeDateAsync(int sociedadId, DateTime endDate);
         Task<int> GetTotalAccionistasBySociedadIdAsync(int sociedadId, int estatusId);
         Task<int> GetTotalCustodiadosCountBySociedadIdAsync(int sociedadId, int estatusId);

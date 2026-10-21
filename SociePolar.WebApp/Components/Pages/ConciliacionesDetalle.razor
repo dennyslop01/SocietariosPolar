@@ -276,9 +276,6 @@
         {
             var conciliacion = await repository.GetByIdAsync(id);
             var listaDetalle = await repository.GetDetalleByIdAsync(id);
-            var listaAccionistas = await repoaccionistasocie.GetBySociedadIdEstatusIdAsync((int)conciliacion?.Sociedad?.Id, 2);
-            //var listaHistorico = await repoaccionistasocie.GetHistoricoBySociedadIdRangeDateAsync((int)conciliacion?.Sociedad?.Id, conciliacion.CreateDate);
-
             foreach (var item in listaDetalle)
             {
                 var accionista = await repoaccionista.GetByIdAsync(item.AccionistaId);
@@ -308,36 +305,23 @@
                             TotalAcciones = item.TotalAcciones
                         });
                     }
-                }
-            }
-
-            CantidadAcciones = listaDetalle.Sum(x => x.TotalAcciones);
-            TotalAccionista = listaDetalle.Count();
-
-            // 1. Extraemos todos los IDs de la lista detalle en un HashSet para que la búsqueda sea ultra rápida
-            var idsDetalle = listaDetalle.Select(d => d.AccionistaId).ToHashSet();
-
-            // 2. Filtramos los accionistas con Status 2 que NO estén en ese conjunto de IDs
-            var accionistasFiltrados = listaAccionistas
-                .Where(a => a.EstatusAccionista?.Id == 2 && !idsDetalle.Contains((int)a.Accionista?.Id));
-
-            // 3. Recorremos el resultado
-            foreach (var item in accionistasFiltrados) 
-            {
-                var accionista = await repoaccionista.GetByIdAsync((int)item.Accionista?.Id);
-                if (accionista != null)
-                {
-                    ListgralInactivos.Add(new ConciliacionDetalleDto
+                    else if (item.Accion == "Inactivado")
                     {
-                        Id = item.Id,
-                        Accion = "Inactivado",
-                        Documento = accionista.TipoDocumento1?.Nombre,
-                        NroDocumento = accionista.Documento1,
-                        Nombre = accionista.Nombre,
-                        TotalAcciones = item.NroAcciones
-                    });
+                        ListgralInactivos.Add(new ConciliacionDetalleDto
+                        {
+                            Id = item.Id,
+                            Accion = item.Accion,
+                            Documento = accionista.TipoDocumento1?.Nombre,
+                            NroDocumento = accionista.Documento1,
+                            Nombre = accionista.Nombre,
+                            TotalAcciones = item.TotalAcciones
+                        });
+                    }
                 }
             }
+
+            CantidadAcciones = listaDetalle.Where(x => x.Accion != "Inactivado").Sum(x => x.TotalAcciones);
+            TotalAccionista = listaDetalle.Where(x => x.Accion != "Inactivado").Count();
         }
         catch (Exception ex)
         {

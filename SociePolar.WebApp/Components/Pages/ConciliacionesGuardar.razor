@@ -542,11 +542,11 @@
                     foreach (var item in listaConciliaciones.Where(x => x.Accion == "Actualizado"))
                     {
                         await repoaccionistasocie.UpdateNroAccionesCustodioAsync(
-                            item.AccionistaId,
-                            (int)entidadEditando.SociedadId,
-                            custodioOperacion,
-                            item.TotalAcciones,
-                            userid,
+                            item.AccionistaId, 
+                            (int)entidadEditando.SociedadId, 
+                            custodioOperacion, 
+                            item.TotalAcciones, 
+                            userid, 
                             1);
                     }
 

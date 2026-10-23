@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
@@ -366,8 +366,8 @@ namespace SociePolar.Infrastructure.Repositories
 
             AccionistaSociedad? editentidad = await context.AccionistasSociedades
                 .Include(x => x.EstatusAccionista)
-                .FirstOrDefaultAsync(x => x.Accionista.Id == accionistaid
-                                       && x.Sociedad.Id == sociedadid
+                .FirstOrDefaultAsync(x => x.Accionista.Id == accionistaid 
+                                       && x.Sociedad.Id == sociedadid 
                                        && x.CustodioId == custodioid);
 
             if (editentidad == null && custodioid == null)

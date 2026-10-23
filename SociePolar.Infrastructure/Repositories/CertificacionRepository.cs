@@ -105,10 +105,10 @@ namespace SociePolar.Infrastructure.Repositories
         public void Delete(int id)
         {
             using var context = _contextFactory.CreateDbContext();
-            var entity = context.Set<Sociedad>().Find(id);
+            var entity = context.Set<Certificacion>().Find(id);
             if (entity != null)
             {
-                context.Set<Sociedad>().Remove(entity);
+                context.Set<Certificacion>().Remove(entity);
                 context.SaveChanges();
             }
         }

@@ -115,14 +115,14 @@
             foreach (var item in listSociedades1)
             {
                 Listgral.Add(new DocumentosVencidos
-                    {
-                        Id = item.Id,
-                        Modulo = "Sociedades",
-                    // Documento = item.TipoDocumento1?.Nombre,
-                    // NroDocumento = item.Documento1!,
-                        FechaVencimiento = item.FechaVencimiento,
-                        Nombre = item.Empresa.Nombre
-                    });
+                {
+                    Id = item.Id,
+                    Modulo = "Sociedades",
+                    Documento = "Fecha Vencimiento de la Sociedad",
+                // NroDocumento = item.Documento1!,
+                    FechaVencimiento = item.FechaVencimiento,
+                    Nombre = item.Empresa.Nombre
+                });
             }
 
             var listSociedades2 = listSociedades.OrderBy(x => x.Empresa.Nombre).Where(x => x.VencimientoDocumento1 < DateTime.Now.AddDays(30)).ToList();

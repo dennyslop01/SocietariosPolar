@@ -1,4 +1,4 @@
-﻿using SociePolar.Domain.Dtos;
+using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
 
 namespace SociePolar.Application.Interfaces

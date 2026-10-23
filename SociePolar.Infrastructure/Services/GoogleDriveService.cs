@@ -16,30 +16,47 @@ namespace SociePolar.Infrastructure.Services
             _config = config;
         }
 
+        private DriveService? _driveService;
+        private GoogleCredential? _credential;
+        private readonly object _lock = new object();
+
         /// <summary>
         /// Instancia centralizada de la credencial de la Cuenta de Servicio
         /// impersonando al Usuario Bot del dominio (@empresaspolar.com).
+        /// Reutiliza la credencial en memoria para evitar relecturas de disco
+        /// y solicitudes repetidas de token OAuth2.
         /// </summary>
         private GoogleCredential GetCredential()
         {
-            var jsonPath = _config["GoogleDrive:CredentialsPath"];
-            var botUserEmail = _config["GoogleDrive:ImpersonatedUserEmail"]; // Ej: bot.societario@empresaspolar.com
+            if (_credential != null)
+                return _credential;
 
-            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+            lock (_lock)
             {
-                throw new FileNotFoundException($"No se encontró el archivo de credenciales de Google Drive en: {jsonPath}");
-            }
+                if (_credential != null)
+                    return _credential;
 
-            if (string.IsNullOrEmpty(botUserEmail))
-            {
-                throw new ArgumentNullException("GoogleDrive:ImpersonatedUserEmail", "Debe configurar el correo del usuario bot en appsettings.json");
-            }
+                var jsonPath = _config["GoogleDrive:CredentialsPath"];
+                var botUserEmail = _config["GoogleDrive:ImpersonatedUserEmail"]; // Ej: bot.societario@empresaspolar.com
 
-            using (var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read))
-            {
-                return GoogleCredential.FromStream(stream)
-                    .CreateScoped(_scopes)
-                    .CreateWithUser(botUserEmail); // <--- AQUÍ OCURRE LA MAGIA DE LA IMPERSONACIÓN
+                if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+                {
+                    throw new FileNotFoundException($"No se encontró el archivo de credenciales de Google Drive en: {jsonPath}");
+                }
+
+                if (string.IsNullOrEmpty(botUserEmail))
+                {
+                    throw new ArgumentNullException("GoogleDrive:ImpersonatedUserEmail", "Debe configurar el correo del usuario bot en appsettings.json");
+                }
+
+                using (var stream = new FileStream(jsonPath, FileMode.Open, FileAccess.Read))
+                {
+                    _credential = GoogleCredential.FromStream(stream)
+                        .CreateScoped(_scopes)
+                        .CreateWithUser(botUserEmail); // <--- AQUÍ OCURRE LA MAGIA DE LA IMPERSONACIÓN
+
+                    return _credential;
+                }
             }
         }
 
@@ -60,13 +77,24 @@ namespace SociePolar.Infrastructure.Services
 
         private DriveService GetService()
         {
-            var credential = GetCredential();
+            if (_driveService != null)
+                return _driveService;
 
-            return new DriveService(new BaseClientService.Initializer()
+            lock (_lock)
             {
-                HttpClientInitializer = credential,
-                ApplicationName = _config["GoogleDrive:ApplicationName"],
-            });
+                if (_driveService != null)
+                    return _driveService;
+
+                var credential = GetCredential();
+
+                _driveService = new DriveService(new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = credential,
+                    ApplicationName = _config["GoogleDrive:ApplicationName"],
+                });
+
+                return _driveService;
+            }
         }
 
         public async Task<string> CreateFolderAsync(string folderName, string? parentFolderId = null)

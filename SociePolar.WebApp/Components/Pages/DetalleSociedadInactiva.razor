@@ -361,7 +361,11 @@
                                     </td>
                                     <td class="text-start fw-semibold text-dark">@p.Nombre</td>
                                     <td class="text-start text-secondary">
-                                        @(p.TipoDocumento1 != null ? $"{p.TipoDocumento1.Nombre}: " : "")@(p.Documento1 ?? "-")
+                                        @(string.IsNullOrWhiteSpace(p.Documento1) 
+                                            ? "-" 
+                                            : (p.TipoDocumento1 != null && !p.Documento1.StartsWith(p.TipoDocumento1.Nombre, StringComparison.OrdinalIgnoreCase) 
+                                                ? $"{p.TipoDocumento1.Nombre}-{p.Documento1}" 
+                                                : p.Documento1))
                                     </td>
                                     <td class="text-start text-secondary">@(p.Duracion != null ? $"{p.Duracion} " : "-")</td>
                                     <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
@@ -619,7 +623,7 @@
                 return;
             }
             var listAutoridad = await repoAutoridad.GetAllAsync();
-            ListAutoridadGral = listAutoridad.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id))
+            ListAutoridadGral = listAutoridad.Where(x => x.Sociedad != null && x.Sociedad.Id == int.Parse(id) && !string.IsNullOrWhiteSpace(x.Nombre))
                 .OrderBy(x => x.Cargo?.Orden ?? 999)
                 .ThenBy(x => x.Cargo?.Nombre ?? "")
                 .ThenBy(x => x.Nombre ?? "")

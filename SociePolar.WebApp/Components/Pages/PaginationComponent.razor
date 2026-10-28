@@ -70,7 +70,7 @@
 
 @code {
     [Parameter] public IEnumerable<TItem> Items { get; set; } = Enumerable.Empty<TItem>();
-    [Parameter] public int DefaultPageSize { get; set; } = 50;
+    [Parameter] public int DefaultPageSize { get; set; } = 15;
     [Parameter] public RenderFragment ChildContentHeader { get; set; }
     [Parameter] public RenderFragment<TItem> ChildContentRow { get; set; }
     [Parameter] public string TableClass { get; set; } = "";
@@ -82,7 +82,7 @@
     [Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
 
     private int CurrentPage { get; set; } = 1;
-    private readonly int[] PageSizes = new[] { 5, 10, 20, 50, 100 };
+    private readonly int[] PageSizes = new[] { 10, 15, 25, 50, 100 };
     private int _pageSize;
     private int PageSize
     {
@@ -265,6 +265,32 @@
         z-index: 15 !important;
         background-color: #F8FAFC !important;
         box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* Columna Congelada Flotante a la Derecha (Acciones) */
+    .polar-sticky-col-actions {
+        position: sticky !important;
+        right: 0 !important;
+        z-index: 8 !important;
+        background-color: #FFFFFF !important;
+        box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    thead .polar-sticky-col-actions {
+        position: sticky !important;
+        top: 0 !important;
+        right: 0 !important;
+        z-index: 15 !important;
+        background-color: #F8FAFC !important;
+        box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Mantiene el fondo sincronizado al hacer hover sobre filas con columnas congeladas */
+    tr:hover td.polar-sticky-col-direct,
+    tr:hover td.polar-sticky-col-1,
+    tr:hover td.polar-sticky-col-2,
+    tr:hover td.polar-sticky-col-actions {
+        background-color: #F1F5F9 !important;
     }
 
     /* Modo Compacto / Densidad Optimizada */

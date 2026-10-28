@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
@@ -726,5 +726,18 @@ namespace SociePolar.Infrastructure.Repositories
             return newAccionista;
         }
 
+        public async Task<List<AccionistaResumenDto>> GetResumenListAsync()
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<Accionista>()
+                .AsNoTracking()
+                .Select(a => new AccionistaResumenDto
+                {
+                    Id = a.Id,
+                    Documento1 = a.Documento1,
+                    Nombre = a.Nombre
+                })
+                .ToListAsync();
+        }
     }
 }

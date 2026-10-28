@@ -1,4 +1,4 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
     <div class="card shadow-sm border-0 h-auto">
@@ -132,7 +132,7 @@
                     {
                         Id = item.Id,
                         Modulo = "Sociedades",
-                        Documento = item.TipoDocumento1?.Nombre,
+                        Documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento1?.Nombre),
                         NroDocumento = item.Documento1!,
                         FechaVencimiento = item.VencimientoDocumento1,
                         Nombre = item.Empresa.Nombre
@@ -146,7 +146,7 @@
                     {
                         Id = item.Id,
                         Modulo = "Sociedades",
-                        Documento = item.TipoDocumento2?.Nombre,
+                        Documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento2?.Nombre),
                         NroDocumento = item.Documento2!,
                         FechaVencimiento = item.VencimientoDocumento2,
                         Nombre = item.Empresa.Nombre
@@ -160,7 +160,7 @@
                     {
                         Id = item.Id,
                         Modulo = "Sociedades",
-                        Documento = item.TipoDocumento3?.Nombre,
+                        Documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento3?.Nombre),
                         NroDocumento = item.Documento3!,
                         FechaVencimiento = item.VencimientoDocumento3,
                         Nombre = item.Empresa.Nombre
@@ -175,8 +175,7 @@
                     {
                         Id = item.Id,
                         Modulo = "Autoridades",
-                    // Documento = item.TipoDocumento1?.Nombre,
-                    // NroDocumento = item.Documento1!,
+                        Documento = "Vencimiento Cargo",
                         FechaVencimiento = item.FechaDuracion,
                         Nombre = item.Nombre
                     });
@@ -189,7 +188,7 @@
                     {
                         Id = item.Id,
                         Modulo = "Autoridades",
-                        Documento = item.TipoDocumento1?.Nombre,
+                        Documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento1?.Nombre),
                         NroDocumento = item.Documento1!,
                         FechaVencimiento = item.VencimientoDocumento1,
                         Nombre = item.Nombre
@@ -203,7 +202,7 @@
                     {
                         Id = item.Id,
                         Modulo = "Autoridades",
-                        Documento = item.TipoDocumento2?.Nombre,
+                        Documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento2?.Nombre),
                         NroDocumento = item.Documento2!,
                         FechaVencimiento = item.VencimientoDocumento2,
                         Nombre = item.Nombre
@@ -221,7 +220,7 @@
             {
                 if (item.FechaVencimiento1 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento1?.Nombre, item?.TipoAccionista?.Id);
                     nrodocumento = (item?.TipoAccionista?.Id != 3 ? item.Documento1 : item.CedulaSusesion);
                     nombreper = (item?.TipoAccionista?.Id != 3 ? item.Nombre : item.NombreSusesion);
                     fechavencimiento = (DateTime)item.FechaVencimiento1;
@@ -246,7 +245,7 @@
             {
                 if (item.FechaVencimiento2 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento2?.Nombre, item?.TipoAccionista?.Id);
                     nrodocumento = item.Documento2;
                     fechavencimiento = (DateTime)item.FechaVencimiento2;
                     nombreper = item.Nombre;
@@ -271,7 +270,7 @@
             {
                 if (item.FechaVencimiento3 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento3?.Nombre, item?.TipoAccionista?.Id);
                     nrodocumento = item.Documento3;
                     nombreper = item.Nombre;
                     fechavencimiento = (DateTime)item.FechaVencimiento3;
@@ -293,9 +292,10 @@
 
             var listaaccaux4 = listAccionista.OrderBy(x => x.Nombre).Where(x => x.FechaVencimiento4 < DateTime.Now.AddDays(30)).ToList();
             foreach (var item in listaaccaux4)
-            {                if (item.FechaVencimiento4 < DateTime.Now.AddDays(30))
+            {
+                if (item.FechaVencimiento4 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = UtilClass.ObtenerEtiquetaTipoDocumento(item.TipoDocumento4?.Nombre, item?.TipoAccionista?.Id);
                     nrodocumento = item.Documento4;
                     nombreper = item.Nombre;
                     fechavencimiento = (DateTime)item.FechaVencimiento4;
@@ -320,7 +320,7 @@
             {
                 if (item.FechaVencimientoApoderado1 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = "Cédula Apoderado";
                     nrodocumento = item.DocumentoApoderado1;
                     nombreper = item.NombreApoderado;
                     fechavencimiento = (DateTime)item.FechaVencimientoApoderado1;
@@ -345,7 +345,7 @@
             {
                 if (item.FechaVencimientoApoderado2 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = "Cédula Apoderado 2";
                     nrodocumento = item.DocumentoApoderado2;
                     nombreper = item.NombreApoderado;
                     fechavencimiento = (DateTime)item.FechaVencimientoApoderado2;
@@ -370,7 +370,7 @@
             {
                 if (item.FechaVencimientoApoderado3 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = "Cédula Apoderado 3";
                     nrodocumento = item.DocumentoApoderado3;
                     nombreper = item.NombreApoderado;
                     fechavencimiento = (DateTime)item.FechaVencimientoApoderado3;
@@ -395,7 +395,7 @@
             {
                 if (item.FechaVencimientoConyuge1 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = "Cédula Cónyuge";
                     nrodocumento = item.DocumentoConyuge1;
                     nombreper = item.NombreConyuge;
                     fechavencimiento = (DateTime)item.FechaVencimientoConyuge1;
@@ -420,7 +420,7 @@
             {
                 if (item.FechaVencimientoConyuge2 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = "Cédula Cónyuge 2";
                     nrodocumento = item.DocumentoConyuge2;
                     nombreper = item.NombreConyuge;
                     fechavencimiento = (DateTime)item.FechaVencimientoConyuge2;
@@ -445,7 +445,7 @@
             {
                 if (item.FechaVencimientoConyuge3 < DateTime.Now.AddDays(30))
                 {
-                    documento = "Cédula";
+                    documento = "Cédula Cónyuge 3";
                     nrodocumento = item.DocumentoConyuge3;
                     nombreper = item.NombreConyuge;
                     fechavencimiento = (DateTime)item.FechaVencimientoConyuge3;

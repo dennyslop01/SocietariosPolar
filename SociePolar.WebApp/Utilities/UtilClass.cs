@@ -21,6 +21,87 @@ namespace SociePolar.WebApp.Utilities
                 : (valor == "0" ? string.Empty : valor);
         }
 
+        /// <summary>
+        /// Devuelve únicamente el número de documento sin el prefijo del tipo (ej: de 'V-11.643.495' devuelve '11.643.495').
+        /// Para usar en vistas donde ya existe una columna previa 'Tipo Documento'.
+        /// </summary>
+        public static string ObtenerNumeroDocumentoLimpio(string? tipoDoc, string? documento)
+        {
+            if (string.IsNullOrWhiteSpace(documento) || documento.Trim() == "-") return "-";
+            string limpio = documento.Trim();
+
+            if (!string.IsNullOrWhiteSpace(tipoDoc))
+            {
+                string tipo = tipoDoc.Trim();
+                if (limpio.StartsWith(tipo, StringComparison.OrdinalIgnoreCase))
+                {
+                    limpio = limpio.Substring(tipo.Length).TrimStart('-', ':', ' ', '.');
+                }
+            }
+            else
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(limpio, @"^[VEJGvejg][\-:\s]+(.+)$");
+                if (match.Success)
+                {
+                    limpio = match.Groups[1].Value.Trim();
+                }
+            }
+
+            return string.IsNullOrWhiteSpace(limpio) ? "-" : limpio;
+        }
+
+        /// <summary>
+        /// Devuelve el documento completo asegurando que incluya su prefijo de tipo (ej: 'V-11.643.495').
+        /// Para usar en Reportes PDF, exports o vistas unificadas sin columna independiente de Tipo Documento.
+        /// </summary>
+        public static string ObtenerDocumentoCompleto(string? tipoDoc, string? documento)
+        {
+            if (string.IsNullOrWhiteSpace(documento) || documento.Trim() == "-") return "-";
+            string limpio = documento.Trim();
+
+            // Si trae formato erróneo duplicado como 'V: V-' o 'V: ', limpiarlo
+            limpio = System.Text.RegularExpressions.Regex.Replace(limpio, @"^[VEJGvejg][\-:\s]+([VEJGvejg][\-:\s]+)", "$1", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "";
+
+            if (!string.IsNullOrEmpty(prefijo))
+            {
+                if (limpio.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+                {
+                    string resto = limpio.Substring(prefijo.Length).TrimStart('-', ':', ' ', '.');
+                    return $"{prefijo}-{resto}";
+                }
+                else
+                {
+                    // Si ya inicia con alguna otra letra y guion, respetarlo
+                    if (System.Text.RegularExpressions.Regex.IsMatch(limpio, @"^[A-Za-z][\-:\s]"))
+                    {
+                        return limpio;
+                    }
+                    return $"{prefijo}-{limpio}";
+                }
+            }
+
+            return limpio;
+        }
+
+        /// <summary>
+        /// Devuelve la etiqueta descriptiva del tipo de documento (ej: "RIF" para 'J', 'G' o Persona Jurídica, "Cédula" para 'V'/'E', "Pasaporte" para 'P', etc.).
+        /// </summary>
+        public static string ObtenerEtiquetaTipoDocumento(string? tipoDocNombre, int? tipoAccionistaId = null)
+        {
+            var tipo = tipoDocNombre?.Trim().ToUpper();
+            return tipo switch
+            {
+                "J" => "RIF",
+                "G" => "RIF Gubernamental",
+                "V" => "Cédula",
+                "E" => "Cédula Extranjera",
+                "P" => "Pasaporte",
+                _ => tipoAccionistaId == 2 ? "RIF" : (!string.IsNullOrEmpty(tipo) ? tipo : "Cédula")
+            };
+        }
+
         public static long? LimpiarYConvertirLong(string? input)
         {
             if (string.IsNullOrWhiteSpace(input)) return null;

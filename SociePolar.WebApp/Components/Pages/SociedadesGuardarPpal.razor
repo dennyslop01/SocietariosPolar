@@ -612,8 +612,8 @@
                     }
                     else
                     {
-                        listUnidadFiltrado = new List<UnidadNegocio>();
-                        dto.UnidadNegocioId = 0;
+                        listUnidadFiltrado = listUnidad;
+                        dto.UnidadNegocioId = item.UnidadNegocio?.Id ?? 0;
                     }
                     entidadEditando = dto;
                     entidadEditandoAux = JsonSerializer.Deserialize<SociedadDto>(JsonSerializer.Serialize(entidadEditando)) ?? new();
@@ -859,7 +859,7 @@
         }
         else
         {
-            listUnidadFiltrado = new List<UnidadNegocio>();
+            listUnidadFiltrado = listUnidad;
         }
 
         // Forzamos el refresco visual de la UI

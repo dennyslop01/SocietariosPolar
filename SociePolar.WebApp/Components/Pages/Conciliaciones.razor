@@ -177,7 +177,7 @@
         try
         {
             Listgral = await repository.GetAllAsync();
-            Listgral = Listgral.OrderBy(x => x.CreateDate).ToList();
+            Listgral = Listgral.OrderByDescending(x => x.CreateDate).ThenByDescending(x => x.Id).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)

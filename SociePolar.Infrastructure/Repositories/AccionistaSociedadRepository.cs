@@ -124,7 +124,9 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Sociedad)
                 .ThenInclude(s => s!.EstatusSociedad)
                 .Include(b => b.Accionista)
-                .ThenInclude(a => a!.TipoAccionista)
+                    .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.Accionista)
+                    .ThenInclude(a => a!.TipoDocumento1)
                 .Include(b => b.EstatusAccionista)
                 .Where(x => x.Sociedad!.Id == sociedadId)
                 .ToListAsync();
@@ -291,6 +293,7 @@ namespace SociePolar.Infrastructure.Repositories
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Set<AccionistaSociedad>()
                 .Include(b => b.Accionista).ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.Accionista).ThenInclude(a => a!.TipoDocumento1)
                 .Include(b => b.EstatusAccionista)
                 .Where(x => x.Sociedad.Id == sociedadId && x.CustodioId == custodioId && x.EstatusAccionista.Id == estatusId)
                 .OrderBy(x => x.Accionista.Nombre)
@@ -427,6 +430,7 @@ namespace SociePolar.Infrastructure.Repositories
         public async Task AccionistasSociedadInactivar(int procesoid, int? custodioId = null)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
+            context.Database.SetCommandTimeout(300);
 
             var paramProcesoId = new SqlParameter("@ProcesoId", procesoid);
             var paramCustodioId = new SqlParameter("@CustodioId", (object?)custodioId ?? DBNull.Value);
@@ -483,6 +487,71 @@ namespace SociePolar.Infrastructure.Repositories
                 .Where(s => context.Set<AccionistaSociedad>()
                     .Any(a => a.Sociedad.Id == s.Id && a.EstatusAccionista!.Id == estatusId))
                 .ToListAsync();
+        }
+
+        public async Task<List<AccionistaSociedadResumenDto>> GetResumenBySociedadIdAsync(int sociedadId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.AccionistasSociedades
+                .AsNoTracking()
+                .Where(x => x.Sociedad!.Id == sociedadId)
+                .Select(x => new AccionistaSociedadResumenDto
+                {
+                    Id = x.Id,
+                    AccionistaId = x.Accionista!.Id,
+                    CustodioId = x.CustodioId,
+                    NroAcciones = x.NroAcciones,
+                    EstatusAccionistaId = x.EstatusAccionista != null ? x.EstatusAccionista.Id : null
+                })
+                .ToListAsync();
+        }
+
+        public async Task ActualizarSaldosYAuditoriaConciliacionLoteAsync(int procesoId, int sociedadId, int? custodioId, int userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            context.Database.SetCommandTimeout(300);
+
+            var paramProcesoId = new SqlParameter("@ProcesoId", procesoId);
+            var paramSociedadId = new SqlParameter("@SociedadId", sociedadId);
+            var paramCustodioId = new SqlParameter("@CustodioId", (object?)custodioId ?? DBNull.Value);
+            var paramUserId = new SqlParameter("@UserId", userId);
+
+            string sql = @"
+                -- 1. Insertar auditoría de cambios de saldo (Compra / Venta) para los que variaron su cantidad de acciones
+                INSERT INTO dbo.AuditoriasNroAcciones 
+                    (SociedadId, AccionistaId, NroAcciones, Accion, Descripcion, CreateUserId, CreateDate)
+                SELECT 
+                    @SociedadId,
+                    asoc.AccionistaId,
+                    cd.TotalAcciones,
+                    CASE WHEN cd.TotalAcciones > ISNULL(asoc.NroAcciones, 0) THEN 'Compra' ELSE 'Venta' END,
+                    CASE WHEN cd.TotalAcciones > ISNULL(asoc.NroAcciones, 0) 
+                         THEN 'Compra de acciones en conciliación: +' + CAST(cd.TotalAcciones - ISNULL(asoc.NroAcciones, 0) AS VARCHAR(30)) + ' acciones (Saldo anterior: ' + CAST(ISNULL(asoc.NroAcciones, 0) AS VARCHAR(30)) + ', Nuevo: ' + CAST(cd.TotalAcciones AS VARCHAR(30)) + ')'
+                         ELSE 'Venta de acciones en conciliación: ' + CAST(cd.TotalAcciones - ISNULL(asoc.NroAcciones, 0) AS VARCHAR(30)) + ' acciones (Saldo anterior: ' + CAST(ISNULL(asoc.NroAcciones, 0) AS VARCHAR(30)) + ', Nuevo: ' + CAST(cd.TotalAcciones AS VARCHAR(30)) + ')'
+                    END,
+                    @UserId,
+                    GETDATE()
+                FROM dbo.AccionistasSociedades asoc
+                INNER JOIN dbo.ConciliacionesDetalles cd ON cd.AccionistaId = asoc.AccionistaId
+                WHERE cd.ConciliacionId = @ProcesoId
+                  AND asoc.SociedadId = @SociedadId
+                  AND ((@CustodioId IS NULL AND asoc.CustodioId IS NULL) OR asoc.CustodioId = @CustodioId)
+                  AND (asoc.NroAcciones IS NULL OR asoc.NroAcciones <> cd.TotalAcciones);
+
+                -- 2. Actualizar saldos y estatus activo de todos los que vinieron en la conciliación
+                UPDATE asoc
+                SET asoc.NroAcciones = cd.TotalAcciones,
+                    asoc.EstatusAccionistaId = 1,
+                    asoc.UpdateDate = GETDATE(),
+                    asoc.UpdateUserId = @UserId
+                FROM dbo.AccionistasSociedades asoc
+                INNER JOIN dbo.ConciliacionesDetalles cd ON cd.AccionistaId = asoc.AccionistaId
+                WHERE cd.ConciliacionId = @ProcesoId
+                  AND asoc.SociedadId = @SociedadId
+                  AND ((@CustodioId IS NULL AND asoc.CustodioId IS NULL) OR asoc.CustodioId = @CustodioId);
+            ";
+
+            await context.Database.ExecuteSqlRawAsync(sql, paramProcesoId, paramSociedadId, paramCustodioId, paramUserId);
         }
     }
 }

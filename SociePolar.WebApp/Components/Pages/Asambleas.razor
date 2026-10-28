@@ -1,7 +1,7 @@
 @page "/asambleas"
 @rendermode InteractiveServer
 
-<div class="container-fluid mt-4">
+<div class="container-fluid px-0">
     <div class="card shadow-sm border-0 h-auto">
         <div class="card-header bg-white py-3">
             <div class="d-flex align-items-center justify-content-between">
@@ -51,54 +51,56 @@
                     </div>
                 </div>
             </div>
-            <div class="table-responsive">
-                <PaginationComponent TItem="Asamblea" Items="Listgral" DefaultPageSize="50" TableClass="polar-table-compact">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom">
-                            <th class="polar-sticky-col-direct ps-3 text-start" style="min-width: 220px; max-width: 280px;">Sociedad</th>
-                            <th class="text-start" style="min-width: 140px;">Tipo Asamblea</th>
-                            <th class="polar-date" style="min-width: 120px;">Fecha Celebración</th>
-                            <th class="polar-date" style="min-width: 120px;">Fecha Registro</th>
-                            <th class="text-start" style="min-width: 180px;">Registro</th>
-                            <th class="text-start" style="min-width: 90px;">Número</th>
-                            <th class="text-start" style="min-width: 90px;">Tomo</th>
-                            <th class="text-end pe-3" style="min-width: 110px;">Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
-                                <span class="polar-truncate" style="max-width: 260px;" title="@p.Sociedad?.Empresa?.Nombre">
-                                    @(p.Sociedad?.Empresa?.Nombre ?? "-")
-                                </span>
-                            </td>
-                            <td class="text-start">
-                                <span class="badge bg-light text-dark border">@(p.TipoAsamblea?.Nombre ?? "-")</span>
-                            </td>
-                            <td class="polar-date text-secondary">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
-                            <td class="polar-date text-secondary">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
-                            <td class="text-start text-secondary">@(p.Registro?.Nombre ?? "-")</td>
-                            <td class="text-start text-secondary">@p.NumeroRegistro</td>
-                            <td class="text-start text-secondary">@p.Tomo</td>
-                            <td class="text-end pe-3 text-nowrap">
-                                @if (idRol == 1 || idRol == 2 || idRol == 3)
-                                {
-                                    <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
-                                        <i class="bi bi-pencil-square fs-6"></i>
-                                    </button>
-                                    <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                        <i class="bi bi-trash3 fs-6"></i>
-                                    </button>
-                                    <button class="btn btn-link btn-sm text-secondary p-0 me-1"
-                                            @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
-                                        <i class="bi bi-file-earmark-pdf fs-6"></i>
-                                    </button>
-                                }
-                            </td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
-            </div>
+            <PaginationComponent TItem="Asamblea" Items="Listgral" DefaultPageSize="15" TableClass="polar-table-compact" ContainerStyle="max-height: calc(100vh - 280px);">
+                <ChildContentHeader>
+                    <tr class="table-light border-bottom text-nowrap">
+                        <th class="polar-sticky-col-direct ps-3 text-start" style="min-width: 170px; max-width: 220px;">Sociedad</th>
+                        <th class="text-start" style="min-width: 120px;">Tipo Asamblea</th>
+                        <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Celebración</th>
+                        <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Registro</th>
+                        <th class="text-start" style="min-width: 160px; max-width: 260px;">Registro</th>
+                        <th class="text-center" style="width: 75px; min-width: 75px;">Número</th>
+                        <th class="text-center" style="width: 75px; min-width: 75px;">Tomo</th>
+                        <th class="text-end pe-3 polar-sticky-col-actions" style="width: 95px; min-width: 95px;">Acciones</th>
+                    </tr>
+                </ChildContentHeader>
+                <ChildContentRow Context="p">
+                    <tr class="align-middle border-bottom">
+                        <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
+                            <span class="polar-truncate" style="max-width: 200px;" title="@p.Sociedad?.Empresa?.Nombre">
+                                @(p.Sociedad?.Empresa?.Nombre ?? "-")
+                            </span>
+                        </td>
+                        <td class="text-start">
+                            <span class="badge bg-light text-dark border">@(p.TipoAsamblea?.Nombre ?? "-")</span>
+                        </td>
+                        <td class="polar-date text-secondary">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
+                        <td class="polar-date text-secondary">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
+                        <td class="text-start text-secondary">
+                            <span class="polar-truncate" style="max-width: 250px;" title="@p.Registro?.Nombre">
+                                @(p.Registro?.Nombre ?? "-")
+                            </span>
+                        </td>
+                        <td class="text-center text-secondary">@p.NumeroRegistro</td>
+                        <td class="text-center text-secondary">@p.Tomo</td>
+                        <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
+                            @if (idRol == 1 || idRol == 2 || idRol == 3)
+                            {
+                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
+                                    <i class="bi bi-pencil-square fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                    <i class="bi bi-trash3 fs-6"></i>
+                                </button>
+                                <button class="btn btn-link btn-sm text-secondary p-0 me-1"
+                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                    <i class="bi bi-file-earmark-pdf fs-6"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                </ChildContentRow>
+            </PaginationComponent>
         </div>
     </div>
 

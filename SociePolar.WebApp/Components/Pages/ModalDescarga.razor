@@ -1,5 +1,8 @@
 @using System.Text
+@using System.IO
 @using SociePolar.Domain.Models
+@using SociePolar.Domain.Entities
+@using SociePolar.Application.Interfaces
 @rendermode InteractiveServer
 
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
@@ -10,7 +13,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title fs-6 fw-bold mb-0">
-                        <i class="bi bi-filetype-csv me-2"></i> Descargar Datos
+                        <i class="bi bi-filetype-csv me-2"></i> @(idModulo == "9" ? "Descargar Accionistas" : "Descargar Datos")
                     </h5>
                     <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
                 </div>
@@ -37,6 +40,50 @@
                     }
                     else
                     {
+                        @if (idModulo == "9" && !string.IsNullOrEmpty(nombreSociedad))
+                        {
+                            <div class="alert alert-light border d-flex align-items-center mb-3 py-2 px-3 rounded-3 shadow-xs">
+                                <i class="bi bi-building me-2 fs-5 text-primary"></i>
+                                <div>
+                                    <span class="text-muted small d-block" style="font-size: 0.75rem;">Sociedad:</span>
+                                    <strong class="text-dark small">@nombreSociedad</strong>
+                                </div>
+                            </div>
+
+                            @if (tieneCustodia)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-secondary small">Contenido a Descargar</label>
+                                    <div class="d-flex flex-column gap-2 p-2 border rounded-3 bg-light-subtle">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoExp" id="expDirectos" value="1" 
+                                                   checked="@(tipoExportacionAccionistas == 1)" 
+                                                   @onchange="@(() => tipoExportacionAccionistas = 1)">
+                                            <label class="form-check-label small fw-medium text-dark" for="expDirectos" style="cursor: pointer;">
+                                                Accionistas de la Sociedad <span class="text-muted" style="font-size: 0.8rem;">(Directos + Bloque Custodio)</span>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoExp" id="expCustodia" value="2" 
+                                                   checked="@(tipoExportacionAccionistas == 2)" 
+                                                   @onchange="@(() => tipoExportacionAccionistas = 2)">
+                                            <label class="form-check-label small fw-medium text-dark" for="expCustodia" style="cursor: pointer;">
+                                                Accionistas en Custodia <span class="text-muted" style="font-size: 0.8rem;">(Desglose Sub-Cuentas C.V.V.)</span>
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipoExp" id="expAmbos" value="3" 
+                                                   checked="@(tipoExportacionAccionistas == 3)" 
+                                                   @onchange="@(() => tipoExportacionAccionistas = 3)">
+                                            <label class="form-check-label small fw-medium text-dark" for="expAmbos" style="cursor: pointer;">
+                                                Ambos archivos <span class="text-muted" style="font-size: 0.8rem;">(Descargar los 2 por separado)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
                         <div class="mb-2">
                             <label class="form-label fw-bold text-secondary small">Formato del Separador</label>
                             <InputSelect class="form-select form-select-sm" @bind-Value="entidadActual.TipoSeparador">
@@ -63,7 +110,12 @@
 @code {
     [Parameter] public string idModulo { get; set; } = "";
     [Parameter] public string idEstado { get; set; } = "";
+    [Parameter] public int idSociedad { get; set; } = 0;
+    [Parameter] public string nombreSociedad { get; set; } = "";
+    [Parameter] public bool tieneCustodia { get; set; } = false;
     [Parameter] public EventCallback<bool> OnFinalizado { get; set; }
+
+    private int tipoExportacionAccionistas = 1;
 
     private MatrizCSV entidadActual = new();
     private bool cargando = false;
@@ -90,6 +142,7 @@
         new Modulos { Id = 6, Nombre = "Libros" },
         new Modulos { Id = 7, Nombre = "Accionistas" },
         new Modulos { Id = 8, Nombre = "Titulos" },
+        new Modulos { Id = 9, Nombre = "AccionistasSociedad" },
     };
 
     [Inject] private ISociedad repository { get; set; } = null!;
@@ -99,6 +152,7 @@
     [Inject] private ILibroSocietario repolibros { get; set; } = null!;
     [Inject] private IAccionista repoaccionista { get; set; } = null!;
     [Inject] private ITitulo repotitulo { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoaccionistasociedad { get; set; } = null!;
 
     protected override void OnInitialized()
     {
@@ -160,6 +214,11 @@
 
     private async Task<bool> ExportarCsv(string separador)
     {
+        if (idModulo == "9")
+        {
+            return await ExportarAccionistasSociedadCsv(separador);
+        }
+
         string modulo = ListModulos.FirstOrDefault(m => m.Id == int.Parse(idModulo))?.Nombre ?? "Datos";
         string csvString = idModulo switch
         {
@@ -595,6 +654,207 @@
             sb.AppendLine(linea);
         }
         return sb.ToString();
+    }
+
+    private static string SanearNombreArchivo(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "Sociedad";
+        var invalidChars = Path.GetInvalidFileNameChars();
+        string limpio = new string(nombre.Where(c => !invalidChars.Contains(c)).ToArray());
+        return limpio.Replace(" ", "_").Replace(".", "").Replace(",", "").Trim();
+    }
+
+    private async Task<bool> ExportarAccionistasSociedadCsv(string separador)
+    {
+        string estadoTexto = idEstado == "2" ? "Inactivos" : "Activos";
+        string nombreLimpio = SanearNombreArchivo(nombreSociedad);
+
+        bool exportarDirectos = (tipoExportacionAccionistas == 1 || tipoExportacionAccionistas == 3 || !tieneCustodia);
+        bool exportarCustodia = (tieneCustodia && (tipoExportacionAccionistas == 2 || tipoExportacionAccionistas == 3));
+
+        bool descargoAlMenosUno = false;
+
+        if (exportarDirectos)
+        {
+            string csvDirectos = await GenerarAccionistasDirectosSociedadCsv(separador);
+            if (!string.IsNullOrWhiteSpace(csvDirectos))
+            {
+                string fileName = $"Accionistas-{nombreLimpio}-{estadoTexto}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csvDirectos);
+                descargoAlMenosUno = true;
+            }
+        }
+
+        if (exportarCustodia)
+        {
+            if (descargoAlMenosUno)
+            {
+                await Task.Delay(500); // Pausa breve para permitir la descarga ordenada de ambos archivos
+            }
+
+            string csvCustodia = await GenerarAccionistasCustodiaSociedadCsv(separador);
+            if (!string.IsNullOrWhiteSpace(csvCustodia))
+            {
+                string fileName = $"Accionistas-Custodia-CVV-{nombreLimpio}-{estadoTexto}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csvCustodia);
+                descargoAlMenosUno = true;
+            }
+        }
+
+        if (!descargoAlMenosUno)
+        {
+            await MostrarNotificacion("No se encontraron registros de accionistas para exportar en esta sociedad", true);
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task<string> GenerarAccionistasDirectosSociedadCsv(string separador)
+    {
+        var sb = new StringBuilder();
+        int.TryParse(idEstado, out int targetEstado);
+        if (targetEstado == 0) targetEstado = 1;
+
+        var todos = await repoaccionistasociedad.GetBySociedadIdAsync(idSociedad);
+        var directos = todos
+            .Where(x => x.EstatusAccionista?.Id == targetEstado && x.CustodioId == null)
+            .OrderByDescending(x => x.NroAcciones ?? 0)
+            .ToList();
+
+        if (!directos.Any())
+        {
+            return string.Empty;
+        }
+
+        var custodiosIds = await repoaccionistasociedad.GetCustodiosIdBySociedadAsync(idSociedad, targetEstado);
+        var custodiosSet = new HashSet<int>(custodiosIds);
+
+        var soc = await repository.GetByIdAsync(idSociedad);
+        long totalAccionesSociedad = 0;
+        if (!string.IsNullOrEmpty(soc?.NumeroAcciones) && long.TryParse(soc.NumeroAcciones.Replace(".", "").Replace(",", "").Trim(), out long numParsed))
+        {
+            totalAccionesSociedad = numParsed;
+        }
+
+        string encabezado = string.Join(separador, new string[] {
+            "Sociedad", "TipoDocumento", "NroDocumento", "NombreAccionista", "TipoAccionista",
+            "NroAcciones", "PorcentajeParticipacion", "EsCustodio", "FechaIngreso", "UltimaModificacion"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in directos)
+        {
+            long nroAcciones = item.NroAcciones ?? 0;
+            decimal porc = 0;
+            if (totalAccionesSociedad > 0)
+            {
+                porc = Math.Round((decimal)nroAcciones / totalAccionesSociedad * 100, 6);
+            }
+
+            string nombreFinal = (item.Accionista?.TipoAccionista?.Id != 3)
+                ? (item.Accionista?.Nombre ?? string.Empty)
+                : (item.Accionista?.NombreSusesion ?? item.Accionista?.Nombre ?? string.Empty);
+
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(nombreSociedad, separador),
+                EscaparCsv(item.Accionista?.TipoDocumento1?.Nombre ?? "-", separador),
+                EscaparCsv(item.Accionista?.Documento1 ?? "-", separador),
+                EscaparCsv(nombreFinal, separador),
+                EscaparCsv(item.Accionista?.TipoAccionista?.Nombre ?? "-", separador),
+                EscaparCsv(nroAcciones, separador),
+                EscaparCsv(FormatearPorcentajeCsv(porc, separador), separador),
+                EscaparCsv(custodiosSet.Contains(item.Id) ? "Si" : "No", separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd"), separador)
+            });
+            sb.AppendLine(linea);
+        }
+
+        return sb.ToString();
+    }
+
+    private async Task<string> GenerarAccionistasCustodiaSociedadCsv(string separador)
+    {
+        var sb = new StringBuilder();
+        int.TryParse(idEstado, out int targetEstado);
+        if (targetEstado == 0) targetEstado = 1;
+
+        var todos = await repoaccionistasociedad.GetBySociedadIdAsync(idSociedad);
+        var custodiosIds = await repoaccionistasociedad.GetCustodiosIdBySociedadAsync(idSociedad, targetEstado);
+        var custodiosRows = todos.Where(x => custodiosIds.Contains(x.Id)).ToList();
+
+        if (!custodiosRows.Any())
+        {
+            return string.Empty;
+        }
+
+        var soc = await repository.GetByIdAsync(idSociedad);
+        long totalAccionesSociedad = 0;
+        if (!string.IsNullOrEmpty(soc?.NumeroAcciones) && long.TryParse(soc.NumeroAcciones.Replace(".", "").Replace(",", "").Trim(), out long numParsed))
+        {
+            totalAccionesSociedad = numParsed;
+        }
+
+        string encabezado = string.Join(separador, new string[] {
+            "Sociedad", "Custodio", "TipoDocumento", "NroDocumento", "NombreAccionista",
+            "TipoAccionista", "NroAcciones", "PorcentajeSobreSociedad", "FechaIngreso", "UltimaModificacion"
+        });
+        sb.AppendLine(encabezado);
+
+        bool tieneSubcuentas = false;
+
+        foreach (var cust in custodiosRows)
+        {
+            string nombreCustodio = cust.Accionista?.Nombre ?? "Caja Venezolana de Valores";
+            var subcuentas = await repoaccionistasociedad.GetCustodiadosAsync(idSociedad, cust.Id, targetEstado);
+
+            foreach (var sub in subcuentas.OrderByDescending(x => x.NroAcciones ?? 0))
+            {
+                tieneSubcuentas = true;
+                long nroAcciones = sub.NroAcciones ?? 0;
+                decimal porc = 0;
+                if (totalAccionesSociedad > 0)
+                {
+                    porc = Math.Round((decimal)nroAcciones / totalAccionesSociedad * 100, 6);
+                }
+
+                string nombreFinal = (sub.Accionista?.TipoAccionista?.Id != 3)
+                    ? (sub.Accionista?.Nombre ?? string.Empty)
+                    : (sub.Accionista?.NombreSusesion ?? sub.Accionista?.Nombre ?? string.Empty);
+
+                string linea = string.Join(separador, new string[] {
+                    EscaparCsv(nombreSociedad, separador),
+                    EscaparCsv(nombreCustodio, separador),
+                    EscaparCsv(sub.Accionista?.TipoDocumento1?.Nombre ?? "-", separador),
+                    EscaparCsv(sub.Accionista?.Documento1 ?? "-", separador),
+                    EscaparCsv(nombreFinal, separador),
+                    EscaparCsv(sub.Accionista?.TipoAccionista?.Nombre ?? "-", separador),
+                    EscaparCsv(nroAcciones, separador),
+                    EscaparCsv(FormatearPorcentajeCsv(porc, separador), separador),
+                    EscaparCsv(sub.CreateDate.ToString("yyyy-MM-dd"), separador),
+                    EscaparCsv(sub.UpdateDate.ToString("yyyy-MM-dd"), separador)
+                });
+                sb.AppendLine(linea);
+            }
+        }
+
+        return tieneSubcuentas ? sb.ToString() : string.Empty;
+    }
+
+    private static string FormatearPorcentajeCsv(decimal porc, string separador)
+    {
+        if (separador == ";")
+        {
+            // Para Excel en español (separador ';'), la coma ',' es el separador decimal estándar.
+            // Si se exporta con punto '.', Excel lo confunde con separador de miles cuando la parte entera es >= 1,
+            // eliminándolo y convirtiendo por ejemplo 44.4444% en 444444%.
+            return porc.ToString("0.0000", new System.Globalization.CultureInfo("es-VE")) + "%";
+        }
+        else
+        {
+            return porc.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + "%";
+        }
     }
 
     private async Task Cancelar()

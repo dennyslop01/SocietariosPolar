@@ -115,21 +115,29 @@
 
 .polar-container {
     width: 100%;
-    max-width: 1440px; /* Proporción áurea estándar para legibilidad en escritorio */
-    margin: 0 auto;
-    padding: 1.75rem 2rem;
+    max-width: 100%; /* Aprovecha todo el ancho disponible en la pantalla sin franjas vacías */
+    margin: 0;
+    padding: 0.85rem 1.25rem;
+    box-sizing: border-box;
 }
 
-/* Adaptación para monitores 4:3 (cuadrados), 16:9, 16:10 y pantallas verticales 9:16 */
+/* Eliminar márgenes redundantes de Bootstrap en páginas anidadas */
+.polar-container ::deep .container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Adaptación para monitores medianos y móviles */
 @media (max-width: 1200px) {
     .polar-container {
-        max-width: 100%;
-        padding: 1.25rem 1.5rem;
+        padding: 0.75rem 1rem;
     }
 }
 
 @media (max-width: 768px) {
     .polar-container {
-        padding: 1rem;
+        padding: 0.5rem 0.5rem;
     }
 }
+

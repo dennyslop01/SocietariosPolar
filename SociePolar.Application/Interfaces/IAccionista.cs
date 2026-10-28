@@ -1,4 +1,4 @@
-﻿using SociePolar.Domain.Dtos;
+using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
 
 namespace SociePolar.Application.Interfaces
@@ -16,9 +16,9 @@ namespace SociePolar.Application.Interfaces
         Task<Accionista?> GetByIdAsync(int id);
         Task<Accionista?> GetByRifAsync(string tipoDoc, string rif);
 
-        //Task<List<Accionista>> GetBySociedadIdAsync(int sociedadId);
         Task AddAsync(AccionistaDto entity);
         Task<Accionista> AddReturnEntidadAsync(AccionistaDto entity);
+        Task<List<AccionistaResumenDto>> GetResumenListAsync();
         void Update(AccionistaDto entity);
         void Delete(int id);
     }

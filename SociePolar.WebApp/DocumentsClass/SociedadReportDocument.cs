@@ -1,4 +1,4 @@
-﻿using QuestPDF.Fluent;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using SociePolar.Domain.Entities;
@@ -179,7 +179,7 @@ namespace SociePolar.WebApp.DocumentsClass
                         }
 
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(aut.Nombre);
-                        table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(UtilClass.FormatearStringMiles(aut.Documento1));
+                        table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(UtilClass.ObtenerDocumentoCompleto(aut.TipoDocumento1?.Nombre, aut.Documento1));
                     }
                 });
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
@@ -57,6 +57,7 @@ namespace SociePolar.Infrastructure.Repositories
             context.Entry(newConciliacion.Sociedad).State = EntityState.Detached;
 
             int conciliacionId = newConciliacion.Id;
+            context.Database.SetCommandTimeout(300);
 
             var paramSociedadId = new SqlParameter("@SociedadId", entity.SociedadId);
             var paramUserId = new SqlParameter("@UserId", entity.CreateUserId);
@@ -67,15 +68,23 @@ namespace SociePolar.Infrastructure.Repositories
 
         public async Task AddDetalleAsync(List<ConciliacionDetalle> entity)
         {
+            if (entity == null || entity.Count == 0) return;
+
             using var context = await _contextFactory.CreateDbContextAsync();
+            context.Database.SetCommandTimeout(300);
 
             var idencabezado = await context.Set<Conciliacion>().FindAsync(entity[0].ConciliacionId);
             if (idencabezado == null)
                 throw new Exception($"Conciliacion con ID {entity[0].ConciliacionId} no existe.");
 
-            await context.Set<ConciliacionDetalle>().AddRangeAsync(entity);
-
-            await context.SaveChangesAsync();
+            const int batchSize = 1000;
+            for (int i = 0; i < entity.Count; i += batchSize)
+            {
+                var batch = entity.Skip(i).Take(batchSize).ToList();
+                await context.Set<ConciliacionDetalle>().AddRangeAsync(batch);
+                await context.SaveChangesAsync();
+                context.ChangeTracker.Clear();
+            }
         }
 
         public async Task<List<ConciliacionDetalle>?> GetDetalleByIdAsync(Int32 id)

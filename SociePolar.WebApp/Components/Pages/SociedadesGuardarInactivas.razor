@@ -614,8 +614,8 @@
                     }
                     else
                     {
-                        listUnidadFiltrado = new List<UnidadNegocio>();
-                        dto.UnidadNegocioId = 0;
+                        listUnidadFiltrado = listUnidad;
+                        dto.UnidadNegocioId = item.UnidadNegocio?.Id ?? 0;
                     }
                     entidadEditando = dto;
                     entidadEditandoAux = JsonSerializer.Deserialize<SociedadInactivaDto>(JsonSerializer.Serialize(entidadEditando)) ?? new();
@@ -778,11 +778,11 @@
         // Tu lógica de filtrado existente
         if (entidadEditando.RegionId > 0)
         {
-            listUnidadFiltrado = listUnidad.Where(u => u.Region.Id == entidadEditando.RegionId).ToList();
+            listUnidadFiltrado = listUnidad.Where(u => u.Region != null && u.Region.Id == entidadEditando.RegionId).ToList();
         }
         else
         {
-            listUnidadFiltrado = new List<UnidadNegocio>();
+            listUnidadFiltrado = listUnidad;
         }
 
         // Forzamos el refresco visual de la UI

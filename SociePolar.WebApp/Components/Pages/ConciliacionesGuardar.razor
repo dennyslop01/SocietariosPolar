@@ -192,7 +192,7 @@
 
 @if (cargando || guardando)
 {
-    <ModalCargando />
+    <ModalCargando Mensaje="@(guardando ? mensajeProgreso : "Cargando...")" />
 }
 
 @code {
@@ -207,6 +207,7 @@
     private string iconoAlerta = "bi-check-circle-fill";
     private bool cargando = true;
     private bool guardando = false;
+    private string mensajeProgreso = "Procesando...";
     bool esInvalido = false;
     private string? fileNameConciliacion = null;
 
@@ -435,6 +436,10 @@
             return;
         }
 
+        mensajeProgreso = "1/4 Subiendo respaldo a Google Drive...";
+        StateHasChanged();
+        await Task.Yield();
+
         if (!await SubirDocumentosDrive(streamToUploadConciliacion, contentTypeConciliacion))
         {
             guardando = false;
@@ -456,24 +461,112 @@
                     Int32 idNew = await repository.AddAsync(entidadEditando);
                     listaArchivo.ForEach(x => x.ConciliacionId = idNew);
 
+                    mensajeProgreso = "2/4 Analizando padrón de accionistas en memoria...";
+                    StateHasChanged();
+                    await Task.Yield();
+
+                    // Pre-carga en memoria de relaciones Accionista-Sociedad para esta sociedad
+                    int sociedadId = (int)entidadEditando.SociedadId;
+                    int? custodioOperacion = (isCustodia && custodioId > 0) ? custodioId : null;
+
+                    var relacionesExistentes = await repoaccionistasocie.GetResumenBySociedadIdAsync(sociedadId);
+                    var setRelaciones = new HashSet<(int AccionistaId, int? CustodioId)>();
+                    var setAccionistasConRelacionActiva = new HashSet<int>();
+
+                    foreach (var r in relacionesExistentes)
+                    {
+                        setRelaciones.Add((r.AccionistaId, r.CustodioId));
+                        if (r.CustodioId == custodioOperacion && r.EstatusAccionistaId == 1)
+                        {
+                            setAccionistasConRelacionActiva.Add(r.AccionistaId);
+                        }
+                    }
+
+                    // Pre-carga en memoria de todos los accionistas existentes (Id, Documento, Nombre)
+                    var accionistasResumen = await repoAccionistas.GetResumenListAsync();
+                    var dictAccionistasPorDoc = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                    var dictAccionistasPorNombre = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                    // Priorizar accionistas con custodia activa en esta sociedad, luego por Id ascendente histórico
+                    var accionistasOrdenados = accionistasResumen
+                        .OrderByDescending(a => setAccionistasConRelacionActiva.Contains(a.Id))
+                        .ThenBy(a => a.Id);
+
+                    foreach (var a in accionistasOrdenados)
+                    {
+                        if (!string.IsNullOrWhiteSpace(a.Documento1))
+                        {
+                            var (td, np) = DocumentoNormalizer.Normalizar(a.Documento1);
+                            if (!string.IsNullOrEmpty(np))
+                            {
+                                dictAccionistasPorDoc.TryAdd(np, a.Id);
+                                dictAccionistasPorDoc.TryAdd($"{td}{np}", a.Id);
+                                dictAccionistasPorDoc.TryAdd($"{td}-{np}", a.Id);
+                            }
+                            dictAccionistasPorDoc.TryAdd(a.Documento1.Trim(), a.Id);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(a.Nombre))
+                        {
+                            string nomNorm = a.Nombre.Trim();
+                            if (!dictAccionistasPorNombre.ContainsKey(nomNorm))
+                            {
+                                dictAccionistasPorNombre[nomNorm] = a.Id;
+                            }
+                            else
+                            {
+                                dictAccionistasPorNombre[nomNorm] = -1; // No es único, no usar fallback
+                            }
+                        }
+                    }
+
+                    listaConciliaciones.Clear();
+                    int totalFilas = listaArchivo.Count;
+                    int contadorFilas = 0;
+
                     foreach (var item in listaArchivo)
                     {
+                        contadorFilas++;
+                        if (contadorFilas % 2000 == 0)
+                        {
+                            mensajeProgreso = $"2/4 Comparando accionistas ({contadorFilas:N0} de {totalFilas:N0})...";
+                            StateHasChanged();
+                            await Task.Yield();
+                        }
+
                         var (tipoDoc, rif) = DocumentoNormalizer.Normalizar(item.Rif);
                         string accionreal = "Actualizado";
+                        int accionistaId = 0;
 
-                        Accionista? accionista = await repoAccionistas.GetByRifAsync(tipoDoc, rif);
-
-                        // Fallback de seguridad: buscar por nombre exacto antes de asumir que no existe
-                        if (accionista == null && !string.IsNullOrWhiteSpace(item.NombreAccionista))
+                        // 1. Buscar en diccionario por documento / RIF normalizado
+                        if (!string.IsNullOrEmpty(rif))
                         {
-                            var porNombre = await repoAccionistas.GetByNameAsync(item.NombreAccionista.Trim());
-                            if (porNombre != null && porNombre.Count == 1)
+                            if (dictAccionistasPorDoc.TryGetValue($"{tipoDoc}{rif}", out int idEncontrado) && idEncontrado > 0)
                             {
-                                accionista = porNombre.First();
+                                accionistaId = idEncontrado;
+                            }
+                            else if (dictAccionistasPorDoc.TryGetValue(rif, out idEncontrado) && idEncontrado > 0)
+                            {
+                                accionistaId = idEncontrado;
+                            }
+                            else if (!string.IsNullOrWhiteSpace(item.Rif) && dictAccionistasPorDoc.TryGetValue(item.Rif.Trim(), out idEncontrado) && idEncontrado > 0)
+                            {
+                                accionistaId = idEncontrado;
                             }
                         }
 
-                        if (accionista == null)
+                        // 2. Fallback por nombre exacto si no se encontró por documento
+                        if (accionistaId == 0 && !string.IsNullOrWhiteSpace(item.NombreAccionista))
+                        {
+                            string nom = item.NombreAccionista.Trim();
+                            if (dictAccionistasPorNombre.TryGetValue(nom, out int idNom) && idNom > 0)
+                            {
+                                accionistaId = idNom;
+                            }
+                        }
+
+                        // 3. Si no existe en el padrón, crear el accionista nuevo
+                        if (accionistaId == 0)
                         {
                             string docFinal = (tipoDoc == "V" || tipoDoc == "E") ? rif : $"{tipoDoc}{rif}";
                             AccionistaDto accionistaDto = new()
@@ -486,32 +579,41 @@
                                 UpdateDate = DateTime.Now,
                                 UpdateUserId = userid
                             };
-                            accionista = await repoAccionistas.AddReturnEntidadAsync(accionistaDto);
+                            var nuevoAccionista = await repoAccionistas.AddReturnEntidadAsync(accionistaDto);
+                            accionistaId = nuevoAccionista.Id;
                             accionreal = "Creado";
+
+                            if (!string.IsNullOrEmpty(rif))
+                            {
+                                dictAccionistasPorDoc[rif] = accionistaId;
+                                dictAccionistasPorDoc[$"{tipoDoc}{rif}"] = accionistaId;
+                            }
+                            if (!string.IsNullOrWhiteSpace(item.NombreAccionista))
+                            {
+                                dictAccionistasPorNombre[item.NombreAccionista.Trim()] = accionistaId;
+                            }
                         }
 
-                        if (accionista != null)
+                        // 4. Verificar relación AccionistaSociedad
+                        if (accionistaId > 0)
                         {
-                            int? custodioFinal = (isCustodia && custodioId > 0) ? custodioId : null;
-
-                            AccionistaSociedad? accionistaSociedad = await repoaccionistasocie.GetBySociedadIdAccionistaIdCustodioIdAsync(
-                                (int)entidadEditando.SociedadId, accionista.Id, custodioFinal);
-
-                            if (accionistaSociedad == null)
+                            var claveRelacion = (accionistaId, custodioOperacion);
+                            if (!setRelaciones.Contains(claveRelacion))
                             {
                                 AccionistaSociedadDto accionistaSociedadDto = new()
                                 {
-                                    AccionistaId = accionista.Id,
-                                    SociedadId = entidadEditando.SociedadId,
+                                    AccionistaId = accionistaId,
+                                    SociedadId = sociedadId,
                                     EstatusAccionistaId = 1,
-                                    CustodioId = custodioFinal,
+                                    CustodioId = custodioOperacion,
                                     NroAcciones = item.TotalAcciones,
                                     CreateDate = DateTime.Now,
                                     CreateUserId = userid,
                                     UpdateDate = DateTime.Now,
                                     UpdateUserId = userid
                                 };
-                                accionistaSociedad = await repoaccionistasocie.AddReturnEntidadAsync(accionistaSociedadDto);
+                                await repoaccionistasocie.AddReturnEntidadAsync(accionistaSociedadDto);
+                                setRelaciones.Add(claveRelacion);
                                 accionreal = "Creado";
                             }
                             else
@@ -519,37 +621,38 @@
                                 accionreal = "Actualizado";
                             }
 
-                            if (accionistaSociedad != null)
+                            ConciliacionDetalle detalle = new()
                             {
-                                ConciliacionDetalle detalle = new()
-                                {
-                                    ConciliacionId = idNew,
-                                    AccionistaId = accionista.Id,
-                                    TotalAcciones = item.TotalAcciones,
-                                    Accion = accionreal,
-                                    CreateDate = DateTime.Now,
-                                    CreateUserId = userid
-                                };
-                                listaConciliaciones.Add(detalle);
-                            }
+                                ConciliacionId = idNew,
+                                AccionistaId = accionistaId,
+                                TotalAcciones = item.TotalAcciones,
+                                Accion = accionreal,
+                                CreateDate = DateTime.Now,
+                                CreateUserId = userid
+                            };
+                            listaConciliaciones.Add(detalle);
                         }
                     }
 
+                    mensajeProgreso = "3/4 Guardando registros de conciliación...";
+                    StateHasChanged();
+                    await Task.Yield();
+
+                    // Inserción en bloques de 1,000 en ConciliacionesDetalles
                     await repository.AddDetalleAsync(listaConciliaciones);
 
-                    int? custodioOperacion = (isCustodia && custodioId > 0) ? custodioId : null;
+                    mensajeProgreso = "4/4 Aplicando saldos, auditoría e inactivaciones...";
+                    StateHasChanged();
+                    await Task.Yield();
 
-                    foreach (var item in listaConciliaciones.Where(x => x.Accion == "Actualizado"))
-                    {
-                        await repoaccionistasocie.UpdateNroAccionesCustodioAsync(
-                            item.AccionistaId, 
-                            (int)entidadEditando.SociedadId, 
-                            custodioOperacion, 
-                            item.TotalAcciones, 
-                            userid, 
-                            1);
-                    }
+                    // Actualización masiva de saldos y generación de auditoría en 1 solo paso SQL
+                    await repoaccionistasocie.ActualizarSaldosYAuditoriaConciliacionLoteAsync(
+                        idNew, 
+                        sociedadId, 
+                        custodioOperacion, 
+                        userid);
 
+                    // Inactivar accionistas ausentes vía SP
                     await repoaccionistasocie.AccionistasSociedadInactivar(idNew, custodioOperacion);
 
                     // Liberar el stream de forma segura ahora que el proceso completo terminó bien
@@ -594,23 +697,16 @@
 
             using (var reader = ExcelReaderFactory.CreateReader(streamExcelread))
             {
-                bool esPrimeraFila = true;
                 int fila = 1;
                 int vacios = 0;
                 try
                 {
                     while (reader.Read())
                     {
-                        if (fila < 2)
+                        // Omitir únicamente la primera fila (Cabecera)
+                        if (fila == 1)
                         {
                             fila++;
-                            continue;
-                        }
-
-                        if (esPrimeraFila)
-                        {
-                            fila++;
-                            esPrimeraFila = false;
                             continue;
                         }
 

@@ -24,9 +24,9 @@ builder.Services.Configure<IGoogleDrive>(builder.Configuration.GetSection("Googl
 builder.Services.Configure<SociePolar.WebApp.Configuration.Saml2Settings>(builder.Configuration.GetSection("Saml2"));
 
 
-// AUTENTICACIÓN ACTIVA ACTUAL (Windows Negotiate / Local Dev Fallback)
-builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-    .AddNegotiate();
+// AUTENTICACIÓN SAML 2.0 AZURE AD / ENTRA ID ACTIVA PARA QA Y PRODUCCIÓN
+// builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+//     .AddNegotiate();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -37,7 +37,10 @@ builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => { options.DetailedErrors = true; });
 
 builder.Services.AddDbContextFactory<SociedadDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConn"))
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConn"), sqlServerOptions =>
+           {
+               sqlServerOptions.CommandTimeout(300); // 5 minutos de margen para operaciones masivas de conciliación
+           })
            .EnableSensitiveDataLogging()
            .EnableDetailedErrors());
 

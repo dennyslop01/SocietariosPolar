@@ -75,10 +75,10 @@
         cargando = true;
         try
         {
-            var authState = await authStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            usuario = user.Identity?.Name ?? "Usuario Desconocido";
-            userEmail = user.Identity?.Name ?? "Usuario Desconocido";
+            // var authState = await authStateProvider.GetAuthenticationStateAsync();
+            // var user = authState.User;
+            // usuario = user.Identity?.Name ?? "Usuario Desconocido";
+            // userEmail = user.Identity?.Name ?? "Usuario Desconocido";
 
             var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
             if (string.IsNullOrEmpty(useremailaux.Value))

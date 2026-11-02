@@ -66,9 +66,12 @@
                 <ChildContentRow Context="p">
                     <tr class="align-middle border-bottom">
                         <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
-                            <span class="polar-truncate" style="max-width: 250px;" title="@p.Sociedad?.Empresa?.Nombre">
+                            <button type="button" class="btn btn-link p-0 text-decoration-none text-start fw-semibold text-dark polar-truncate"
+                                    style="max-width: 250px;"
+                                    @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)"
+                                    title="Ver detalle de sociedad: @p.Sociedad?.Empresa?.Nombre">
                                 @(p.Sociedad?.Empresa?.Nombre ?? "-")
-                            </span>
+                            </button>
                         </td>
                         <td class="text-start text-secondary">@(p.Sociedad?.EjercicioEconomico ?? "-")</td>
                         <td class="polar-date text-secondary">@p.Fecha?.ToString("dd/MM/yyyy")</td>
@@ -78,6 +81,9 @@
                         <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
                         <td class="polar-date text-secondary">@p.UpdateDate.ToShortDateString()</td>
                         <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
+                            <button class="btn btn-link btn-sm text-info p-0 me-2" @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)" title="Ver Detalle Sociedad">
+                                <i class="bi bi-eye fs-6"></i>
+                            </button>
                             @if (idRol == 1 || idRol == 2 || idRol == 3)
                             {
                                 <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
@@ -150,10 +156,23 @@
     <ModalDescarga idModulo="5" idEstado="1" OnFinalizado="ManejarCierreDescarga" />
 }
 
+@if (mostrarPopupSociedad && idSociedadPopup > 0)
+{
+    <ModalDetalleSociedad SociedadId="@idSociedadPopup" OnCerrar="() => mostrarPopupSociedad = false" />
+}
 
 @code {
     private List<Certificacion> Listgral = new();
     private List<Certificacion> ListgralBuscar = new();
+    private int idSociedadPopup = 0;
+    private bool mostrarPopupSociedad = false;
+
+    private void AbrirModalDetalleSociedad(int socId)
+    {
+        if (socId <= 0) return;
+        idSociedadPopup = socId;
+        mostrarPopupSociedad = true;
+    }
     private string searchTerm = ""; private bool cargando = false;
     private bool mostrarModal = false;
     private string mensajeAlerta = "";

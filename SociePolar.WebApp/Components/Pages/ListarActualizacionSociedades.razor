@@ -1,4 +1,4 @@
-﻿@rendermode InteractiveServer
+@rendermode InteractiveServer
 
 <div class="container-fluid mt-4">
     <div class="card shadow-sm border-0 h-auto">
@@ -25,9 +25,7 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar por nombre..."
                                @oninput="FiltrarBusqueda" />
                     </div>
                 </div>
@@ -38,54 +36,77 @@
                         <tr class="table-light border-bottom">
                             <th class="py-3 ps-3 text-secondary fw-bold" style="width: 5%; font-size: 0.85rem;">#</th>
                             <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Módulo</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nombre</th>
-                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha Última Actualización</th>
-                            @* <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 10%; font-size: 0.85rem;">Acciones</th> *@
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom">
-                            <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Modulo</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.Nombre</td>
-                            <td class="text-start text-secondary small" style="width: 15%;">@p.FechaVencimiento?.ToShortDateString()</td>
-                            @* <td class="text-end pe-3" style="width: 10%;">
-                                <button class="btn btn-link btn-sm text-secondary p-0 ms-2"
-                                        @onclick="() => Detalle(p)" title="Detalle Sociedad">
-                                    <i class="bi bi-file-earmark-text fs-6"></i>
-                                </button>
-                            </td> *@
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
-            </div>
-        </div>
-    </div>
-
-    @if (mostrarAlerta)
-    {
-        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
-            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
-                <i class="bi @iconoAlerta me-2 fs-5"></i>
-                <div class="fw-bold">
-                    @mensajeAlerta
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Documento
+                            </th>
+                            <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro.
+                                Documento</th>
+                                <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nombre</th>
+                                <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Fecha Última
+                                    Actualización</th>
+                                    <th class="py-3 pe-3 text-secondary fw-bold text-end"
+                                        style="width: 10%; font-size: 0.85rem;">Acciones</th>
+                                </tr>
+                            </ChildContentHeader>
+                            <ChildContentRow Context="p">
+                                <tr class="align-middle border-bottom">
+                                    <td class="ps-3" style="width: 5%;"><span class="text-muted small">@p.Id</span></td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Modulo</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">
+                                        <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold"
+                                           @onclick="() => AbrirModalDetalleAccionista(p.Id)"
+                                           title="Ver ficha del accionista en ventana emergente">
+                                            @p.Nombre
+                                        </a>
+                                    </td>
+                                    <td class="text-start text-secondary small" style="width: 15%;">
+                                        @p.FechaVencimiento?.ToShortDateString()</td>
+                                        <td class="text-end pe-3" style="width: 10%;">
+                                            <button class="btn btn-link btn-sm text-info p-0 ms-2"
+                                                    @onclick="() => AbrirModalDetalleAccionista(p.Id)"
+                                                    title="Ver Detalle Accionista (Popup)">
+                                                <i class="bi bi-eye fs-6"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    </div>
                 </div>
+
+                @if (mostrarAlerta)
+                {
+                    <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+                        <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                            <i class="bi @iconoAlerta me-2 fs-5"></i>
+                            <div class="fw-bold">
+                                @mensajeAlerta
+                            </div>
+                        </div>
+                    </div>
+                }
+
             </div>
-        </div>
-    }
 
-</div>
+            @if (cargando)
+            {
+                <ModalCargando />
+            }
 
-@if (cargando)
-{
-    <ModalCargando />
-}
+            @if (accionistaPopupId > 0)
+            {
+                <ModalDetalleAccionista AccionistaId="@accionistaPopupId" OnCerrar="() => accionistaPopupId = 0" />
+            }
 
 @code {
+    private int accionistaPopupId = 0;
+    private void AbrirModalDetalleAccionista(int id)
+    {
+        if (id > 0) accionistaPopupId = id;
+    }
+
     private List<DocumentosVencidos> Listgral = new();
     private List<DocumentosVencidos> ListgralBuscar = new();
     private string searchTerm = "";
@@ -109,7 +130,8 @@
         try
         {
             var listAccionista = await repoAccionista.GetAllAsync();
-            var listAccionistaFiltrada = listAccionista.OrderByDescending(x => x.UltimaActualizacion).Where(x => x.FaltaActualizar == 1).ToList();
+            var listAccionistaFiltrada = listAccionista.OrderByDescending(x => x.UltimaActualizacion).Where(x => x.FaltaActualizar
+== 1).ToList();
             foreach (var item in listAccionistaFiltrada)
             {
                 Listgral.Add(new DocumentosVencidos
@@ -123,7 +145,8 @@
                 });
             }
 
-            listAccionistaFiltrada = listAccionista.OrderByDescending(x => x.UltimaActualizacion).Where(x => x.UltimaActualizacion < DateTime.Now.AddYears(-3)).ToList();
+            listAccionistaFiltrada = listAccionista.OrderByDescending(x => x.UltimaActualizacion).Where(x => x.UltimaActualizacion <
+DateTime.Now.AddYears(-3)).ToList();
             foreach (var item in listAccionistaFiltrada)
             {
                 Listgral.Add(new DocumentosVencidos

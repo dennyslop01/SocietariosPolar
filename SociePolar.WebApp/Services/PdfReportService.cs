@@ -1,6 +1,9 @@
 using Microsoft.JSInterop;
 using QuestPDF.Fluent;
 using SociePolar.Application.Interfaces;
+using SociePolar.Domain.Dtos;
+using SociePolar.Domain.Entities;
+using SociePolar.Domain.Interfaces;
 using SociePolar.WebApp.DocumentsClass;
 using Microsoft.AspNetCore.Hosting;
 
@@ -13,18 +16,27 @@ namespace SociePolar.WebApp.Services
         private readonly IAsamblea _repoAsamblea;
         private readonly ICertificacion _repoCertificacion;
         private readonly ILibroSocietario _repoLibros;
+        private readonly IAccionista _repoAccionista;
+        private readonly IAccionistaSociedad _repoAccionistaSociedad;
+        private readonly IRepositoryFactory _repoFactory;
         private readonly IJSRuntime _js;
         private readonly IWebHostEnvironment _env;
 
         public PdfReportService(
             ISociedad repository, IAutoridad repoAutoridad, IAsamblea repoAsamblea,
-            ICertificacion repoCertificacion, ILibroSocietario repoLibros, IJSRuntime js, IWebHostEnvironment env)
+            ICertificacion repoCertificacion, ILibroSocietario repoLibros,
+            IAccionista repoAccionista, IAccionistaSociedad repoAccionistaSociedad,
+            IRepositoryFactory repoFactory,
+            IJSRuntime js, IWebHostEnvironment env)
         {
             _repository = repository;
             _repoAutoridad = repoAutoridad;
             _repoAsamblea = repoAsamblea;
             _repoCertificacion = repoCertificacion;
             _repoLibros = repoLibros;
+            _repoAccionista = repoAccionista;
+            _repoAccionistaSociedad = repoAccionistaSociedad;
+            _repoFactory = repoFactory;
             _js = js;
             _env = env;
         }
@@ -38,35 +50,32 @@ namespace SociePolar.WebApp.Services
                 throw new Exception($"No se encontró la sociedad con Id {sociedadId}");
             }
 
-            var autoridadesAll = await _repoAutoridad.GetAllAsync();
+            var autoridadesAll = await _repoAutoridad.GetBySociedadIdAsync(sociedadId);
             var autoridades = autoridadesAll
-                .Where(x => x.Sociedad?.Id == sociedadId)
                 .OrderBy(x => x.Cargo?.Orden ?? 999)
                 .ThenBy(x => x.Cargo?.Nombre ?? "")
                 .ThenBy(x => x.Nombre ?? "")
                 .ToList();
             
-            var asambleasAll = await _repoAsamblea.GetAllAsync();
+            var asambleasAll = await _repoAsamblea.GetBySociedadIdAsync(sociedadId);
             var asambleas = asambleasAll
-                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1)
+                .Where(x => x.IndicadorAsamblea == 1)
                 .OrderBy(x => x.FechaCelebracion)
                 .ToList();
 
             var reformas = asambleasAll
-                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1 && (x.IndicadorAsamblea == 0 || x.TipoReforma != null))
+                .Where(x => (x.IndicadorAsamblea == 0 || x.TipoReforma != null))
                 .OrderBy(x => x.FechaCelebracion)
                 .ToList();
 
-            var certificacionesAll = await _repoCertificacion.GetAllAsync();
+            var certificacionesAll = await _repoCertificacion.GetBySociedadIdAsync(sociedadId);
             var certificaciones = certificacionesAll
-                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1)
-                .OrderBy(x => x.Fecha)
+                .OrderByDescending(x => x.Fecha)
                 .ToList();
 
-            var librosAll = await _repoLibros.GetAllAsync();
+            var librosAll = await _repoLibros.GetBySociedadIdAsync(sociedadId);
             var libros = librosAll
-                .Where(x => x.Sociedad?.Id == sociedadId && x.Sociedad?.EstatusSociedad?.Id == 1)
-                .OrderBy(x => x.ClaseLibro?.Nombre ?? "")
+                .OrderBy(x => x.FechaDesde)
                 .ToList();
 
             // 2. Cargar los bytes de la imagen desde wwwroot de manera segura
@@ -102,6 +111,97 @@ namespace SociePolar.WebApp.Services
             string relativeUrl = $"reports/{nombreArchivo}";
 
             // 6. Invocar JavaScript para abrir en visor de pestaña y descargar
+            string base64Data = Convert.ToBase64String(pdfBytes);
+            await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
+
+            return relativeUrl;
+        }
+
+        public async Task<string> GenerarYDescargarReporteAccionistaAsync(int accionistaId)
+        {
+            var accionista = await _repoAccionista.GetByIdAsync(accionistaId);
+            if (accionista == null)
+            {
+                throw new Exception($"No se encontró el accionista con Id {accionistaId}");
+            }
+
+            // Obtener catálogo de tipos de documento para resolver los IDs enteros (Cónyuge, Apoderado, Rep. Legal)
+            Dictionary<int, string> tiposDocDict = new();
+            try
+            {
+                var repoTipoDoc = _repoFactory.GetRepository("tipodocumento");
+                var method = repoTipoDoc.GetType().GetMethod("GetAllAsync");
+                if (method != null)
+                {
+                    var task = (Task)method.Invoke(repoTipoDoc, null)!;
+                    await task;
+                    var resultProperty = task.GetType().GetProperty("Result");
+                    if (resultProperty?.GetValue(task) is IEnumerable<IBaseEntity> listaTipos)
+                    {
+                        tiposDocDict = listaTipos.ToDictionary(k => k.Id, v => v.Nombre ?? "");
+                    }
+                }
+            }
+            catch
+            {
+                // Ignorar en caso de fallo al resolver catálogo secundario
+            }
+
+            // Obtener participaciones en sociedades
+            var relaciones = await _repoAccionistaSociedad.GetByAccionistaIdAsync(accionistaId);
+            List<AccionistaSociedadVerDto> participaciones = new();
+            foreach (var item in relaciones.OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? ""))
+            {
+                long nroAcciones = item.NroAcciones ?? 0;
+                decimal porcParticipa = 0;
+                if (item.Sociedad != null && !string.IsNullOrWhiteSpace(item.Sociedad.NumeroAcciones) &&
+                    long.TryParse(item.Sociedad.NumeroAcciones, out long totalAccionesSoc) && totalAccionesSoc > 0 && nroAcciones > 0)
+                {
+                    porcParticipa = Math.Round((decimal)nroAcciones / totalAccionesSoc * 100, 6);
+                }
+
+                participaciones.Add(new AccionistaSociedadVerDto
+                {
+                    Id = item.Id,
+                    SociedadId = item.Sociedad?.Id ?? 0,
+                    SociedadNombre = item.Sociedad?.Empresa?.Nombre ?? "-",
+                    DocumentoIdentidad = item.Sociedad?.EstatusSociedad?.Nombre ?? "-",
+                    TipoAccionistaNombre = item.EstatusAccionista?.Nombre ?? "-",
+                    NroAcciones = nroAcciones,
+                    Participacion = porcParticipa,
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                });
+            }
+
+            byte[] logoBytes = Array.Empty<byte>();
+            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg");
+            if (File.Exists(rutaLogo))
+            {
+                logoBytes = await File.ReadAllBytesAsync(rutaLogo);
+            }
+
+            var document = new AccionistaReportDocument(accionista, participaciones, tiposDocDict, logoBytes);
+            var pdfBytes = document.GeneratePdf();
+
+            string nombreBase = accionista.TipoAccionista?.Id == 3
+                ? (accionista.NombreSusesion ?? accionista.Nombre ?? $"Accionista_{accionistaId}")
+                : (accionista.Nombre ?? $"Accionista_{accionistaId}");
+            if (nombreBase.Length > 40) nombreBase = nombreBase.Substring(0, 40);
+            string nombreLimpio = System.Text.RegularExpressions.Regex.Replace(nombreBase, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+            if (string.IsNullOrWhiteSpace(nombreLimpio)) nombreLimpio = $"Accionista_{accionistaId}";
+            string nombreArchivo = $"Reporte_Accionista_{nombreLimpio}_{DateTime.Now:yyyyMMdd}.pdf";
+
+            string reportsFolder = Path.Combine(_env.WebRootPath, "reports");
+            if (!Directory.Exists(reportsFolder))
+            {
+                Directory.CreateDirectory(reportsFolder);
+            }
+            string physicalPath = Path.Combine(reportsFolder, nombreArchivo);
+            await File.WriteAllBytesAsync(physicalPath, pdfBytes);
+
+            string relativeUrl = $"reports/{nombreArchivo}";
+
             string base64Data = Convert.ToBase64String(pdfBytes);
             await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
 

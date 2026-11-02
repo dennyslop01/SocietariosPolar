@@ -1,0 +1,962 @@
+@page "/detalleaccionista/{id}"
+@rendermode InteractiveServer
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                        <i class="bi bi-person-vcard text-white fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            @NombreMostrar
+                        </h5>
+                        <span class="text-secondary small fw-semibold">
+                            @(string.IsNullOrEmpty(entidadActual.TipoAccionista?.Nombre) ? "Detalle de Accionista" : $"Detalle de Accionista ({entidadActual.TipoAccionista.Nombre})")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="ExportarAPdf"
+                            disabled="@cargando"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-file-earmark-pdf me-2"></i> Exportar PDF
+                    </button>
+
+                    <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="Regresar"
+                            style="height: 32px; font-weight: 500;">
+                        <i class="bi bi-arrow-return-left me-2"></i> Regresar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (mostrarAlerta)
+        {
+            <div class="alert @claseAlerta d-flex align-items-center justify-content-between m-3 mb-0 py-2 px-3 border-0 shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi @iconoAlerta me-2 fs-5"></i>
+                    <div class="small fw-semibold">
+                        @mensajeAlerta
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(urlPdfGenerado))
+                {
+                    <a href="@urlPdfGenerado" target="_blank" class="btn btn-sm btn-outline-primary ms-3 fw-semibold">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Abrir PDF en pantalla
+                    </a>
+                }
+            </div>
+        }
+
+        <div class="card-body">
+            <!-- Navegación de Pestañas Estilizada -->
+            <ul class="nav nav-pills nav-fill mb-4 bg-light p-2 rounded-pill" id="accionistaDetailTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill active"
+                            id="tab-1" data-bs-toggle="tab" data-bs-target="#panel-1"
+                            type="button" role="tab">
+                        <span class="fw-semibold">Datos Básicos</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill"
+                            id="tab-2" data-bs-toggle="tab" data-bs-target="#panel-2"
+                            type="button" role="tab">
+                        <span class="fw-semibold">Contacto y Ubicación</span>
+                    </button>
+                </li>
+                @if (entidadActual.TipoAccionista?.Id == 1)
+                {
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill"
+                                id="tab-3" data-bs-toggle="tab" data-bs-target="#panel-3"
+                                type="button" role="tab">
+                            <span class="fw-semibold">Cónyuge</span>
+                        </button>
+                    </li>
+                }
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill"
+                            id="tab-4" data-bs-toggle="tab" data-bs-target="#panel-4"
+                            type="button" role="tab">
+                        <span class="fw-semibold">Finanzas y Apoderado</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill"
+                            id="tab-5" data-bs-toggle="tab" data-bs-target="#panel-5"
+                            type="button" role="tab">
+                        <span class="fw-semibold">Junta y Otros</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill"
+                            id="tab-6" data-bs-toggle="tab" data-bs-target="#panel-6"
+                            type="button" role="tab">
+                        <span class="fw-semibold">Sociedades</span>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido de las Pestañas -->
+            <div class="tab-content" id="accionistaDetailTabsContent">
+                <!-- Panel 1: Datos Básicos -->
+                <div class="tab-pane fade show active" id="panel-1" role="tabpanel">
+                    <div class="table-responsive">
+                        <div class="row justify-content-center">
+                            <div class="col-xl-9 col-lg-10 col-md-12">
+                                <div class="row">
+                                    <!-- Tipo Accionista -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Tipo Accionista</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TipoAccionista?.Nombre)</label>
+                                    </div>
+
+                                    @if (entidadActual.TipoAccionista?.Id != 3)
+                                    {
+                                        <!-- Nombre o Razón Social -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Nombre o Razón Social</label>
+                                            <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Nombre)</label>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <!-- Nombre o Razón Social (Sucesión) -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Nombre o Razón Social (Sucesión)</label>
+                                            <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.NombreSusesion ?? entidadActual.Nombre)</label>
+                                        </div>
+                                    }
+
+                                    <div class="col-12"><hr /></div>
+
+                                    <!-- Documento 1 -->
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 1</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TipoDocumento1?.Nombre)</label>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 1</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento1?.Nombre, entidadActual.Documento1))</label>
+                                    </div>
+
+                                    @if (entidadActual.TipoAccionista?.Id != 3)
+                                    {
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision1?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento1?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <!-- Documento 2 -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TipoDocumento2?.Nombre)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento2?.Nombre, entidadActual.Documento2))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision2?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento2?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <!-- Documento 3 -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TipoDocumento3?.Nombre)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento3?.Nombre, entidadActual.Documento3))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision3?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento3?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        @if (entidadActual.TipoAccionista?.Id == 1)
+                                        {
+                                            <!-- Documento 4 -->
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 4</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TipoDocumento4?.Nombre)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal 4</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento4?.Nombre, entidadActual.Documento4))</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 4</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision4?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 4</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento4?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+
+                                            <div class="col-12"><hr /></div>
+
+                                            <!-- Campos Persona Natural -->
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Estado Civil</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.EstadoCivil?.Nombre)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Nacionalidad</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Nacionalidad)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha de Nacimiento</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaNacimiento?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                        }
+
+                                        @if (entidadActual.TipoAccionista?.Id == 2)
+                                        {
+                                            <div class="col-12">
+                                                <hr />
+                                                <label class="form-label fw-bold text-primary small">Representante Legal y Datos Corporativos</label>
+                                                <hr />
+                                            </div>
+
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Nombre Representante Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.RepresentanteLegal)</label>
+                                            </div>
+
+                                            <!-- Doc 1 Rep Legal -->
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Tipo Doc. 1 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumento1IdLegal)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Documento 1 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Documento1Legal)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Emisión 1 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision1Legal?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Vencimiento 1 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento1Legal?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+
+                                            <!-- Doc 2 Rep Legal -->
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Tipo Doc. 2 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumento2IdLegal)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Documento 2 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Documento2Legal)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Emisión 2 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision2Legal?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Vencimiento 2 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento2Legal?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+
+                                            <!-- Doc 3 Rep Legal -->
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Tipo Doc. 3 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumento3IdLegal)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Documento 3 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Documento3Legal)</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Emisión 3 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmision3Legal?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                            <div class="col-md-3 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Vencimiento 3 Rep. Legal</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimiento3Legal?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Años de Duración de la Compañía</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.AnoDuracion)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Años de Vigencia de la Junta</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.VigenciaJunta?.ToString())</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento de la Junta</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoJunta?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Año Emisión JD</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.AnoEmisionJD)</label>
+                                            </div>
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Junta Directiva</label>
+                                                <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.JuntaDirectiva)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">¿Documento Constitutivo?</label>
+                                                <label class="form-label text-secondary small">@SiNoGuion(entidadActual.DocumentoConstitutivo)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Datos Documento Constitutivo</label>
+                                                <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.DatosDocumentoConstitutivo)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Inscrito En</label>
+                                                <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.InscritoEn)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Publicación</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Publicacion)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Datos Publicación</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DatosPublicacion)</label>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <!-- Campos Sucesión (Tipo 3) -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento de Identidad Fiscal (Sucesión)</label>
+                                            <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.CedulaSusesion)</label>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">¿Difunto?</label>
+                                            <label class="form-label text-secondary small">@SiNoGuion(entidadActual.Difunto)</label>
+                                        </div>
+                                        @if (entidadActual.Difunto == 1)
+                                        {
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Fecha Defunción</label>
+                                                <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaDefuncion?.ToString("yyyy-MM-dd"))</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Datos Acta Defunción</label>
+                                                <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.DatosActaDefuncion)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Declaración</label>
+                                                <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Declaracion)</label>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label fw-bold text-secondary small d-block">Datos Declaración</label>
+                                                <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.DatosDeclaracion)</label>
+                                            </div>
+                                        }
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Miembros Sucesión</label>
+                                            <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.MiembrosSucesion)</label>
+                                        </div>
+                                    }
+
+                                    <div class="col-12"><hr /></div>
+
+                                    <!-- Campos Comunes -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Dirigido A</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DirigidoA?.Nombre)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Fecha de Ingreso</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaIngreso?.ToString("yyyy-MM-dd"))</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Última Actualización</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.UltimaActualizacion?.ToString("yyyy-MM-dd"))</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Año Actualización</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.AnoActualizacion?.ToString())</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">¿Hace falta actualizar?</label>
+                                        <label class="form-label text-secondary small">@SiNoGuion(entidadActual.FaltaActualizar)</label>
+                                    </div>
+
+                                    <div class="col-12"><hr /></div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Fecha de Creación</label>
+                                        <label class="form-label text-secondary small">@entidadActual.CreateDate.ToString("yyyy-MM-dd")</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Última Modificación</label>
+                                        <label class="form-label text-secondary small">@entidadActual.UpdateDate.ToString("yyyy-MM-dd")</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Contacto y Ubicación -->
+                <div class="tab-pane fade" id="panel-2" role="tabpanel">
+                    <div class="table-responsive">
+                        <div class="row justify-content-center">
+                            <div class="col-xl-9 col-lg-10 col-md-12">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Email 1</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Email1)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Email 2</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Email2)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Email 3</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Email3)</label>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Teléfono Móvil</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TelefonoMovil)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Teléfono 1</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Telefono1)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Teléfono 2</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Telefono2)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Teléfono 3</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Telefono3)</label>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Teléfono 4</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Telefono4)</label>
+                                    </div>
+
+                                    <div class="col-12"><hr /></div>
+
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Grupo Familiar</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.GrupoFamiliar)</label>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Dirección 1</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Direccion1)</label>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Dirección 2</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Direccion2)</label>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Domiciliado En</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.DomiciliadoEn)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 3: Cónyuge -->
+                @if (entidadActual.TipoAccionista?.Id == 1)
+                {
+                    <div class="tab-pane fade" id="panel-3" role="tabpanel">
+                        <div class="table-responsive">
+                            <div class="row justify-content-center">
+                                <div class="col-xl-9 col-lg-10 col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Nombre Cónyuge</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.NombreConyuge)</label>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">¿Separación o Capitulación de Bienes?</label>
+                                            <label class="form-label text-secondary small">@SiNoGuion(entidadActual.SeparacionBienes)</label>
+                                        </div>
+
+                                        <div class="col-12"><hr /></div>
+
+                                        <!-- Doc 1 Cónyuge -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 1</label>
+                                            <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumentoConyugeId1)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento Fiscal 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DocumentoConyuge1)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmisionConyuge1?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoConyuge1?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <!-- Doc 2 Cónyuge -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 2</label>
+                                            <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumentoConyugeId2)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento Fiscal 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DocumentoConyuge2)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmisionConyuge2?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoConyuge2?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <!-- Doc 3 Cónyuge -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 3</label>
+                                            <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumentoConyugeId3)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento Fiscal 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DocumentoConyuge3)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmisionConyuge3?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoConyuge3?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Panel 4: Finanzas y Apoderado -->
+                <div class="tab-pane fade" id="panel-4" role="tabpanel">
+                    <div class="table-responsive">
+                        <div class="row justify-content-center">
+                            <div class="col-xl-9 col-lg-10 col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Banco</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.Banco?.Nombre)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Tipo Cuenta</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TipoCuenta?.Nombre)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Número de Cuenta</label>
+                                        <label class="form-label text-secondary small font-monospace">@ValorOGuion(entidadActual.NumeroCuenta)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Nombre Titular</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.NombreTitularCuenta)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Modalidad de Pago</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.ModalidadPago?.Nombre)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">¿Tiene Apoderado?</label>
+                                        <label class="form-label text-secondary small">@SiNoGuion(entidadActual.TieneApoderado)</label>
+                                    </div>
+
+                                    @if (entidadActual.TieneApoderado == 1)
+                                    {
+                                        <div class="col-12">
+                                            <hr />
+                                            <label class="form-label fw-bold text-primary small">Datos del Apoderado</label>
+                                            <hr />
+                                        </div>
+
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Nombre Apoderado</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.NombreApoderado)</label>
+                                        </div>
+
+                                        <!-- Doc 1 Apoderado -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 1</label>
+                                            <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumentoApoderadoId1)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento Fiscal 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DocumentoApoderado1)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmisionApoderado1?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 1</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoApoderado1?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <!-- Doc 2 Apoderado -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 2</label>
+                                            <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumentoApoderadoId2)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento Fiscal 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DocumentoApoderado2)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmisionApoderado2?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 2</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoApoderado2?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <!-- Doc 3 Apoderado -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Tipo Documento 3</label>
+                                            <label class="form-label text-secondary small">@ObtenerNombreTipoDoc(entidadActual.TipoDocumentoApoderadoId3)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Documento Fiscal 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.DocumentoApoderado3)</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Emisión 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaEmisionApoderado3?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Fecha de Vencimiento 3</label>
+                                            <label class="form-label text-secondary small">@ValorOGuion(entidadActual.FechaVencimientoApoderado3?.ToString("yyyy-MM-dd"))</label>
+                                        </div>
+
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label fw-bold text-secondary small d-block">Datos Poder</label>
+                                            <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.DatosPoder)</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 5: Junta y Otros -->
+                <div class="tab-pane fade" id="panel-5" role="tabpanel">
+                    <div class="table-responsive">
+                        <div class="row justify-content-center">
+                            <div class="col-xl-9 col-lg-10 col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Nombre Contacto</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.NombreContacto)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Email Contacto</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.EmailContacto)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Teléfono Contacto</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.TelefonoContacto)</label>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Condición Especial</label>
+                                        <label class="form-label text-secondary small">@ValorOGuion(entidadActual.CondicionEspecial?.Nombre)</label>
+                                    </div>
+
+                                    <div class="col-12"><hr /></div>
+
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Observaciones</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.Observaciones)</label>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold text-secondary small d-block">Documentos Relacionados</label>
+                                        <label class="form-label text-secondary small text-break">@ValorOGuion(entidadActual.DocumentosRelacionados)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 6: Sociedades -->
+                <div class="tab-pane fade" id="panel-6" role="tabpanel">
+                    <div class="table-responsive">
+                        <PaginationComponent TItem="AccionistaSociedadVerDto" Items="ListSociedadesAccionista" DefaultPageSize="50" TableClass="polar-table-compact">
+                            <ChildContentHeader>
+                                <tr class="table-light border-bottom">
+                                    <th class="ps-3 text-start" style="min-width: 240px;">Sociedad</th>
+                                    <th class="text-start" style="min-width: 140px;">Estatus Sociedad</th>
+                                    <th class="text-start" style="min-width: 140px;">Estatus Accionista</th>
+                                    <th class="polar-num" style="min-width: 130px;">Nro. Acciones</th>
+                                    <th class="polar-num" style="min-width: 130px;">% Participación</th>
+                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
+                                    <th class="polar-date" style="min-width: 110px;">Última modificación</th>
+                                    <th class="text-end pe-3" style="min-width: 80px;">Acciones</th>
+                                </tr>
+                            </ChildContentHeader>
+                            <ChildContentRow Context="p">
+                                <tr class="align-middle border-bottom">
+                                    <td class="ps-3 text-start fw-semibold text-dark">
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold text-dark text-start"
+                                                @onclick="() => AbrirModalSociedad(p.SociedadId)"
+                                                title="Ver detalle de sociedad">
+                                            @p.SociedadNombre
+                                        </button>
+                                    </td>
+                                    <td class="text-start">
+                                        <span class="badge bg-light text-dark border">@(p.DocumentoIdentidad ?? "-")</span>
+                                    </td>
+                                    <td class="text-start">
+                                        <span class="badge @(p.TipoAccionistaNombre == "Activo" ? "bg-success-subtle text-success border border-success-subtle" : "bg-light text-secondary border")">
+                                            @(p.TipoAccionistaNombre ?? "-")
+                                        </span>
+                                    </td>
+                                    <td class="polar-num">@UtilClass.FormatearMiles(p.NroAcciones ?? 0)</td>
+                                    <td class="polar-num">@((p.Participacion ?? 0).ToString("N6"))%</td>
+                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                    <td class="polar-date text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="text-end pe-3">
+                                        @if (p.SociedadId > 0)
+                                        {
+                                            <button class="btn btn-link btn-sm text-primary p-0"
+                                                    @onclick="() => AbrirModalSociedad(p.SociedadId)"
+                                                    title="Ver Detalle Sociedad">
+                                                <i class="bi bi-eye fs-6"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            </ChildContentRow>
+                        </PaginationComponent>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (mostrarAlerta)
+    {
+        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                <i class="bi @iconoAlerta me-2 fs-5"></i>
+                <div class="fw-bold">
+                    @mensajeAlerta
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@if (mostrarModalSociedad && idSociedadPopup > 0)
+{
+    <ModalDetalleSociedad SociedadId="@idSociedadPopup" OnCerrar="() => mostrarModalSociedad = false" />
+}
+
+@code {
+    [Parameter] public string id { get; set; } = "";
+
+    private bool cargando = false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string urlPdfGenerado = "";
+    private string claseAlerta = "alert-success";
+    private string iconoAlerta = "bi-check-circle-fill";
+    private Accionista entidadActual = new();
+    private List<AccionistaSociedadVerDto> ListSociedadesAccionista = new();
+    private Dictionary<int, string> tiposDocDict = new();
+    private int idSociedadPopup = 0;
+    private bool mostrarModalSociedad = false;
+
+    private void AbrirModalSociedad(int sociedadId)
+    {
+        if (sociedadId <= 0) return;
+        idSociedadPopup = sociedadId;
+        mostrarModalSociedad = true;
+    }
+
+    [Inject] private IAccionista repository { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoAccionistaSociedad { get; set; } = null!;
+
+    private string NombreMostrar =>
+        entidadActual.TipoAccionista?.Id == 3
+            ? (!string.IsNullOrWhiteSpace(entidadActual.NombreSusesion) ? entidadActual.NombreSusesion : (entidadActual.Nombre ?? "Detalle Accionista"))
+            : (!string.IsNullOrWhiteSpace(entidadActual.Nombre) ? entidadActual.Nombre : "Detalle Accionista");
+
+    private static string ValorOGuion(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? "-" : valor;
+
+    private static string SiNoGuion(int? valor) =>
+        valor == 1 ? "Sí" : (valor == 0 ? "No" : "-");
+
+    private string ObtenerNombreTipoDoc(int? idDoc)
+    {
+        if (idDoc.HasValue && idDoc.Value > 0 && tiposDocDict.TryGetValue(idDoc.Value, out var nombre))
+        {
+            return nombre;
+        }
+        return "-";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+
+        if (!string.IsNullOrWhiteSpace(id) && id != "0" && int.TryParse(id, out _))
+        {
+            await LoadGenericDataAsync();
+        }
+        else
+        {
+            await MostrarNotificacion("No se proporcionó un ID válido", true);
+        }
+        cargando = false;
+    }
+
+    private async Task LoadGenericDataAsync()
+    {
+        try
+        {
+            int accionistaId = int.Parse(id);
+            var resultado = await repository.GetByIdAsync(accionistaId);
+            if (resultado == null)
+            {
+                await MostrarNotificacion("El accionista seleccionado no existe.", true);
+                return;
+            }
+            entidadActual = resultado;
+
+            // Cargar catálogo de tipos de documento para resolver IDs de Cónyuge, Apoderado y Rep. Legal
+            try
+            {
+                var repoTipoDoc = RepoFactory.GetRepository("tipodocumento");
+                var method = repoTipoDoc.GetType().GetMethod("GetAllAsync");
+                if (method != null)
+                {
+                    var task = (Task)method.Invoke(repoTipoDoc, null)!;
+                    await task;
+                    var resultProperty = task.GetType().GetProperty("Result");
+                    if (resultProperty?.GetValue(task) is IEnumerable<IBaseEntity> listaTipos)
+                    {
+                        tiposDocDict = listaTipos.ToDictionary(k => k.Id, v => v.Nombre ?? "");
+                    }
+                }
+            }
+            catch
+            {
+                // Ignorar si falla carga de catálogo auxiliar
+            }
+
+            // Cargar las sociedades donde participa este accionista
+            var relaciones = await repoAccionistaSociedad.GetByAccionistaIdAsync(accionistaId);
+            List<AccionistaSociedadVerDto> listaSociedades = new();
+            foreach (var item in relaciones.OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? ""))
+            {
+                long nroAcciones = item.NroAcciones ?? 0;
+                decimal porcParticipa = 0;
+
+                if (item.Sociedad != null && !string.IsNullOrWhiteSpace(item.Sociedad.NumeroAcciones) &&
+                    long.TryParse(item.Sociedad.NumeroAcciones, out long totalAccionesSoc) && totalAccionesSoc > 0 && nroAcciones > 0)
+                {
+                    porcParticipa = Math.Round((decimal)nroAcciones / totalAccionesSoc * 100, 6);
+                }
+
+                listaSociedades.Add(new AccionistaSociedadVerDto
+                {
+                    Id = item.Id,
+                    SociedadId = item.Sociedad?.Id ?? 0,
+                    SociedadNombre = item.Sociedad?.Empresa?.Nombre ?? "-",
+                    DocumentoIdentidad = item.Sociedad?.EstatusSociedad?.Nombre ?? "-",
+                    TipoAccionistaNombre = item.EstatusAccionista?.Nombre ?? "-",
+                    NroAcciones = nroAcciones,
+                    Participacion = porcParticipa,
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                });
+            }
+            ListSociedadesAccionista = listaSociedades;
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000);
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private void Regresar()
+    {
+        navManager.NavigateTo("/accionistas");
+    }
+
+    private async Task ExportarAPdf()
+    {
+        try
+        {
+            cargando = true;
+            urlPdfGenerado = "";
+            StateHasChanged();
+
+            urlPdfGenerado = await ReportService.GenerarYDescargarReporteAccionistaAsync(int.Parse(id));
+
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Reporte PDF generado exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion($"Error al exportar PDF: {ex.Message}", true);
+        }
+    }
+}
+

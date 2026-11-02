@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
@@ -18,6 +18,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.AccionistaSociedad!.Sociedad)
                 .Include(b => b.AccionistaSociedad!.Sociedad!.Empresa)
                 .Include(b => b.AccionistaSociedad!.Accionista)
+                .OrderBy(x => x.Fecha)
                 .ToListAsync();
         }
 
@@ -42,6 +43,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.AccionistaSociedad!.Sociedad!.Empresa)
                 .Include(b => b.AccionistaSociedad!.Accionista)
                 .Where(x => x.AccionistaSociedad!.Id == sociedadId)
+                .OrderBy(x => x.Fecha)
                 .ToListAsync();
         }
 

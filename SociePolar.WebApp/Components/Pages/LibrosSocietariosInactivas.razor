@@ -21,14 +21,12 @@
                     {
                         <!-- Botón Agregar -->
                         <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                                @onclick="AbrirModalNuevo"
-                                style="height: 32px; font-weight: 500;">
+                                @onclick="AbrirModalNuevo" style="height: 32px; font-weight: 500;">
                             <i class="bi bi-plus-lg me-2"></i> Agregar
                         </button>
 
                         <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                                @onclick="MostrarDescarga"
-                                style="height: 32px; font-weight: 500;" title="Generar csv">
+                                @onclick="MostrarDescarga" style="height: 32px; font-weight: 500;" title="Generar csv">
                             <i class="bi bi-filetype-csv me-2"></i> Descargar
                         </button>
                     }
@@ -44,115 +42,143 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por sociedad..."
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar por sociedad..."
                                @oninput="FiltrarBusqueda" />
                     </div>
                 </div>
             </div>
-            <PaginationComponent TItem="LibroSocietario" Items="Listgral" DefaultPageSize="15" TableClass="polar-table-compact" ContainerStyle="max-height: calc(100vh - 280px);">
+            <PaginationComponent TItem="LibroSocietario" Items="Listgral" DefaultPageSize="15"
+                                 TableClass="polar-table-compact" ContainerStyle="max-height: calc(100vh - 280px);">
                 <ChildContentHeader>
                     <tr class="table-light border-bottom text-nowrap">
-                        <th class="polar-sticky-col-direct ps-3 text-start" style="min-width: 200px; max-width: 260px;">Sociedad</th>
-                        <th class="text-start" style="min-width: 130px;">Clase</th>
-                        <th class="text-start" style="min-width: 140px;">Tipo</th>
-                        <th class="text-start" style="width: 100px; min-width: 100px;">Tomo en Uso</th>
-                        <th class="text-start" style="width: 80px; min-width: 80px;">Folio</th>
-                        <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Desde</th>
-                        <th class="text-start" style="width: 110px; min-width: 110px;">Libros Sellados</th>
-                        <th class="text-end pe-3 polar-sticky-col-actions" style="width: 110px; min-width: 110px;">Acciones</th>
-                    </tr>
-                </ChildContentHeader>
-                <ChildContentRow Context="p">
-                    <tr class="align-middle border-bottom">
-                        <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
-                            <span class="polar-truncate" style="max-width: 250px;" title="@p.Sociedad?.Empresa?.Nombre">
-                                @(p.Sociedad?.Empresa?.Nombre ?? "-")
-                            </span>
-                        </td>
-                        <td class="text-start text-secondary">@(p.ClaseLibro?.Nombre ?? "-")</td>
-                        <td class="text-start">
-                            <span class="badge bg-light text-dark border">@(p.TipoLibro?.Nombre ?? "-")</span>
-                        </td>
-                        <td class="text-start text-secondary">@p.TomoUso</td>
-                        <td class="text-start text-secondary">@p.Folios</td>
-                        <td class="polar-date text-secondary">@p.FechaDesde?.ToString("dd/MM/yyyy")</td>
-                        <td class="text-start text-secondary">@(p.LibrosSellados == "1" ? "Sí" : "No")</td>
-                        <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
-                            @if (idRol == 1 || idRol == 2 || idRol == 3)
-                            {
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                    <i class="bi bi-trash3 fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-secondary p-0 me-2"
-                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
-                                    <i class="bi bi-file-earmark-pdf fs-6"></i>
-                                </button>
-                            }
-                        </td>
-                    </tr>
-                </ChildContentRow>
-            </PaginationComponent>
-        </div>
-    </div>
-
-    @if (mostrarAlerta)
-    {
-        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
-            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
-                <i class="bi @iconoAlerta me-2 fs-5"></i>
-                <div class="fw-bold">
-                    @mensajeAlerta
+                        <th class="polar-sticky-col-direct ps-3 text-start" style="min-width: 200px; max-width: 260px;">
+                            Sociedad</th>
+                            <th class="text-start" style="min-width: 130px;">Clase</th>
+                            <th class="text-start" style="min-width: 140px;">Tipo</th>
+                            <th class="text-start" style="width: 100px; min-width: 100px;">Tomo en Uso</th>
+                            <th class="text-start" style="width: 80px; min-width: 80px;">Folio</th>
+                            <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Desde</th>
+                            <th class="text-start" style="width: 110px; min-width: 110px;">Libros Sellados</th>
+                            <th class="text-end pe-3 polar-sticky-col-actions" style="width: 110px; min-width: 110px;">
+                                Acciones</th>
+                            </tr>
+                        </ChildContentHeader>
+                        <ChildContentRow Context="p">
+                            <tr class="align-middle border-bottom">
+                                <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
+                                    <button type="button"
+                                            class="btn btn-link p-0 text-decoration-none text-start fw-semibold text-dark polar-truncate"
+                                            style="max-width: 250px;"
+                                            @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)"
+                                            title="Ver detalle de sociedad: @p.Sociedad?.Empresa?.Nombre">
+                                        @(p.Sociedad?.Empresa?.Nombre ?? "-")
+                                    </button>
+                                </td>
+                                <td class="text-start text-secondary">@(p.ClaseLibro?.Nombre ?? "-")</td>
+                                <td class="text-start">
+                                    <span class="badge bg-light text-dark border">@(p.TipoLibro?.Nombre ?? "-")</span>
+                                </td>
+                                <td class="text-start text-secondary">@p.TomoUso</td>
+                                <td class="text-start text-secondary">@p.Folios</td>
+                                <td class="polar-date text-secondary">@p.FechaDesde?.ToString("dd/MM/yyyy")</td>
+                                <td class="text-start text-secondary">@(p.LibrosSellados == "1" ? "Sí" : "No")</td>
+                                <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
+                                    <button class="btn btn-link btn-sm text-info p-0 me-2"
+                                            @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)"
+                                            title="Ver Detalle Sociedad">
+                                        <i class="bi bi-eye fs-6"></i>
+                                    </button>
+                                    @if (idRol == 1 || idRol == 2 || idRol == 3)
+                                    {
+                                        <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)"
+                                                title="Editar">
+                                            <i class="bi bi-pencil-square fs-6"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-danger p-0 me-2"
+                                                @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                            <i class="bi bi-trash3 fs-6"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-secondary p-0 me-2"
+                                                @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                            <i class="bi bi-file-earmark-pdf fs-6"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        </ChildContentRow>
+                    </PaginationComponent>
                 </div>
             </div>
-        </div>
-    }
 
-</div>
-
-@if (cargando)
-{
-    <ModalCargando />
-}
-
-@if (mostrarModal)
-{
-    <LibroSocietariosInactivasGuardar id="@idLibroSocietario.ToString()" OnFinalizado="ManejarCierreModal" />
-}
-
-@if (mostrarModalEliminar)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
-                    <h5 class="fw-bold">¿Estás seguro?</h5>
-                    <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.TipoLibro?.Nombre</strong>. Esta acción no se puede deshacer.
-                    </p>
+            @if (mostrarAlerta)
+            {
+                <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+                    <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                        <i class="bi @iconoAlerta me-2 fs-5"></i>
+                        <div class="fw-bold">
+                            @mensajeAlerta
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+            }
+
+        </div>
+
+        @if (cargando)
+        {
+            <ModalCargando />
+        }
+
+        @if (mostrarModal)
+        {
+            <LibroSocietariosInactivasGuardar id="@idLibroSocietario.ToString()" OnFinalizado="ManejarCierreModal" />
+        }
+
+        @if (mostrarModalEliminar)
+        {
+            <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-body text-center py-4">
+                            <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
+                            <h5 class="fw-bold">¿Estás seguro?</h5>
+                            <p class="text-secondary small">
+                                Vas a eliminar <strong>@entidadParaEliminar?.TipoLibro?.Nombre</strong>. Esta acción no se puede
+                                deshacer.
+                            </p>
+                        </div>
+                        <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                            <button class="btn btn-outline-secondary btn-sm px-4 me-2"
+                                    @onclick="CerrarModalEliminar">Cancelar</button>
+                            <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-}
+        }
 
-@if (descarga)
-{
-    <ModalDescarga idModulo="6" idEstado="2" OnFinalizado="ManejarCierreDescarga" />
-}
+        @if (descarga)
+        {
+            <ModalDescarga idModulo="6" idEstado="2" OnFinalizado="ManejarCierreDescarga" />
+        }
+
+        @if (mostrarPopupSociedad && idSociedadPopup > 0)
+        {
+            <ModalDetalleSociedad SociedadId="@idSociedadPopup" OnCerrar="() => mostrarPopupSociedad = false" />
+        }
 
 @code {
     private List<LibroSocietario> Listgral = new();
     private List<LibroSocietario> ListgralBuscar = new();
+    private int idSociedadPopup = 0;
+    private bool mostrarPopupSociedad = false;
+
+    private void AbrirModalDetalleSociedad(int socId)
+    {
+        if (socId <= 0) return;
+        idSociedadPopup = socId;
+        mostrarPopupSociedad = true;
+    }
     private string searchTerm = "";
     private bool cargando = false;
     private bool mostrarModal = false;
@@ -219,8 +245,8 @@
         {
             var listLibros = await repository.GetAllAsync();
             // Filtro exclusivo para Sociedades Inactivas (EstatusSociedad.Id == 2)
-            Listgral = listLibros.OrderBy(x => x.Sociedad?.Empresa?.Nombre)
-                                 .Where(x => x.Sociedad?.EstatusSociedad?.Id == 2)
+            Listgral = listLibros.Where(x => x.Sociedad?.EstatusSociedad?.Id == 2)
+                                 .OrderBy(x => x.FechaDesde)
                                  .ToList();
             ListgralBuscar = Listgral;
         }
@@ -252,7 +278,8 @@
         else
         {
             Listgral = ListgralBuscar
-                .Where(b => b.Sociedad?.Empresa?.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.Sociedad?.Empresa?.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm,
+StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
     }

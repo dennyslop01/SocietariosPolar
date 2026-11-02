@@ -132,6 +132,22 @@ namespace SociePolar.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<AccionistaSociedad>> GetByAccionistaIdAsync(int accionistaId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Set<AccionistaSociedad>()
+                .AsNoTracking()
+                .Include(b => b.Sociedad)
+                    .ThenInclude(s => s!.Empresa)
+                .Include(b => b.Sociedad)
+                    .ThenInclude(s => s!.EstatusSociedad)
+                .Include(b => b.Accionista)
+                    .ThenInclude(a => a!.TipoAccionista)
+                .Include(b => b.EstatusAccionista)
+                .Where(x => x.Accionista!.Id == accionistaId)
+                .ToListAsync();
+        }
+
         public async Task<List<AccionistaSociedad>> GetBySociedadIdEstatusIdAsync(int sociedadId, int estatusId)
         {
             using var context = await _contextFactory.CreateDbContextAsync();

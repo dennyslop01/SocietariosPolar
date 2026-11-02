@@ -113,26 +113,36 @@ namespace SociePolar.WebApp.DocumentsClass
                             columns.RelativeColumn();
                         });
 
-                        // Cada celda se define con table.Cell() y el contenido fluye de izquierda a derecha automáticamente
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Región: ").Bold(); t.Span(_sociedad.Region?.Nombre); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Unidad de Negocio: ").Bold(); t.Span(_sociedad.UnidadNegocio?.Nombre); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Moneda: ").Bold(); t.Span(_sociedad.Moneda?.Nombre); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Número SAP: ").Bold(); t.Span(_sociedad.NumeroSap); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Tipo de Sociedad: ").Bold(); t.Span(_sociedad.TipoSociedad?.Nombre); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Estatus: ").Bold(); t.Span(_sociedad.EstatusSociedad?.Nombre); });
 
                         if (_sociedad.EstatusSociedad?.Id == 1)
                         {
                             table.Cell().PaddingVertical(4).Text(t => { t.Span("Tipo Activa: ").Bold(); t.Span(_sociedad.TipoSociedadActiva?.Nombre); });
                         }
+                        else if (_sociedad.EstatusSociedad?.Id == 2)
+                        {
+                            table.Cell().PaddingVertical(4).Text(t => { t.Span("Tipo Inactiva: ").Bold(); t.Span(_sociedad.TipoSociedadInactiva?.Nombre); });
+                        }
                         else
                         {
-                            table.Cell().Text(""); // Celda vacía para mantener la alineación de la cuadrícula si no es estatus 1
+                            table.Cell().Text("");
                         }
 
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Fecha Constitución: ").Bold(); t.Span(_sociedad.FechaConstitucion?.ToString("yyyy-MM-dd")); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Fecha Vencimiento: ").Bold(); t.Span(_sociedad.FechaVencimiento?.ToString("yyyy-MM-dd")); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Duración: ").Bold(); t.Span(_sociedad.Duracion); });
                         table.Cell().PaddingVertical(4).Text(t => { t.Span("Acciones: ").Bold(); t.Span(UtilClass.FormatearStringMiles(_sociedad.NumeroAcciones)); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Valor Nominal: ").Bold(); t.Span(UtilClass.FormatearNumero(_sociedad.ValorAccion, 10)); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Valor Patrimonial: ").Bold(); t.Span(UtilClass.FormatearNumero(_sociedad.ValorPatrimonial, 10)); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Documento Fiscal 1: ").Bold(); t.Span(UtilClass.ObtenerDocumentoCompleto(_sociedad.TipoDocumento1?.Nombre, _sociedad.Documento1)); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Vencimiento Doc. 1: ").Bold(); t.Span(_sociedad.VencimientoDocumento1?.ToString("yyyy-MM-dd")); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Empresa Fusión: ").Bold(); t.Span(_sociedad.EmpresaFusion); });
+                        table.Cell().PaddingVertical(4).Text(t => { t.Span("Fecha Fusión: ").Bold(); t.Span(_sociedad.FechaFusion?.ToString("yyyy-MM-dd")); });
                     });
 
 

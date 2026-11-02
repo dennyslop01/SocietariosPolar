@@ -1,0 +1,1010 @@
+@rendermode InteractiveServer
+
+<style>
+    .modal-detalle-compacto {
+        font-size: 0.78rem;
+    }
+    .modal-detalle-compacto .form-label {
+        font-size: 0.76rem;
+        margin-bottom: 0.1rem;
+    }
+    .modal-detalle-compacto .valor-campo {
+        font-size: 0.78rem;
+        color: #495057;
+        margin-bottom: 0;
+    }
+    .modal-detalle-compacto .nav-pills .nav-link {
+        font-size: 0.76rem;
+        padding: 0.35rem 0.65rem;
+    }
+    .modal-detalle-compacto table,
+    .modal-detalle-compacto .polar-table-compact {
+        font-size: 0.75rem !important;
+    }
+    .modal-detalle-compacto table th,
+    .modal-detalle-compacto table td {
+        padding: 0.3rem 0.45rem !important;
+    }
+    .modal-detalle-compacto hr {
+        margin: 0.5rem 0;
+    }
+</style>
+
+<div class="modal fade show d-block modal-detalle-compacto" tabindex="-1" style="background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(3px); z-index: @ZIndex !important;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered" style="max-width: 92vw; margin: 1rem auto;">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden" style="max-height: 90vh;">
+            <!-- Cabecera del Modal -->
+            <div class="modal-header bg-white py-2 px-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    <div class="@(entidadActual.EstatusSociedad?.Id == 2 ? "bg-secondary" : "bg-primary") p-2 rounded-3 me-2 shadow-sm d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                        <i class="bi bi-bezier text-white fs-6"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.92rem;">
+                            @(string.IsNullOrEmpty(entidadActual.Empresa?.Nombre) ? "Detalle de Sociedad" : entidadActual.Empresa.Nombre)
+                        </h6>
+                        <span class="text-secondary fw-semibold" style="font-size: 0.72rem;">
+                            @(entidadActual.EstatusSociedad?.Id == 2 ? "Ficha Informativa - Sociedad Inactiva" : "Ficha Informativa - Sociedad Activa")
+                        </span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-danger btn-sm px-2 py-1 shadow-sm d-flex align-items-center"
+                            @onclick="ExportarAPdf"
+                            disabled="@cargando"
+                            style="font-size: 0.76rem; font-weight: 500;">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                    </button>
+
+                    <button class="btn btn-secondary btn-sm px-2 py-1 shadow-sm d-flex align-items-center"
+                            @onclick="Cerrar"
+                            style="font-size: 0.76rem; font-weight: 500;">
+                        <i class="bi bi-x-lg me-1"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+
+            @if (mostrarAlerta)
+            {
+                <div class="alert @claseAlerta d-flex align-items-center justify-content-between m-2 mb-0 py-1 px-3 border-0 shadow-sm" role="alert" style="font-size: 0.76rem;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi @iconoAlerta me-2"></i>
+                        <div class="fw-semibold">@mensajeAlerta</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(urlPdfGenerado))
+                    {
+                        <a href="@urlPdfGenerado" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 ms-3 fw-semibold" style="font-size: 0.74rem;">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> Abrir PDF en pantalla
+                        </a>
+                    }
+                </div>
+            }
+
+            <!-- Cuerpo del Modal -->
+            <div class="modal-body p-3">
+                <!-- Navegación de Pestañas Compacta -->
+                <ul class="nav nav-pills nav-fill mb-3 bg-light p-1 rounded-pill" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 1 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 1" type="button">
+                            <span class="fw-semibold">General</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 2 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 2" type="button">
+                            <span class="fw-semibold">Autoridades (@ListAutoridadGral.Count)</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 3 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 3" type="button">
+                            <span class="fw-semibold">Asambleas (@ListAsambleaGral.Count)</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 4 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 4" type="button">
+                            <span class="fw-semibold">Reformas (@ListReformaGral.Count)</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 5 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 5" type="button">
+                            <span class="fw-semibold">Certificaciones (@ListCertificacionGral.Count)</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 6 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 6" type="button">
+                            <span class="fw-semibold">Libros (@ListLibrosgral.Count)</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill @(pestanaActiva == 7 ? "active" : "")"
+                                @onclick="() => pestanaActiva = 7" type="button">
+                            <span class="fw-semibold">Accionistas (@ListAccionistasGral.Count)</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Contenido de las Pestañas -->
+                <div class="tab-content">
+                    @if (pestanaActiva == 1)
+                    {
+                        <div class="px-2">
+                            <div class="row g-2">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Región</label>
+                                    <div class="valor-campo">@(entidadActual.Region?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Unidad de Negocio</label>
+                                    <div class="valor-campo">@(entidadActual.UnidadNegocio?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Nombre de Sociedad</label>
+                                    <div class="valor-campo fw-semibold text-dark">@(entidadActual.Empresa?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Moneda de la Sociedad</label>
+                                    <div class="valor-campo">@(entidadActual.Moneda?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Número SAP</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.NumeroSap) ? "-" : entidadActual.NumeroSap)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Tipo de Sociedad</label>
+                                    <div class="valor-campo">@(entidadActual.TipoSociedad?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Estatus de la Sociedad</label>
+                                    <div class="valor-campo">@(entidadActual.EstatusSociedad?.Nombre ?? "-")</div>
+                                </div>
+                                @if (entidadActual.EstatusSociedad?.Id == 1)
+                                {
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label fw-bold text-secondary d-block">Tipo de Sociedad Activa</label>
+                                        <div class="valor-campo">@(entidadActual.TipoSociedadActiva?.Nombre ?? "-")</div>
+                                    </div>
+                                }
+
+                                <div class="col-12"><hr /></div>
+
+                                <div class="col-md-12 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Objeto de la Sociedad</label>
+                                    <div class="valor-campo text-break">@(string.IsNullOrWhiteSpace(entidadActual.Objeto) ? "-" : entidadActual.Objeto)</div>
+                                </div>
+
+                                <div class="col-12"><hr /></div>
+
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Domicilio</label>
+                                    <div class="valor-campo text-break">@(string.IsNullOrWhiteSpace(entidadActual.Domicilio) ? "-" : entidadActual.Domicilio)</div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Dirección Fiscal</label>
+                                    <div class="valor-campo text-break">@(string.IsNullOrWhiteSpace(entidadActual.DireccionFiscal) ? "-" : entidadActual.DireccionFiscal)</div>
+                                </div>
+                                <div class="col-md-12 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Datos de constitución</label>
+                                    <div class="valor-campo text-break">@(string.IsNullOrWhiteSpace(entidadActual.DatosConstitucion) ? "-" : entidadActual.DatosConstitucion)</div>
+                                </div>
+
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Constitución</label>
+                                    <div class="valor-campo">@(entidadActual.FechaConstitucion?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Vencimiento</label>
+                                    <div class="valor-campo">@(entidadActual.FechaVencimiento?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Duración</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.Duracion) ? "-" : entidadActual.Duracion)</div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Número Acciones</label>
+                                    <div class="valor-campo">@UtilClass.FormatearStringMiles(entidadActual.NumeroAcciones)</div>
+                                </div>
+
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">¿Aplica Capital?</label>
+                                    <div class="valor-campo">@((entidadActual.AplicaCapital == 1) ? "Sí aplica" : "No aplica")</div>
+                                </div>
+                                @if (entidadActual.AplicaCapital == 1)
+                                {
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label fw-bold text-secondary d-block">Capital Suscrito</label>
+                                        <div class="valor-campo">@UtilClass.FormatearNumero(entidadActual.CapitalSuscrito)</div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label fw-bold text-secondary d-block">Capital Pagado</label>
+                                        <div class="valor-campo">@UtilClass.FormatearNumero(entidadActual.CapitalPagado)</div>
+                                    </div>
+                                }
+
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Clase de Acciones</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.ClaseAcciones) ? "-" : entidadActual.ClaseAcciones)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Valor Nominal</label>
+                                    <div class="valor-campo">@UtilClass.FormatearNumero(entidadActual.ValorAccion, 10)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Valor Patrimonial</label>
+                                    <div class="valor-campo">@UtilClass.FormatearNumero(entidadActual.ValorPatrimonial, 10)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Forma de Administración</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.FormaAdministracion) ? "-" : entidadActual.FormaAdministracion)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Ejercicio Económico</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.EjercicioEconomico) ? "-" : entidadActual.EjercicioEconomico)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Número de Expediente</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.NumeroExpediente) ? "-" : entidadActual.NumeroExpediente)</div>
+                                </div>
+
+                                <div class="col-md-12 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Observaciones</label>
+                                    <div class="valor-campo text-break">@(string.IsNullOrWhiteSpace(entidadActual.Observaciones) ? "-" : entidadActual.Observaciones)</div>
+                                </div>
+
+                                <div class="col-12"><hr /></div>
+
+                                <!-- Documentos de Identidad Fiscal -->
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Tipo Documento Fiscal 1</label>
+                                    <div class="valor-campo">@(entidadActual.TipoDocumento1?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Documento Fiscal 1</label>
+                                    <div class="valor-campo">@UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento1?.Nombre, entidadActual.Documento1)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Vencimiento 1</label>
+                                    <div class="valor-campo">@(entidadActual.VencimientoDocumento1?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Tipo Documento Fiscal 2</label>
+                                    <div class="valor-campo">@(entidadActual.TipoDocumento2?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Documento Fiscal 2</label>
+                                    <div class="valor-campo">@UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento2?.Nombre, entidadActual.Documento2)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Vencimiento 2</label>
+                                    <div class="valor-campo">@(entidadActual.VencimientoDocumento2?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Tipo Documento Fiscal 3</label>
+                                    <div class="valor-campo">@(entidadActual.TipoDocumento3?.Nombre ?? "-")</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Documento Fiscal 3</label>
+                                    <div class="valor-campo">@UtilClass.ObtenerNumeroDocumentoLimpio(entidadActual.TipoDocumento3?.Nombre, entidadActual.Documento3)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Vencimiento 3</label>
+                                    <div class="valor-campo">@(entidadActual.VencimientoDocumento3?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Nit</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.Nit) ? "-" : entidadActual.Nit)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Empresa Fusión</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.EmpresaFusion) ? "-" : entidadActual.EmpresaFusion)</div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Fusión</label>
+                                    <div class="valor-campo">@(entidadActual.FechaFusion?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <hr />
+                                    <label class="form-label fw-bold text-primary">Datos de Publicación</label>
+                                    <hr />
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Año</label>
+                                    <div class="valor-campo">@(entidadActual.AnoPublicacion?.ToString() ?? "-")</div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha</label>
+                                    <div class="valor-campo">@(entidadActual.FechaPublicacion?.ToString("yyyy-MM-dd") ?? "-")</div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Número</label>
+                                    <div class="valor-campo">@(string.IsNullOrWhiteSpace(entidadActual.NumeroPublicacion) ? "-" : entidadActual.NumeroPublicacion)</div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Nombre Diario</label>
+                                    <div class="valor-campo">@(entidadActual.NombreDiario?.Nombre ?? "-")</div>
+                                </div>
+
+                                <div class="col-12"><hr /></div>
+
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Creación</label>
+                                    <div class="valor-campo">@entidadActual.CreateDate.ToString("yyyy-MM-dd")</div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label fw-bold text-secondary d-block">Última Modificación</label>
+                                    <div class="valor-campo">@entidadActual.UpdateDate.ToString("yyyy-MM-dd")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (pestanaActiva == 2)
+                    {
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="Autoridad" Items="ListAutoridadGral" DefaultPageSize="25" TableClass="polar-table-compact">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="ps-2 text-start">Cargo</th>
+                                        <th class="text-start">Nombre</th>
+                                        <th class="text-start">Duración</th>
+                                        <th class="polar-date">Fecha Duración</th>
+                                        <th class="text-start">Documento 1</th>
+                                        <th class="polar-date">Venc. Doc. 1</th>
+                                        <th class="text-start">Documento 2</th>
+                                        <th class="polar-date">Venc. Doc. 2</th>
+                                        <th class="polar-date">Creación</th>
+                                        <th class="polar-date pe-2">Modificación</th>
+                                    </tr>
+                                    @{
+                                        _ultimoCargoId = null;
+                                    }
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="ps-2 text-start">
+                                            @if (_ultimoCargoId != p.Cargo?.Id)
+                                            {
+                                                <span class="badge bg-light text-dark border">@(p.Cargo?.Nombre ?? "-")</span>
+                                                _ultimoCargoId = p.Cargo?.Id;
+                                            }
+                                        </td>
+                                        <td class="text-start fw-semibold text-dark">@p.Nombre</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Duracion) ? "-" : p.Duracion)</td>
+                                        <td class="polar-date text-secondary">@(p.FechaDuracion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@UtilClass.ObtenerDocumentoCompleto(p.TipoDocumento1?.Nombre, p.Documento1)</td>
+                                        <td class="polar-date text-secondary">@(p.VencimientoDocumento1?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@UtilClass.ObtenerDocumentoCompleto(p.TipoDocumento2?.Nombre, p.Documento2)</td>
+                                        <td class="polar-date text-secondary">@(p.VencimientoDocumento2?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                        <td class="polar-date pe-2 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    }
+                    else if (pestanaActiva == 3)
+                    {
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="Asamblea" Items="ListAsambleaGral" DefaultPageSize="25" TableClass="polar-table-compact">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="ps-2 text-start">Tipo Asamblea</th>
+                                        <th class="polar-date">Celebración</th>
+                                        <th class="text-start">Nro. Acta</th>
+                                        <th class="polar-date">Fecha Reg.</th>
+                                        <th class="text-start">Registro</th>
+                                        <th class="text-start">Número</th>
+                                        <th class="text-start">Tomo</th>
+                                        <th class="polar-date">Publicación</th>
+                                        <th class="text-start">Nro. Pub.</th>
+                                        <th class="text-start">Diario</th>
+                                        <th class="text-start">Tipo Reforma</th>
+                                        <th class="text-start">Observaciones</th>
+                                        <th class="text-end pe-2">Detalle</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="ps-2 text-start">
+                                            <span class="badge bg-light text-dark border">@(p.TipoAsamblea?.Nombre ?? "-")</span>
+                                        </td>
+                                        <td class="polar-date text-secondary">@(p.FechaCelebracion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroActa) ? "-" : p.NumeroActa)</td>
+                                        <td class="polar-date text-secondary">@(p.FechaRegistro?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@(p.Registro?.Nombre ?? "-")</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroRegistro) ? "-" : p.NumeroRegistro)</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Tomo) ? "-" : p.Tomo)</td>
+                                        <td class="polar-date text-secondary">@(p.FechaPublicacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroPublicacion) ? "-" : p.NumeroPublicacion)</td>
+                                        <td class="text-start text-secondary">@(p.NombreDiario?.Nombre ?? "-")</td>
+                                        <td class="text-start text-secondary">@(p.AplicaReforma == 1 ? (p.TipoReforma?.Nombre ?? "Sí") : "No")</td>
+                                        <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observacion) ? "-" : p.Observacion)</td>
+                                        <td class="text-end pe-2">
+                                            <button class="btn btn-link btn-sm text-primary p-0"
+                                                    @onclick="() => Detalle(p)" title="Detalle Asamblea">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    }
+                    else if (pestanaActiva == 4)
+                    {
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="Asamblea" Items="ListReformaGral" DefaultPageSize="25" TableClass="polar-table-compact">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="ps-2 text-start">Tipo Reforma</th>
+                                        <th class="text-start">Tipo Asamblea</th>
+                                        <th class="polar-date">Celebración</th>
+                                        <th class="text-start">Nro. Acta</th>
+                                        <th class="polar-date">Fecha Reg.</th>
+                                        <th class="text-start">Registro</th>
+                                        <th class="text-start">Número</th>
+                                        <th class="text-start">Tomo</th>
+                                        <th class="polar-date">Publicación</th>
+                                        <th class="text-start">Nro. Pub.</th>
+                                        <th class="text-start">Diario</th>
+                                        <th class="text-start">Observaciones</th>
+                                        <th class="text-end pe-2">Detalle</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="ps-2 text-start">
+                                            <span class="badge bg-light text-dark border">@(p.TipoReforma?.Nombre ?? "-")</span>
+                                        </td>
+                                        <td class="text-start text-secondary">@(p.TipoAsamblea?.Nombre ?? "-")</td>
+                                        <td class="polar-date text-secondary">@(p.FechaCelebracion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroActa) ? "-" : p.NumeroActa)</td>
+                                        <td class="polar-date text-secondary">@(p.FechaRegistro?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@(p.Registro?.Nombre ?? "-")</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroRegistro) ? "-" : p.NumeroRegistro)</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Tomo) ? "-" : p.Tomo)</td>
+                                        <td class="polar-date text-secondary">@(p.FechaPublicacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroPublicacion) ? "-" : p.NumeroPublicacion)</td>
+                                        <td class="text-start text-secondary">@(p.NombreDiario?.Nombre ?? "-")</td>
+                                        <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observacion) ? "-" : p.Observacion)</td>
+                                        <td class="text-end pe-2">
+                                            <button class="btn btn-link btn-sm text-primary p-0"
+                                                    @onclick="() => Detalle(p)" title="Detalle Reforma">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    }
+                    else if (pestanaActiva == 5)
+                    {
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="Certificacion" Items="ListCertificacionGral" DefaultPageSize="25" TableClass="polar-table-compact">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="ps-2 text-start">Cargo</th>
+                                        <th class="text-start">Ejercicio Fiscal</th>
+                                        <th class="polar-date">Fecha</th>
+                                        <th class="text-start">Observaciones</th>
+                                        <th class="polar-date">Creación</th>
+                                        <th class="polar-date pe-2">Modificación</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="ps-2 text-start">
+                                            <span class="badge bg-light text-dark border">@(p.Cargo?.Nombre ?? "-")</span>
+                                        </td>
+                                        <td class="text-start text-secondary">@(!string.IsNullOrWhiteSpace(p.EjercicioFiscal) ? p.EjercicioFiscal : (p.Sociedad?.EjercicioEconomico ?? "-"))</td>
+                                        <td class="polar-date text-secondary">@(p.Fecha?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)</td>
+                                        <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                        <td class="polar-date pe-2 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    }
+                    else if (pestanaActiva == 6)
+                    {
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="LibroSocietario" Items="ListLibrosgral" DefaultPageSize="25" TableClass="polar-table-compact">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="ps-2 text-start">Clase</th>
+                                        <th class="text-start">Tipo</th>
+                                        <th class="text-center">Tomo</th>
+                                        <th class="text-center">Folio</th>
+                                        <th class="polar-date">Desde</th>
+                                        <th class="polar-date">Hasta</th>
+                                        <th class="text-center">Sellado</th>
+                                        <th class="polar-date">Fecha Sello</th>
+                                        <th class="text-center">¿Vacío?</th>
+                                        <th class="text-start">Ubicación</th>
+                                        <th class="text-start">Observaciones</th>
+                                        <th class="polar-date pe-2">Modificación</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="ps-2 text-start text-secondary">@(p.ClaseLibro?.Nombre ?? "-")</td>
+                                        <td class="text-start text-secondary">@(p.TipoLibro?.Nombre ?? "-")</td>
+                                        <td class="text-center text-secondary">@(string.IsNullOrWhiteSpace(p.TomoUso) ? "-" : p.TomoUso)</td>
+                                        <td class="text-center text-secondary">@(string.IsNullOrWhiteSpace(p.Folios) ? "-" : p.Folios)</td>
+                                        <td class="polar-date text-secondary">@(p.FechaDesde?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="polar-date text-secondary">@(p.FechaHasta?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-center">
+                                            @{
+                                                bool esSellado = p.LibrosSellados == "1" || string.Equals(p.LibrosSellados, "Sí", StringComparison.OrdinalIgnoreCase) || string.Equals(p.LibrosSellados, "Si", StringComparison.OrdinalIgnoreCase);
+                                                string textoSellado = esSellado ? "Sí" : (p.LibrosSellados == "0" || string.Equals(p.LibrosSellados, "No", StringComparison.OrdinalIgnoreCase) ? "No" : (string.IsNullOrWhiteSpace(p.LibrosSellados) ? "-" : p.LibrosSellados));
+                                            }
+                                            <span class="badge @(esSellado ? "bg-success" : "bg-light text-secondary border")">
+                                                @textoSellado
+                                            </span>
+                                        </td>
+                                        <td class="polar-date text-secondary">@(p.FechaSello?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-center text-secondary">@(p.Vacio == 1 ? "Sí" : (p.Vacio == 0 ? "No" : "-"))</td>
+                                        <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Ubicacion) ? "-" : p.Ubicacion)</td>
+                                        <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)</td>
+                                        <td class="polar-date pe-2 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    </tr>
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    }
+                    else if (pestanaActiva == 7)
+                    {
+                        <div class="table-responsive">
+                            <PaginationComponent TItem="AccionistaSociedadVerDto" Items="ListAccionistasGral" DefaultPageSize="25" TableClass="polar-table-compact">
+                                <ChildContentHeader>
+                                    <tr class="table-light border-bottom">
+                                        <th class="ps-2 text-start">Documento</th>
+                                        <th class="text-start">Nombre y Apellido</th>
+                                        <th class="text-start">Tipo Accionista</th>
+                                        <th class="polar-num">Nro. Acciones</th>
+                                        <th class="polar-num">% Participación</th>
+                                        <th class="polar-date">Creación</th>
+                                        <th class="polar-date">Modificación</th>
+                                        <th class="text-end pe-2">Detalle</th>
+                                    </tr>
+                                </ChildContentHeader>
+                                <ChildContentRow Context="p">
+                                    <tr class="align-middle border-bottom">
+                                        <td class="ps-2 text-start text-secondary font-monospace">@(string.IsNullOrWhiteSpace(p.DocumentoIdentidad) ? "-" : p.DocumentoIdentidad)</td>
+                                        <td class="text-start fw-semibold text-dark">
+                                            @if (p.EsCustodio)
+                                            {
+                                                <button @onclick="() => ToggleCustodiados(p)" class="btn btn-sm btn-link p-0 text-decoration-none me-1" title="Ver sub-accionistas custodiados">
+                                                    <i class="bi @(p.MostrarCustodiados ? "bi-dash-square-fill" : "bi-plus-square-fill") text-primary"></i>
+                                                </button>
+                                            }
+                                            <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold text-dark text-start"
+                                                    style="font-size: inherit;"
+                                                    @onclick="() => AbrirDetalleAccionista(p.AccionistaId)"
+                                                    title="Ver detalle del accionista">
+                                                @p.AccionistaNombre
+                                            </button>
+                                            @if (p.EsCustodio)
+                                            {
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 0.65rem;">Custodio</span>
+                                            }
+                                        </td>
+                                        <td class="text-start">
+                                            <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
+                                        </td>
+                                        <td class="polar-num">@UtilClass.FormatearMiles(p.NroAcciones)</td>
+                                        <td class="polar-num">@((p.Participacion ?? 0).ToString("N6"))%</td>
+                                        <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
+                                        <td class="polar-date text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                        <td class="text-end pe-2">
+                                            @if (p.AccionistaId > 0)
+                                            {
+                                                <button class="btn btn-link btn-sm text-primary p-0"
+                                                        @onclick="() => AbrirDetalleAccionista(p.AccionistaId)"
+                                                        title="Ver Detalle Accionista">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                    @if (p.MostrarCustodiados && p.SubCustodiados.Any())
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="p-0 border-0">
+                                                <div class="bg-light p-2 ps-3 border-start border-3 border-primary shadow-sm my-1 rounded-2">
+                                                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-1 pb-1 border-bottom">
+                                                        <div>
+                                                            <span class="fw-bold text-dark me-2">
+                                                                <i class="bi bi-bank2 me-1 text-primary"></i> Sub-Cuentas Custodiadas en @p.AccionistaNombre
+                                                            </span>
+                                                            <span class="badge bg-primary text-white font-monospace">
+                                                                @UtilClass.FormatearMiles(p.SubCustodiados.Count) registros
+                                                            </span>
+                                                        </div>
+                                                        <div class="input-group input-group-sm" style="max-width: 280px;">
+                                                            <span class="input-group-text bg-white border-end-0 text-secondary py-0">
+                                                                <i class="bi bi-search"></i>
+                                                            </span>
+                                                            <input type="text"
+                                                                   class="form-control form-control-sm border-start-0 ps-0 py-0"
+                                                                   style="font-size: 0.74rem;"
+                                                                   placeholder="Buscar sub-cuenta..."
+                                                                   @bind="p.SubSearchTerm"
+                                                                   @bind:event="oninput"
+                                                                   @bind:after="() => { p.SubCurrentPage = 1; StateHasChanged(); }" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="table-responsive bg-white rounded border">
+                                                        <table class="table table-sm table-hover align-middle m-0">
+                                                            <thead class="table-light border-bottom text-secondary">
+                                                                <tr>
+                                                                    <th class="ps-2">Documento</th>
+                                                                    <th>Sub-Accionista</th>
+                                                                    <th>Tipo</th>
+                                                                    <th class="text-end">Nro. Acciones</th>
+                                                                    <th class="text-end">% Participación</th>
+                                                                    <th class="text-center">Modificación</th>
+                                                                    <th class="pe-2 text-end">Detalle</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var sub in p.SubCustodiadosPaginados)
+                                                                {
+                                                                    <tr class="border-bottom">
+                                                                        <td class="ps-2 font-monospace text-secondary">@(string.IsNullOrWhiteSpace(sub.DocumentoIdentidad) ? "-" : sub.DocumentoIdentidad)</td>
+                                                                        <td class="fw-semibold text-dark">
+                                                                            <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold text-dark text-start"
+                                                                                    style="font-size: inherit;"
+                                                                                    @onclick="() => AbrirDetalleAccionista(sub.AccionistaId)"
+                                                                                    title="Ver detalle del sub-accionista">
+                                                                                @sub.AccionistaNombre
+                                                                            </button>
+                                                                        </td>
+                                                                        <td><span class="badge bg-light text-secondary border">@(sub.TipoAccionistaNombre ?? "Sub-Cuenta")</span></td>
+                                                                        <td class="text-end font-monospace fw-bold text-primary">@UtilClass.FormatearMiles(sub.NroAcciones ?? 0)</td>
+                                                                        <td class="text-end text-secondary">@((sub.Participacion ?? 0).ToString("N6"))%</td>
+                                                                        <td class="text-center text-secondary">@sub.UpdateDate.ToShortDateString()</td>
+                                                                        <td class="pe-2 text-end">
+                                                                            @if (sub.AccionistaId > 0)
+                                                                            {
+                                                                                <button class="btn btn-link btn-sm text-primary p-0"
+                                                                                        @onclick="() => AbrirDetalleAccionista(sub.AccionistaId)"
+                                                                                        title="Ver Detalle Sub-Accionista">
+                                                                                    <i class="bi bi-eye"></i>
+                                                                                </button>
+                                                                            }
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    @if (p.TotalSubPages > 1)
+                                                    {
+                                                        <div class="d-flex flex-wrap align-items-center justify-content-between pt-1 px-1 text-muted">
+                                                            <span>
+                                                                Mostrando @((p.SubCurrentPage - 1) * p.SubPageSize + 1) - @Math.Min(p.SubCurrentPage * p.SubPageSize, p.SubCustodiadosFiltrados.Count()) de @UtilClass.FormatearMiles(p.SubCustodiadosFiltrados.Count())
+                                                            </span>
+                                                            <div class="d-flex align-items-center gap-1">
+                                                                <button class="btn btn-outline-secondary btn-sm py-0 px-1"
+                                                                        style="font-size: 0.72rem;"
+                                                                        disabled="@(p.SubCurrentPage <= 1)"
+                                                                        @onclick="() => p.SubCurrentPage--">
+                                                                    Anterior
+                                                                </button>
+                                                                <span class="mx-1 font-monospace">@p.SubCurrentPage / @p.TotalSubPages</span>
+                                                                <button class="btn btn-outline-secondary btn-sm py-0 px-1"
+                                                                        style="font-size: 0.72rem;"
+                                                                        disabled="@(p.SubCurrentPage >= p.TotalSubPages)"
+                                                                        @onclick="() => p.SubCurrentPage++">
+                                                                    Siguiente
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </ChildContentRow>
+                            </PaginationComponent>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Pie del Modal -->
+            <div class="modal-footer bg-light py-2 px-3 border-top d-flex justify-content-between align-items-center">
+                <span class="text-muted" style="font-size: 0.72rem;">
+                    ID Sociedad: @SociedadId
+                </span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-danger btn-sm px-3 py-1 shadow-sm"
+                            @onclick="ExportarAPdf"
+                            disabled="@cargando"
+                            style="font-size: 0.76rem;">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                    </button>
+                    <button class="btn btn-secondary btn-sm px-3 py-1 shadow-sm"
+                            @onclick="Cerrar"
+                            style="font-size: 0.76rem;">
+                        <i class="bi bi-x-lg me-1"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (cargando)
+{
+    <ModalCargando />
+}
+
+@if (mostrarModalAsamblea)
+{
+    <AsambleasDetalle id="@idAsamblea.ToString()" OnFinalizado="() => mostrarModalAsamblea = false" />
+}
+
+@if (mostrarModalAccionista && idAccionistaDetalle > 0)
+{
+    <ModalDetalleAccionista AccionistaId="@idAccionistaDetalle" ZIndex="@(ZIndex + 10)" OnCerrar="() => mostrarModalAccionista = false" />
+}
+
+@code {
+    [Parameter] public int SociedadId { get; set; }
+    [Parameter] public int ZIndex { get; set; } = 2100;
+    [Parameter] public EventCallback OnCerrar { get; set; }
+
+    private int pestanaActiva = 1;
+    private bool cargando = false;
+    private string mensajeAlerta = "";
+    private bool mostrarAlerta = false;
+    private string urlPdfGenerado = "";
+    private string claseAlerta = "alert-success";
+    private string iconoAlerta = "bi-check-circle-fill";
+
+    private Sociedad entidadActual = new();
+    private List<Autoridad> ListAutoridadGral = new();
+    private List<Asamblea> ListAsambleaGral = new();
+    private List<Asamblea> ListReformaGral = new();
+    private List<Certificacion> ListCertificacionGral = new();
+    private List<LibroSocietario> ListLibrosgral = new();
+    private List<AccionistaSociedadVerDto> ListAccionistasGral = new();
+
+    private int idAsamblea = 0;
+    private bool mostrarModalAsamblea = false;
+    private int idAccionistaDetalle = 0;
+    private bool mostrarModalAccionista = false;
+    private int? _ultimoCargoId;
+    private int _ultimoSociedadIdCargado = 0;
+
+    private void AbrirDetalleAccionista(int accionistaId)
+    {
+        if (accionistaId <= 0) return;
+        idAccionistaDetalle = accionistaId;
+        mostrarModalAccionista = true;
+    }
+
+    [Inject] private ISociedad repository { get; set; } = null!;
+    [Inject] private IAutoridad repoAutoridad { get; set; } = null!;
+    [Inject] private IAsamblea repoAsamblea { get; set; } = null!;
+    [Inject] private ICertificacion repoCertificacion { get; set; } = null!;
+    [Inject] private ILibroSocietario repoLibros { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoaccionista { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SociedadId > 0 && SociedadId != _ultimoSociedadIdCargado)
+        {
+            _ultimoSociedadIdCargado = SociedadId;
+            pestanaActiva = 1;
+            urlPdfGenerado = "";
+            mostrarAlerta = false;
+            await CargarDatosSociedadAsync();
+        }
+    }
+
+    private async Task CargarDatosSociedadAsync()
+    {
+        try
+        {
+            cargando = true;
+            StateHasChanged();
+
+            var soc = await repository.GetByIdAsync(SociedadId);
+            if (soc == null || soc.Id == 0)
+            {
+                cargando = false;
+                await MostrarNotificacion("No se encontró la sociedad seleccionada.", true);
+                return;
+            }
+            entidadActual = soc;
+            int estatusSociedad = entidadActual.EstatusSociedad?.Id ?? 1;
+
+            var listAutoridad = await repoAutoridad.GetBySociedadIdAsync(SociedadId);
+            ListAutoridadGral = listAutoridad
+                .Where(x => !string.IsNullOrWhiteSpace(x.Nombre))
+                .OrderBy(x => x.Cargo?.Orden ?? 999)
+                .ThenBy(x => x.Cargo?.Nombre ?? "")
+                .ThenBy(x => x.Nombre ?? "")
+                .ToList();
+
+            var listAsamblea = await repoAsamblea.GetBySociedadIdAsync(SociedadId);
+            ListAsambleaGral = listAsamblea
+                .Where(x => x.IndicadorAsamblea == 1)
+                .OrderBy(x => x.FechaCelebracion)
+                .ToList();
+
+            ListReformaGral = listAsamblea
+                .Where(x => x.IndicadorAsamblea == 0 || x.TipoReforma != null)
+                .OrderBy(x => x.FechaCelebracion)
+                .ToList();
+
+            var listCertificaciones = await repoCertificacion.GetBySociedadIdAsync(SociedadId);
+            ListCertificacionGral = listCertificaciones
+                .OrderByDescending(x => x.Fecha)
+                .ToList();
+
+            var listLibros = await repoLibros.GetBySociedadIdAsync(SociedadId);
+            ListLibrosgral = listLibros
+                .OrderBy(x => x.FechaDesde)
+                .ToList();
+
+            var listAaccionista = await repoaccionista.GetBySociedadIdAsync(SociedadId);
+            var activosDirectos = listAaccionista
+                .Where(x => (x.EstatusAccionista == null || x.EstatusAccionista.Id == estatusSociedad || x.EstatusAccionista.Id == 1) && x.CustodioId == null)
+                .ToList();
+
+            var custodiosSet = listAaccionista
+                .Where(x => (x.EstatusAccionista == null || x.EstatusAccionista.Id == estatusSociedad || x.EstatusAccionista.Id == 1) && x.CustodioId != null)
+                .Select(x => x.CustodioId!.Value)
+                .ToHashSet();
+
+            long totalAccionesSociedad = 0;
+            if (!string.IsNullOrWhiteSpace(entidadActual.NumeroAcciones))
+            {
+                long.TryParse(entidadActual.NumeroAcciones, out totalAccionesSociedad);
+            }
+
+            List<AccionistaSociedadVerDto> listNewAccionista = new();
+            foreach (var item in activosDirectos)
+            {
+                long nroacciones = item.NroAcciones ?? 0;
+                decimal porcparticipa = 0;
+
+                if (totalAccionesSociedad > 0 && nroacciones > 0)
+                {
+                    porcparticipa = Math.Round((decimal)nroacciones / totalAccionesSociedad * 100, 6);
+                }
+
+                listNewAccionista.Add(new AccionistaSociedadVerDto
+                {
+                    Id = item.Id,
+                    SociedadId = SociedadId,
+                    AccionistaId = item.Accionista?.Id ?? 0,
+                    SociedadNombre = item.Sociedad?.Empresa?.Nombre,
+                    DocumentoIdentidad = UtilClass.ObtenerDocumentoCompleto(item.Accionista?.TipoDocumento1?.Nombre, item.Accionista?.Documento1),
+                    TipoAccionistaNombre = item.Accionista?.TipoAccionista?.Nombre,
+                    AccionistaNombre = (item.Accionista?.TipoAccionista?.Id != 3)
+                        ? item.Accionista?.Nombre
+                        : ((item.Accionista?.NombreSusesion?.Length > 50) ? item.Accionista.NombreSusesion.Substring(0, 50) : item.Accionista?.NombreSusesion),
+                    NroAcciones = nroacciones,
+                    Participacion = porcparticipa,
+                    EsCustodio = custodiosSet.Contains(item.Id),
+                    CreateDate = item.CreateDate,
+                    UpdateDate = item.UpdateDate
+                });
+            }
+            ListAccionistasGral = listNewAccionista.OrderByDescending(x => x.NroAcciones).ToList();
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleCustodiados(AccionistaSociedadVerDto p)
+    {
+        p.MostrarCustodiados = !p.MostrarCustodiados;
+
+        if (p.MostrarCustodiados && !p.SubCustodiados.Any())
+        {
+            int estatusSoc = entidadActual.EstatusSociedad?.Id ?? 1;
+            var custodiadosDb = await repoaccionista.GetCustodiadosAsync(p.SociedadId, p.Id, estatusSoc);
+            if (!custodiadosDb.Any() && estatusSoc != 1)
+            {
+                custodiadosDb = await repoaccionista.GetCustodiadosAsync(p.SociedadId, p.Id, 1);
+            }
+
+            long numTotalSociedad = 0;
+            if (!string.IsNullOrWhiteSpace(entidadActual.NumeroAcciones))
+            {
+                long.TryParse(entidadActual.NumeroAcciones, out numTotalSociedad);
+            }
+
+            p.SubCustodiados = custodiadosDb.Select(x => new AccionistaSociedadVerDto
+            {
+                Id = x.Id,
+                SociedadId = p.SociedadId,
+                SociedadNombre = p.SociedadNombre,
+                AccionistaId = x.Accionista?.Id ?? 0,
+                DocumentoIdentidad = UtilClass.ObtenerDocumentoCompleto(x.Accionista?.TipoDocumento1?.Nombre, x.Accionista?.Documento1),
+                AccionistaNombre = (x.Accionista?.TipoAccionista?.Id != 3) ? x.Accionista?.Nombre : x.Accionista?.NombreSusesion,
+                TipoAccionistaNombre = x.Accionista?.TipoAccionista?.Nombre,
+                NroAcciones = x.NroAcciones,
+                Participacion = (numTotalSociedad > 0 && (x.NroAcciones ?? 0) > 0)
+                    ? Math.Round((decimal)x.NroAcciones!.Value / numTotalSociedad * 100, 6)
+                    : 0,
+                CreateDate = x.CreateDate,
+                UpdateDate = x.UpdateDate
+            }).ToList();
+        }
+        p.SubCurrentPage = 1;
+        StateHasChanged();
+    }
+
+    private void Detalle(Asamblea item)
+    {
+        idAsamblea = item.Id;
+        mostrarModalAsamblea = true;
+    }
+
+    private async Task ExportarAPdf()
+    {
+        try
+        {
+            cargando = true;
+            urlPdfGenerado = "";
+            StateHasChanged();
+
+            urlPdfGenerado = await ReportService.GenerarYDescargarReporteSociedadAsync(SociedadId);
+
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion("Reporte PDF generado exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            cargando = false;
+            StateHasChanged();
+            await MostrarNotificacion($"Error al exportar PDF: {ex.Message}", true);
+        }
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000);
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+
+    private async Task Cerrar()
+    {
+        if (OnCerrar.HasDelegate)
+        {
+            await OnCerrar.InvokeAsync();
+        }
+    }
+}

@@ -379,7 +379,7 @@
             .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado &&
                         (x.IndicadorAsamblea == 0 ||
                          ((reforma == 1 && x.TipoReforma != null) || (reforma != 1 && x.TipoReforma == null))))
-            .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .OrderBy(x => x.FechaCelebracion)
             .ToList();
 
         string encabezado = string.Join(separador, new string[] {
@@ -455,7 +455,7 @@
 
         var listGral = listaGral
             .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado)
-            .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .OrderBy(x => x.FechaDesde)
             .ToList();
 
         string encabezado = string.Join(separador, new string[] {
@@ -626,7 +626,7 @@
 
         var listGral = listaGral
             .Where(x => x.AccionistaSociedad?.Id == targetId)
-            .OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre ?? string.Empty)
+            .OrderBy(x => x.Fecha)
             .ToList();
 
         string encabezado = string.Join(separador, new string[] {

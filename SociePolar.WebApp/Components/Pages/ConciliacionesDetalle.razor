@@ -12,9 +12,18 @@
                         <i class="bi bi-calculator text-white fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="mb-0 fw-bold text-dark">
-                            Detalle de Conciliación
-                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="mb-0 fw-bold text-dark">
+                                Detalle de Conciliación
+                            </h5>
+                            @if (sociedadActual != null)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 d-inline-flex align-items-center gap-1"
+                                        @onclick="() => AbrirModalDetalleSociedad(sociedadActual.Id)" title="Ver ficha de la sociedad en ventana emergente">
+                                    <i class="bi bi-building"></i> @(sociedadActual.Empresa?.Nombre ?? "-") <i class="bi bi-eye ms-1"></i>
+                                </button>
+                            }
+                        </div>
                         <small class="text-muted">Resumen comparativo de acciones y estado de accionistas</small>
                     </div>
                 </div>
@@ -93,8 +102,9 @@
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acción</th>
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Documento</th>
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
-                                        <th class="py-3 text-secondary fw-bold" style="width: 35%; font-size: 0.85rem;">Nombre Accionista</th>
-                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Total Acciones</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 30%; font-size: 0.85rem;">Nombre Accionista</th>
+                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 17%; font-size: 0.85rem;">Total Acciones</th>
+                                        <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 8%; font-size: 0.85rem;">Ficha</th>
                                     </tr>
                                 </ChildContentHeader>
                                 <ChildContentRow Context="p">
@@ -106,8 +116,17 @@
                                         </td>
                                         <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
                                         <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
-                                        <td class="text-start fw-medium text-dark" style="width: 35%;">@p.Nombre</td>
-                                        <td class="text-end fw-bold text-primary" style="width: 20%; color: #00338D !important;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                        <td class="text-start fw-medium text-dark" style="width: 30%;">
+                                            <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold" @onclick="() => AbrirModalDetalleAccionista(p.Id)" title="Ver ficha del accionista en ventana emergente">
+                                                @p.Nombre
+                                            </a>
+                                        </td>
+                                        <td class="text-end fw-bold text-primary" style="width: 17%; color: #00338D !important;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                        <td class="text-end pe-3" style="width: 8%;">
+                                            <button class="btn btn-link btn-sm text-info p-0" @onclick="() => AbrirModalDetalleAccionista(p.Id)" title="Ver Detalle Accionista (Popup)">
+                                                <i class="bi bi-eye fs-6"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </ChildContentRow>
                             </PaginationComponent>
@@ -125,8 +144,9 @@
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acción</th>
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Documento</th>
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
-                                        <th class="py-3 text-secondary fw-bold" style="width: 35%; font-size: 0.85rem;">Nombre Accionista</th>
-                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Total Acciones</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 30%; font-size: 0.85rem;">Nombre Accionista</th>
+                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 17%; font-size: 0.85rem;">Total Acciones</th>
+                                        <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 8%; font-size: 0.85rem;">Ficha</th>
                                     </tr>
                                 </ChildContentHeader>
                                 <ChildContentRow Context="p">
@@ -138,8 +158,17 @@
                                         </td>
                                         <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
                                         <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
-                                        <td class="text-start fw-medium text-dark" style="width: 35%;">@p.Nombre</td>
-                                        <td class="text-end fw-bold text-primary" style="width: 20%; color: #00338D !important;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                        <td class="text-start fw-medium text-dark" style="width: 30%;">
+                                            <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold" @onclick="() => AbrirModalDetalleAccionista(p.Id)" title="Ver ficha del accionista en ventana emergente">
+                                                @p.Nombre
+                                            </a>
+                                        </td>
+                                        <td class="text-end fw-bold text-primary" style="width: 17%; color: #00338D !important;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                        <td class="text-end pe-3" style="width: 8%;">
+                                            <button class="btn btn-link btn-sm text-info p-0" @onclick="() => AbrirModalDetalleAccionista(p.Id)" title="Ver Detalle Accionista (Popup)">
+                                                <i class="bi bi-eye fs-6"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </ChildContentRow>
                             </PaginationComponent>
@@ -157,8 +186,9 @@
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Acción</th>
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Tipo Documento</th>
                                         <th class="py-3 text-secondary fw-bold" style="width: 15%; font-size: 0.85rem;">Nro. Documento</th>
-                                        <th class="py-3 text-secondary fw-bold" style="width: 35%; font-size: 0.85rem;">Nombre Accionista</th>
-                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 20%; font-size: 0.85rem;">Total Acciones</th>
+                                        <th class="py-3 text-secondary fw-bold" style="width: 30%; font-size: 0.85rem;">Nombre Accionista</th>
+                                        <th class="py-3 text-secondary fw-bold text-end" style="width: 17%; font-size: 0.85rem;">Total Acciones</th>
+                                        <th class="py-3 pe-3 text-secondary fw-bold text-end" style="width: 8%; font-size: 0.85rem;">Ficha</th>
                                     </tr>
                                 </ChildContentHeader>
                                 <ChildContentRow Context="p">
@@ -170,8 +200,17 @@
                                         </td>
                                         <td class="text-start text-secondary small" style="width: 15%;">@p.Documento</td>
                                         <td class="text-start text-secondary small" style="width: 15%;">@p.NroDocumento</td>
-                                        <td class="text-start fw-medium text-dark" style="width: 35%;">@p.Nombre</td>
-                                        <td class="text-end fw-bold text-secondary" style="width: 20%;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                        <td class="text-start fw-medium text-dark" style="width: 30%;">
+                                            <a href="javascript:void(0)" class="text-primary text-decoration-none fw-semibold" @onclick="() => AbrirModalDetalleAccionista(p.Id)" title="Ver ficha del accionista en ventana emergente">
+                                                @p.Nombre
+                                            </a>
+                                        </td>
+                                        <td class="text-end fw-bold text-secondary" style="width: 17%;">@UtilClass.FormatearMiles(p.TotalAcciones)</td>
+                                        <td class="text-end pe-3" style="width: 8%;">
+                                            <button class="btn btn-link btn-sm text-info p-0" @onclick="() => AbrirModalDetalleAccionista(p.Id)" title="Ver Detalle Accionista (Popup)">
+                                                <i class="bi bi-eye fs-6"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </ChildContentRow>
                             </PaginationComponent>
@@ -200,8 +239,32 @@
     <ModalCargando />
 }
 
+@if (sociedadPopupId > 0)
+{
+    <ModalDetalleSociedad SociedadId="@sociedadPopupId" OnCerrar="() => sociedadPopupId = 0" />
+}
+
+@if (accionistaPopupId > 0)
+{
+    <ModalDetalleAccionista AccionistaId="@accionistaPopupId" OnCerrar="() => accionistaPopupId = 0" />
+}
+
 @code {
     [Parameter] public Int32 id { get; set; } = 0;
+
+    private int sociedadPopupId = 0;
+    private int accionistaPopupId = 0;
+    private Sociedad? sociedadActual;
+
+    private void AbrirModalDetalleSociedad(int id)
+    {
+        if (id > 0) sociedadPopupId = id;
+    }
+
+    private void AbrirModalDetalleAccionista(int id)
+    {
+        if (id > 0) accionistaPopupId = id;
+    }
 
     [Parameter]
     public EventCallback<bool> OnFinalizado { get; set; }
@@ -275,6 +338,7 @@
         try
         {
             var conciliacion = await repository.GetByIdAsync(id);
+            sociedadActual = conciliacion?.Sociedad;
             var listaDetalle = await repository.GetDetalleByIdAsync(id);
             foreach (var item in listaDetalle)
             {
@@ -285,7 +349,7 @@
                     {
                         ListgralNuevos.Add(new ConciliacionDetalleDto
                         {
-                            Id = item.Id,
+                            Id = item.AccionistaId,
                             Accion = item.Accion,
                             Documento = accionista.TipoDocumento1?.Nombre,
                             NroDocumento = accionista.Documento1,
@@ -297,7 +361,7 @@
                     {
                         ListgralActualizados.Add(new ConciliacionDetalleDto
                         {
-                            Id = item.Id,
+                            Id = item.AccionistaId,
                             Accion = item.Accion,
                             Documento = accionista.TipoDocumento1?.Nombre,
                             NroDocumento = accionista.Documento1,
@@ -309,7 +373,7 @@
                     {
                         ListgralInactivos.Add(new ConciliacionDetalleDto
                         {
-                            Id = item.Id,
+                            Id = item.AccionistaId,
                             Accion = item.Accion,
                             Documento = accionista.TipoDocumento1?.Nombre,
                             NroDocumento = accionista.Documento1,

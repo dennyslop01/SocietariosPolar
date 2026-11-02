@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
 using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
@@ -21,6 +21,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoReforma)
+                .OrderBy(x => x.FechaCelebracion)
                 .ToListAsync();
         }
 
@@ -51,6 +52,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoReforma)
                 .Where(x => x.Sociedad!.Id == sociedadId)
+                .OrderBy(x => x.FechaCelebracion)
                 .ToListAsync();
         }
 

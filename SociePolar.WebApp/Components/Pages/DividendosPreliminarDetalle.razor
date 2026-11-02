@@ -6,13 +6,20 @@
         <div class="card-header bg-white py-3">
             <div class="d-flex align-items-center justify-content-between">
                 <!-- Parte Izquierda: Icono y Título -->
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary p-2 rounded-3 me-2 shadow-sm">
                         <i class="bi bi-calculator text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
                         Detalle Dividendos Preliminares
                     </h5>
+                    @if (DividendoPadre?.Sociedad != null)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 d-inline-flex align-items-center gap-1"
+                                @onclick="() => AbrirModalDetalleSociedad(DividendoPadre.Sociedad.Id)" title="Ver ficha de la sociedad en ventana emergente">
+                            <i class="bi bi-building"></i> @(DividendoPadre.Sociedad.Empresa?.Nombre ?? "-") <i class="bi bi-eye ms-1"></i>
+                        </button>
+                    }
                 </div>
 
                 <!-- Contenedor flex para alinear los botones en línea -->
@@ -119,9 +126,9 @@
                     <ChildContentRow Context="p">
                     <tr class="align-middle border-bottom text-nowrap">
                         <td class="polar-sticky-col-direct text-start text-dark fw-semibold">
-                            <span class="polar-truncate" style="max-width: 250px;" title="@p.NombreAccionista">
+                            <a href="javascript:void(0)" class="polar-truncate text-primary text-decoration-none fw-semibold d-inline-block" style="max-width: 250px;" @onclick="() => AbrirModalDetalleAccionistaPorFila(p)" title="Ver ficha del accionista: @p.NombreAccionista">
                                 @p.NombreAccionista
-                            </span>
+                            </a>
                         </td>
                         <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.Rif) ? "-" : p.Rif)</td>
                         <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.TipoPago) ? "-" : p.TipoPago)</td>
@@ -177,7 +184,10 @@
                             </span>
                         </td>
                         <td class="polar-date text-secondary small">@(p.SoporteFechaP4?.ToString("dd/MM/yyyy") ?? "-")</td>
-                        <td class="text-end pe-3">
+                        <td class="text-end pe-3 text-nowrap">
+                            <button class="btn btn-link btn-sm text-info p-0 me-2" @onclick="() => AbrirModalDetalleAccionistaPorFila(p)" title="Ver Detalle Accionista (Popup)">
+                                <i class="bi bi-eye fs-6"></i>
+                            </button>
                             @if (idRol == 1 || idRol == 2)
                             {
                                 <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
@@ -214,8 +224,77 @@
 {
     <DividendosDefinitivosDetalleGuardar idDetalle="@idDetalle" OnFinalizado="ManejarCierreModal" />
 }
+
+@if (sociedadPopupId > 0)
+{
+    <ModalDetalleSociedad SociedadId="@sociedadPopupId" OnCerrar="() => sociedadPopupId = 0" />
+}
+
+@if (accionistaPopupId > 0)
+{
+    <ModalDetalleAccionista AccionistaId="@accionistaPopupId" OnCerrar="() => accionistaPopupId = 0" />
+}
+
 @code {
     [Parameter] public Int32 id { get; set; } = 0;
+
+    private int sociedadPopupId = 0;
+    private int accionistaPopupId = 0;
+    private List<Accionista> listaAccionistasCatalogo = new();
+
+    private void AbrirModalDetalleSociedad(int idSoc)
+    {
+        if (idSoc > 0) sociedadPopupId = idSoc;
+    }
+
+    private async Task AbrirModalDetalleAccionistaPorFila(DividendoPreliminarDetalle item)
+    {
+        int accId = ResolverAccionistaId(item);
+        if (accId > 0)
+        {
+            accionistaPopupId = accId;
+        }
+        else
+        {
+            await MostrarNotificacion($"No se encontró el accionista registrado ({item.NombreAccionista}).", true);
+        }
+    }
+
+    private int ResolverAccionistaId(DividendoPreliminarDetalle item)
+    {
+        if (listaAccionistasCatalogo == null || !listaAccionistasCatalogo.Any()) return 0;
+
+        if (!string.IsNullOrWhiteSpace(item.Rif))
+        {
+            var partes = item.Rif.Split('-');
+            if (partes.Length >= 2)
+            {
+                string tipoDoc = partes[0].Trim();
+                string nroDoc = partes[1].Replace(".", "").Replace(",", "").Trim();
+                var porRif = listaAccionistasCatalogo.FirstOrDefault(x =>
+                    string.Equals(x.TipoDocumento1?.Nombre?.Trim(), tipoDoc, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals((x.Documento1 ?? "").Replace(".", "").Replace(",", "").Trim(), nroDoc, StringComparison.OrdinalIgnoreCase));
+                if (porRif != null) return porRif.Id;
+            }
+
+            string rifLimpio = item.Rif.Replace("-", "").Replace(".", "").Replace(",", "").Trim();
+            var porDocSimple = listaAccionistasCatalogo.FirstOrDefault(x =>
+                string.Equals(((x.TipoDocumento1?.Nombre ?? "") + (x.Documento1 ?? "")).Replace("-", "").Replace(".", "").Trim(), rifLimpio, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals((x.Documento1 ?? "").Replace(".", "").Replace("-", "").Trim(), rifLimpio, StringComparison.OrdinalIgnoreCase));
+            if (porDocSimple != null) return porDocSimple.Id;
+        }
+
+        if (!string.IsNullOrWhiteSpace(item.NombreAccionista))
+        {
+            string nom = item.NombreAccionista.Trim();
+            var porNombre = listaAccionistasCatalogo.FirstOrDefault(x =>
+                string.Equals(x.Nombre?.Trim(), nom, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(x.NombreSusesion?.Trim(), nom, StringComparison.OrdinalIgnoreCase));
+            if (porNombre != null) return porNombre.Id;
+        }
+
+        return 0;
+    }
 
     [Parameter]
     public EventCallback<bool> OnFinalizado { get; set; }
@@ -234,6 +313,7 @@
     private string searchTerm = "";
 
     [Inject] private IDividendoPreliminar repository { get; set; } = null!;
+    [Inject] private IAccionista repoAccionista { get; set; } = null!;
 
     private DividendoPreliminar? DividendoPadre;
 
@@ -291,6 +371,7 @@
             DividendoPadre = await repository.GetByIdAsync(id);
             ListgralCompleta = await repository.GetDetalleByIdAsync(id) ?? new();
             Listgral = ListgralCompleta;
+            listaAccionistasCatalogo = await repoAccionista.GetAllAsync() ?? new();
         }
         catch (Exception ex)
         {

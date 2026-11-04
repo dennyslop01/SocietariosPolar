@@ -17,6 +17,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="9.0.15" />
     <PackageReference Include="MudBlazor" Version="9.4.0" />
     <PackageReference Include="QuestPDF" Version="2026.8.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.22" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="9.0.22" />
   </ItemGroup>
 
   <ItemGroup>

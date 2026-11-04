@@ -10,10 +10,9 @@
                     </h5>
                     @if (DividendoPadre != null)
                     {
-                        <button type="button" class="badge bg-white text-primary border-0 shadow-sm d-inline-flex align-items-center gap-1 py-1 px-2"
-                                @onclick="() => AbrirModalDetalleSociedad(DividendoPadre.Sociedad?.Id ?? 0)" title="Ver ficha de la sociedad en ventana emergente">
-                            🏢 @(DividendoPadre.Sociedad?.Empresa?.Nombre ?? "-") <i class="bi bi-eye ms-1"></i>
-                        </button>
+                        <span class="badge bg-white text-dark shadow-sm">
+                            🏢 @(DividendoPadre.Sociedad?.Empresa?.Nombre ?? "-")
+                        </span>
                     }
                 </div>
 
@@ -114,9 +113,9 @@
                     <ChildContentRow Context="p">
                         <tr class="align-middle border-bottom text-nowrap">
                             <td class="polar-sticky-col-direct text-start text-dark fw-semibold">
-                                <a href="javascript:void(0)" class="polar-truncate text-primary text-decoration-none fw-semibold d-inline-block" style="max-width: 250px;" @onclick="() => AbrirModalDetalleAccionista(p.Accionista?.Id ?? 0)" title="Ver ficha del accionista: @ObtenerNombreAccionista(p)">
+                                <span class="polar-truncate" style="max-width: 250px;" title="@ObtenerNombreAccionista(p)">
                                     @ObtenerNombreAccionista(p)
-                                </a>
+                                </span>
                             </td>
                             <td class="text-start text-secondary small">@(p.Accionista?.Documento1 ?? "-")</td>
                             <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.TipoPago) ? "-" : p.TipoPago)</td>
@@ -173,9 +172,6 @@
                             </td>
                             <td class="polar-date text-secondary small">@(p.SoporteFechaP4?.ToString("dd/MM/yyyy") ?? "-")</td>
                             <td class="text-end pe-3 text-nowrap">
-                                <button class="btn btn-link btn-sm text-info p-0 me-2" @onclick="() => AbrirModalDetalleAccionista(p.Accionista?.Id ?? 0)" title="Ver Detalle Accionista (Popup)">
-                                    <i class="bi bi-eye fs-6"></i>
-                                </button>
                                 @if (idRol == 1 || idRol == 2 || idRol == 3)
                                 {
                                     <button class="btn btn-link btn-sm text-secondary p-0" @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
@@ -196,31 +192,8 @@
     <ModalCargando />
 }
 
-@if (sociedadPopupId > 0)
-{
-    <ModalDetalleSociedad SociedadId="@sociedadPopupId" OnCerrar="() => sociedadPopupId = 0" />
-}
-
-@if (accionistaPopupId > 0)
-{
-    <ModalDetalleAccionista AccionistaId="@accionistaPopupId" OnCerrar="() => accionistaPopupId = 0" />
-}
-
 @code {
     [Parameter] public Int32 id { get; set; } = 0;
-
-    private int sociedadPopupId = 0;
-    private int accionistaPopupId = 0;
-
-    private void AbrirModalDetalleSociedad(int idSoc)
-    {
-        if (idSoc > 0) sociedadPopupId = idSoc;
-    }
-
-    private void AbrirModalDetalleAccionista(int idAcc)
-    {
-        if (idAcc > 0) accionistaPopupId = idAcc;
-    }
 
     [Parameter]
     public EventCallback<bool> OnFinalizado { get; set; }
@@ -370,12 +343,7 @@
     private string ObtenerNombreAccionista(DividendoDefinitivoDetalle p)
     {
         if (p.Accionista == null) return "-";
-        if (p.Accionista.TipoAccionista?.Id != 3)
-        {
-            return p.Accionista.Nombre ?? "-";
-        }
-        var sucesion = p.Accionista.NombreSusesion ?? "";
-        return sucesion.Length > 50 ? sucesion.Substring(0, 50) + "..." : (string.IsNullOrEmpty(sucesion) ? (p.Accionista.Nombre ?? "-") : sucesion);
+        return p.Accionista.Nombre ?? "-";
     }
 
     private string FormatearMonto(decimal val)

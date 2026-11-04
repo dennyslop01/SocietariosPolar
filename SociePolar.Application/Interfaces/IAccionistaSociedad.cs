@@ -11,7 +11,6 @@ namespace SociePolar.Application.Interfaces
         Task<(List<AccionistaSociedad> Items, int TotalCount)> GetPaginatedAsync(int estatusId, int pageNumber, int pageSize, string searchTerm);
         Task<AccionistaSociedad?> GetByIdAsync(int id);
         Task<List<AccionistaSociedad>> GetBySociedadIdAsync(int sociedadId);
-        Task<List<AccionistaSociedad>> GetByAccionistaIdAsync(int accionistaId);
         Task<List<AccionistaSociedad>> GetBySociedadIdEstatusIdAsync(int sociedadId, int estatusId);
         Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdAsync(int sociedadId, int accionistaId);
         Task<AccionistaSociedad?> GetBySociedadIdAccionistaIdCustodioIdAsync(int sociedadId, int accionistaId, int? custodioId);
@@ -33,5 +32,6 @@ namespace SociePolar.Application.Interfaces
         Task<List<Sociedad>> GetAllSociedadesAsync(int estatusId);
         Task<List<AccionistaSociedadResumenDto>> GetResumenBySociedadIdAsync(int sociedadId);
         Task ActualizarSaldosYAuditoriaConciliacionLoteAsync(int procesoId, int sociedadId, int? custodioId, int userId);
+        Task<List<AccionistaSociedad>> GetByAccionistaIdAsync(int accionistaId);
     }
 }

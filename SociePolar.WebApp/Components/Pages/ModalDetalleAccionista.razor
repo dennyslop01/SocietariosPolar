@@ -412,17 +412,6 @@
                                     <label class="form-label fw-bold text-secondary d-block">¿Hace falta actualizar?</label>
                                     <div class="valor-campo">@SiNoGuion(entidadActual.FaltaActualizar)</div>
                                 </div>
-
-                                <div class="col-12"><hr /></div>
-
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label fw-bold text-secondary d-block">Fecha de Creación</label>
-                                    <div class="valor-campo">@entidadActual.CreateDate.ToString("yyyy-MM-dd")</div>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <label class="form-label fw-bold text-secondary d-block">Última Modificación</label>
-                                    <div class="valor-campo">@entidadActual.UpdateDate.ToString("yyyy-MM-dd")</div>
-                                </div>
                             </div>
                         </div>
                     }
@@ -701,27 +690,23 @@
                                 <ChildContentHeader>
                                     <tr class="table-light border-bottom">
                                         <th class="ps-2 text-start">Sociedad</th>
+                                        <th class="text-start">RIF</th>
                                         <th class="text-start">Estatus Sociedad</th>
                                         <th class="text-start">Estatus Accionista</th>
                                         <th class="polar-num">Nro. Acciones</th>
-                                        <th class="polar-num">% Participación</th>
-                                        <th class="polar-date">Creación</th>
-                                        <th class="polar-date">Modificación</th>
-                                        <th class="text-end pe-2">Detalle</th>
+                                        <th class="polar-num pe-2">% Participación</th>
                                     </tr>
                                 </ChildContentHeader>
                                 <ChildContentRow Context="p">
                                     <tr class="align-middle border-bottom">
                                         <td class="ps-2 text-start fw-semibold text-dark">
-                                            <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold text-dark text-start"
-                                                    style="font-size: inherit;"
-                                                    @onclick="() => AbrirDetalleSociedad(p.SociedadId)"
-                                                    title="Ver detalle de sociedad">
-                                                @p.SociedadNombre
-                                            </button>
+                                            <span>@p.SociedadNombre</span>
+                                        </td>
+                                        <td class="text-start font-monospace text-secondary small">
+                                            @(string.IsNullOrWhiteSpace(p.DocumentoIdentidad) ? "-" : p.DocumentoIdentidad)
                                         </td>
                                         <td class="text-start">
-                                            <span class="badge bg-light text-dark border">@(p.DocumentoIdentidad ?? "-")</span>
+                                            <span class="badge bg-light text-dark border">@(p.EstatusSociedadNombre ?? "-")</span>
                                         </td>
                                         <td class="text-start">
                                             <span class="badge @(p.TipoAccionistaNombre == "Activo" ? "bg-success-subtle text-success border border-success-subtle" : "bg-light text-secondary border")">
@@ -729,19 +714,7 @@
                                             </span>
                                         </td>
                                         <td class="polar-num">@UtilClass.FormatearMiles(p.NroAcciones ?? 0)</td>
-                                        <td class="polar-num">@((p.Participacion ?? 0).ToString("N6"))%</td>
-                                        <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
-                                        <td class="polar-date text-secondary">@p.UpdateDate.ToShortDateString()</td>
-                                        <td class="text-end pe-2">
-                                            @if (p.SociedadId > 0)
-                                            {
-                                                <button class="btn btn-link btn-sm text-primary p-0"
-                                                        @onclick="() => AbrirDetalleSociedad(p.SociedadId)"
-                                                        title="Ver Detalle Sociedad">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            }
-                                        </td>
+                                        <td class="polar-num pe-2">@((p.Participacion ?? 0).ToString("N6"))%</td>
                                     </tr>
                                 </ChildContentRow>
                             </PaginationComponent>
@@ -898,7 +871,8 @@
                     Id = item.Id,
                     SociedadId = item.Sociedad?.Id ?? 0,
                     SociedadNombre = item.Sociedad?.Empresa?.Nombre ?? "-",
-                    DocumentoIdentidad = item.Sociedad?.EstatusSociedad?.Nombre ?? "-",
+                    DocumentoIdentidad = UtilClass.ObtenerDocumentoCompleto(item.Sociedad?.TipoDocumento1?.Nombre, item.Sociedad?.Documento1),
+                    EstatusSociedadNombre = item.Sociedad?.EstatusSociedad?.Nombre ?? "-",
                     TipoAccionistaNombre = item.EstatusAccionista?.Nombre ?? "-",
                     NroAcciones = nroAcciones,
                     Participacion = porcParticipa,

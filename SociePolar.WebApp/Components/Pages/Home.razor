@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
@@ -33,7 +33,7 @@
         <div class="row">
             <div class="col-11">
                 <h6>
-                    ¡Bienvenido a la plataforma de Sistema Societario!
+                    ¡Bienvenido a la plataforma de Societarios Polar!
                 </h6>
             </div>
             <div class="col-11">
@@ -60,8 +60,8 @@
             if (user.Identity is not null && user.Identity.IsAuthenticated)
             {
                 var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
-                if (string.IsNullOrEmpty(useremailaux.Value))
-                    navManager.NavigateTo($"/authsessionuser");
+                if (!useremailaux.Success || string.IsNullOrEmpty(useremailaux.Value))
+                    navManager.NavigateTo($"/authsessionuser", forceLoad: true);
                 else
                 {
                     usuario = useremailaux.Value;

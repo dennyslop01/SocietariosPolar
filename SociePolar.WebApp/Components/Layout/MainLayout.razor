@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@rendermode InteractiveServer
 
 <MudThemeProvider Theme="@_customTheme" />
 <MudDialogProvider />
@@ -18,7 +17,10 @@
 
         <div class="d-flex align-items-center gap-3 h-100">
             <img src="LogoPolar.png" alt="Empresas Polar" class="polar-topbar-logo" />
-            <span class="polar-topbar-title">Sistema Societario</span>
+            <div class="d-none d-sm-flex flex-column">
+                <span class="polar-topbar-title">Societarios Polar</span>
+                <span class="polar-topbar-sub">Gestión Corporativa</span>
+            </div>
         </div>
 
         <MudSpacer />
@@ -70,23 +72,30 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender || string.IsNullOrEmpty(userEmail))
         {
-            var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
-            if (!string.IsNullOrEmpty(useremailaux.Value))
+            try
             {
-                userEmail = useremailaux.Value;
-                if (userEmail.Contains("@"))
+                var useremailaux = await SessionStorage.GetAsync<string>("UserEmail");
+                if (useremailaux.Success && !string.IsNullOrEmpty(useremailaux.Value))
                 {
-                    var prefix = userEmail.Split('@')[0].Replace(".", " ");
-                    userName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(prefix);
+                    userEmail = useremailaux.Value;
+                    if (userEmail.Contains("@"))
+                    {
+                        var prefix = userEmail.Split('@')[0].Replace(".", " ");
+                        userName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(prefix);
+                    }
+                    else
+                    {
+                        userName = userEmail;
+                    }
+                    userInitial = !string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "P";
+                    StateHasChanged();
                 }
-                else
-                {
-                    userName = userEmail;
-                }
-                userInitial = !string.IsNullOrEmpty(userName) ? userName.Substring(0, 1).ToUpper() : "P";
-                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error hidratando usuario en MainLayout: {ex.Message}");
             }
         }
     }

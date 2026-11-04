@@ -362,17 +362,6 @@
                                         <label class="form-label fw-bold text-secondary small d-block">Nombre Diario</label>
                                         <label class="form-label text-secondary small">@entidadActual.NombreDiario?.Nombre</label>
                                     </div>
-
-                                    <div class="col-12"><hr /></div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small d-block">Fecha de Creación</label>
-                                        <label class="form-label text-secondary small">@entidadActual.CreateDate.ToString("yyyy-MM-dd")</label>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold text-secondary small d-block">Última Modificación</label>
-                                        <label class="form-label text-secondary small">@entidadActual.UpdateDate.ToString("yyyy-MM-dd")</label>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -392,9 +381,7 @@
                                     <th class="text-start" style="min-width: 140px;">Documento 1</th>
                                     <th class="polar-date" style="min-width: 120px;">Vencimiento Doc. 1</th>
                                     <th class="text-start" style="min-width: 140px;">Documento 2</th>
-                                    <th class="polar-date" style="min-width: 120px;">Vencimiento Doc. 2</th>
-                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
-                                    <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
+                                    <th class="polar-date pe-3" style="min-width: 120px;">Vencimiento Doc. 2</th>
                                 </tr>
                                 @{
                                     _ultimoCargoId = null;
@@ -417,9 +404,7 @@
                                     <td class="text-start text-secondary">@UtilClass.ObtenerDocumentoCompleto(p.TipoDocumento1?.Nombre, p.Documento1)</td>
                                     <td class="polar-date text-secondary">@(p.VencimientoDocumento1?.ToString("dd/MM/yyyy") ?? "-")</td>
                                     <td class="text-start text-secondary">@UtilClass.ObtenerDocumentoCompleto(p.TipoDocumento2?.Nombre, p.Documento2)</td>
-                                    <td class="polar-date text-secondary">@(p.VencimientoDocumento2?.ToString("dd/MM/yyyy") ?? "-")</td>
-                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="polar-date pe-3 text-secondary">@(p.VencimientoDocumento2?.ToString("dd/MM/yyyy") ?? "-")</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
@@ -440,11 +425,11 @@
                                     <th class="text-start" style="min-width: 90px;">Número</th>
                                     <th class="text-start" style="min-width: 80px;">Tomo</th>
                                     <th class="polar-date" style="min-width: 120px;">Fecha Publicación</th>
+                                    <th class="text-center" style="min-width: 90px;">Año Pub.</th>
                                     <th class="text-start" style="min-width: 100px;">Nro. Publicación</th>
                                     <th class="text-start" style="min-width: 130px;">Diario</th>
                                     <th class="text-start" style="min-width: 130px;">Tipo Reforma</th>
-                                    <th class="text-start" style="min-width: 160px;">Observaciones</th>
-                                    <th class="text-end pe-3" style="min-width: 80px;">Acciones</th>
+                                    <th class="text-start pe-3" style="min-width: 160px;">Observaciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
@@ -459,16 +444,11 @@
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroRegistro) ? "-" : p.NumeroRegistro)</td>
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Tomo) ? "-" : p.Tomo)</td>
                                     <td class="polar-date text-secondary">@(p.FechaPublicacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                    <td class="text-center text-secondary">@(p.AnoPublicacion?.ToString() ?? "-")</td>
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroPublicacion) ? "-" : p.NumeroPublicacion)</td>
                                     <td class="text-start text-secondary">@(p.NombreDiario?.Nombre ?? "-")</td>
                                     <td class="text-start text-secondary">@(p.AplicaReforma == 1 ? (p.TipoReforma?.Nombre ?? "Sí") : "No")</td>
-                                    <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observacion) ? "-" : p.Observacion)</td>
-                                    <td class="text-end pe-3">
-                                        <button class="btn btn-link btn-sm text-primary p-0"
-                                                @onclick="() => Detalle(p)" title="Detalle Asamblea">
-                                            <i class="bi bi-file-earmark-text fs-6"></i>
-                                        </button>
-                                    </td>
+                                    <td class="text-start pe-3 text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observacion) ? "-" : p.Observacion)</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
@@ -490,10 +470,10 @@
                                     <th class="text-start" style="min-width: 90px;">Número</th>
                                     <th class="text-start" style="min-width: 80px;">Tomo</th>
                                     <th class="polar-date" style="min-width: 120px;">Fecha Publicación</th>
+                                    <th class="text-center" style="min-width: 90px;">Año Pub.</th>
                                     <th class="text-start" style="min-width: 100px;">Nro. Publicación</th>
                                     <th class="text-start" style="min-width: 130px;">Diario</th>
-                                    <th class="text-start" style="min-width: 160px;">Observaciones</th>
-                                    <th class="text-end pe-3" style="min-width: 80px;">Acciones</th>
+                                    <th class="text-start pe-3" style="min-width: 160px;">Observaciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
@@ -509,15 +489,10 @@
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroRegistro) ? "-" : p.NumeroRegistro)</td>
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Tomo) ? "-" : p.Tomo)</td>
                                     <td class="polar-date text-secondary">@(p.FechaPublicacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                    <td class="text-center text-secondary">@(p.AnoPublicacion?.ToString() ?? "-")</td>
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.NumeroPublicacion) ? "-" : p.NumeroPublicacion)</td>
                                     <td class="text-start text-secondary">@(p.NombreDiario?.Nombre ?? "-")</td>
-                                    <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observacion) ? "-" : p.Observacion)</td>
-                                    <td class="text-end pe-3">
-                                        <button class="btn btn-link btn-sm text-primary p-0"
-                                                @onclick="() => Detalle(p)" title="Detalle Reforma">
-                                            <i class="bi bi-file-earmark-text fs-6"></i>
-                                        </button>
-                                    </td>
+                                    <td class="text-start pe-3 text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observacion) ? "-" : p.Observacion)</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
@@ -533,9 +508,7 @@
                                     <th class="ps-3 text-start" style="min-width: 180px;">Cargo</th>
                                     <th class="text-start" style="min-width: 140px;">Ejercicio Fiscal</th>
                                     <th class="polar-date" style="min-width: 110px;">Fecha</th>
-                                    <th class="text-start" style="min-width: 220px;">Observaciones</th>
-                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
-                                    <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
+                                    <th class="text-start pe-3" style="min-width: 220px;">Observaciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
@@ -545,9 +518,7 @@
                                     </td>
                                     <td class="text-start text-secondary">@(!string.IsNullOrWhiteSpace(p.EjercicioFiscal) ? p.EjercicioFiscal : (p.Sociedad?.EjercicioEconomico ?? "-"))</td>
                                     <td class="polar-date text-secondary">@(p.Fecha?.ToString("dd/MM/yyyy") ?? "-")</td>
-                                    <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)</td>
-                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="text-start pe-3 text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
@@ -570,9 +541,7 @@
                                     <th class="polar-date" style="min-width: 110px;">Fecha Sello</th>
                                     <th class="text-center" style="min-width: 90px;">¿Está Vacío?</th>
                                     <th class="text-start" style="min-width: 140px;">Ubicación</th>
-                                    <th class="text-start" style="min-width: 180px;">Observaciones</th>
-                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
-                                    <th class="polar-date pe-3" style="min-width: 110px;">Última modificación</th>
+                                    <th class="text-start pe-3" style="min-width: 180px;">Observaciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
@@ -595,9 +564,7 @@
                                     <td class="polar-date text-secondary">@(p.FechaSello?.ToString("dd/MM/yyyy") ?? "-")</td>
                                     <td class="text-center text-secondary">@(p.Vacio == 1 ? "Sí" : (p.Vacio == 0 ? "No" : "-"))</td>
                                     <td class="text-start text-secondary">@(string.IsNullOrWhiteSpace(p.Ubicacion) ? "-" : p.Ubicacion)</td>
-                                    <td class="text-start text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)</td>
-                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="polar-date pe-3 text-secondary">@p.UpdateDate.ToShortDateString()</td>
+                                    <td class="text-start pe-3 text-secondary text-break">@(string.IsNullOrWhiteSpace(p.Observaciones) ? "-" : p.Observaciones)</td>
                                 </tr>
                             </ChildContentRow>
                         </PaginationComponent>
@@ -614,10 +581,7 @@
                                     <th class="text-start" style="min-width: 240px;">Nombre y Apellido</th>
                                     <th class="text-start" style="min-width: 160px;">Tipo Accionista</th>
                                     <th class="polar-num" style="min-width: 130px;">Nro. Acciones</th>
-                                    <th class="polar-num" style="min-width: 130px;">% Participación</th>
-                                    <th class="polar-date" style="min-width: 110px;">Fecha creación</th>
-                                    <th class="polar-date" style="min-width: 110px;">Última modificación</th>
-                                    <th class="text-end pe-3" style="min-width: 80px;">Acciones</th>
+                                    <th class="polar-num pe-3" style="min-width: 130px;">% Participación</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
@@ -630,11 +594,7 @@
                                                 <i class="bi @(p.MostrarCustodiados ? "bi-dash-square-fill" : "bi-plus-square-fill") text-primary"></i>
                                             </button>
                                         }
-                                        <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold text-dark text-start"
-                                                @onclick="() => AbrirModalAccionista(p.AccionistaId)"
-                                                title="Ver detalle del accionista">
-                                            @p.AccionistaNombre
-                                        </button>
+                                        <span>@p.AccionistaNombre</span>
                                         @if (p.EsCustodio)
                                         {
                                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 0.7rem;">Custodio</span>
@@ -644,24 +604,12 @@
                                         <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
                                     </td>
                                     <td class="polar-num">@UtilClass.FormatearMiles(p.NroAcciones)</td>
-                                    <td class="polar-num">@((p.Participacion ?? 0).ToString("N6"))%</td>
-                                    <td class="polar-date text-secondary">@p.CreateDate.ToShortDateString()</td>
-                                    <td class="polar-date text-secondary">@p.UpdateDate.ToShortDateString()</td>
-                                    <td class="text-end pe-3">
-                                        @if (p.AccionistaId > 0)
-                                        {
-                                            <button class="btn btn-link btn-sm text-primary p-0"
-                                                    @onclick="() => AbrirModalAccionista(p.AccionistaId)"
-                                                    title="Ver Detalle Accionista">
-                                                <i class="bi bi-eye fs-6"></i>
-                                            </button>
-                                        }
-                                    </td>
+                                    <td class="polar-num pe-3">@((p.Participacion ?? 0).ToString("N6"))%</td>
                                 </tr>
                                 @if (p.MostrarCustodiados && p.SubCustodiados.Any())
                                 {
                                     <tr>
-                                        <td colspan="8" class="p-0 border-0">
+                                        <td colspan="5" class="p-0 border-0">
                                             <div class="bg-light p-3 ps-4 border-start border-4 border-primary shadow-sm my-2 rounded-2">
                                                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2 pb-2 border-bottom">
                                                     <div>
@@ -692,10 +640,7 @@
                                                                 <th class="py-2">Sub-Accionista</th>
                                                                 <th class="py-2">Tipo</th>
                                                                 <th class="py-2 text-end">Nro. Acciones</th>
-                                                                <th class="py-2 text-end">% Participación</th>
-                                                                <th class="py-2 text-center">Fecha Creación</th>
-                                                                <th class="py-2 text-center">Última Modificación</th>
-                                                                <th class="pe-3 py-2 text-end">Acciones</th>
+                                                                <th class="pe-3 py-2 text-end">% Participación</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -704,28 +649,11 @@
                                                                 <tr class="border-bottom">
                                                                     <td class="ps-3 font-monospace small text-secondary">@(string.IsNullOrWhiteSpace(sub.DocumentoIdentidad) ? "-" : sub.DocumentoIdentidad)</td>
                                                                     <td class="fw-semibold text-dark">
-                                                                        <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold text-dark text-start"
-                                                                                style="font-size: inherit;"
-                                                                                @onclick="() => AbrirModalAccionista(sub.AccionistaId)"
-                                                                                title="Ver detalle del sub-accionista">
-                                                                            @sub.AccionistaNombre
-                                                                        </button>
+                                                                        <span>@sub.AccionistaNombre</span>
                                                                     </td>
                                                                     <td><span class="badge bg-light text-secondary border">@(sub.TipoAccionistaNombre ?? "Sub-Cuenta")</span></td>
                                                                     <td class="text-end font-monospace fw-bold text-primary">@UtilClass.FormatearMiles(sub.NroAcciones ?? 0)</td>
-                                                                    <td class="text-end text-secondary small">@((sub.Participacion ?? 0).ToString("N6"))%</td>
-                                                                    <td class="text-center text-secondary small">@sub.CreateDate.ToShortDateString()</td>
-                                                                    <td class="text-center text-secondary small">@sub.UpdateDate.ToShortDateString()</td>
-                                                                    <td class="pe-3 text-end">
-                                                                        @if (sub.AccionistaId > 0)
-                                                                        {
-                                                                            <button class="btn btn-link btn-sm text-primary p-0"
-                                                                                    @onclick="() => AbrirModalAccionista(sub.AccionistaId)"
-                                                                                    title="Ver Detalle Sub-Accionista">
-                                                                                <i class="bi bi-eye"></i>
-                                                                            </button>
-                                                                        }
-                                                                    </td>
+                                                                    <td class="pe-3 text-end text-secondary small">@((sub.Participacion ?? 0).ToString("N6"))%</td>
                                                                 </tr>
                                                             }
                                                         </tbody>

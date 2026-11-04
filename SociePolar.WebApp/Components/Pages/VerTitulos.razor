@@ -7,27 +7,13 @@
         <div class="card-header bg-white py-3">
             <div class="d-flex align-items-center justify-content-between">
                 <!-- Parte Izquierda: Icono y Título -->
-                <div class="d-flex align-items-center flex-wrap gap-2">
-                    <div class="bg-primary p-2 rounded-3 me-2 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary p-2 rounded-3 me-3 shadow-sm">
                         <i class="bi bi-file-medical text-white fs-5"></i>
                     </div>
                     <h5 class="mb-0 fw-bold text-dark">
                         Títulos : @nombreComplemento
                     </h5>
-                    @if (accionistaIdActual > 0)
-                    {
-                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 d-inline-flex align-items-center gap-1"
-                                @onclick="() => accionistaPopupId = accionistaIdActual" title="Ver ficha del accionista en ventana emergente">
-                            <i class="bi bi-person-vcard"></i> Ver Accionista <i class="bi bi-eye"></i>
-                        </button>
-                    }
-                    @if (sociedadIdActual > 0)
-                    {
-                        <button type="button" class="btn btn-sm btn-outline-info py-0 px-2 d-inline-flex align-items-center gap-1"
-                                @onclick="() => sociedadPopupId = sociedadIdActual" title="Ver ficha de la sociedad en ventana emergente">
-                            <i class="bi bi-building"></i> Ver Sociedad <i class="bi bi-eye"></i>
-                        </button>
-                    }
                 </div>
 
                 <!-- Contenedor flex para alinear los botones en línea -->
@@ -388,24 +374,9 @@
     <ModalDescarga idModulo="8" idEstado="@id" OnFinalizado="ManejarCierreDescarga" />
 }
 
-@if (sociedadPopupId > 0)
-{
-    <ModalDetalleSociedad SociedadId="@sociedadPopupId" OnCerrar="() => sociedadPopupId = 0" />
-}
-
-@if (accionistaPopupId > 0)
-{
-    <ModalDetalleAccionista AccionistaId="@accionistaPopupId" OnCerrar="() => accionistaPopupId = 0" />
-}
-
 
 @code {
     [Parameter] public string id { get; set; } = "";
-
-    private int sociedadPopupId = 0;
-    private int accionistaPopupId = 0;
-    private int sociedadIdActual = 0;
-    private int accionistaIdActual = 0;
 
     private List<Titulo> Listgral = new();
     private List<Titulo> ListgralBuscar = new();
@@ -501,8 +472,6 @@
                 nombreComplemento = accionistaEntity.Accionista?.Nombre + " -- ";
 
             nombreComplemento += accionistaEntity.Sociedad?.Empresa?.Nombre;
-            sociedadIdActual = accionistaEntity.Sociedad?.Id ?? 0;
-            accionistaIdActual = accionistaEntity.Accionista?.Id ?? 0;
 
             Estado = accionistaEntity.EstatusAccionista.Id;
 

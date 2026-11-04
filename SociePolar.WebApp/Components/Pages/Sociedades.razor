@@ -69,12 +69,9 @@
                 <ChildContentRow Context="p">
                     <tr class="align-middle border-bottom text-nowrap">
                         <td class="polar-sticky-col-direct text-start text-dark fw-semibold">
-                            <button type="button" class="btn btn-link p-0 text-decoration-none text-start fw-semibold text-dark polar-truncate"
-                                    style="max-width: 260px;"
-                                    @onclick="() => AbrirModalDetalleSociedad(p.Id)"
-                                    title="Ver detalle en ventana emergente: @p.Empresa?.Nombre">
+                            <span class="polar-truncate" style="max-width: 260px;" title="@p.Empresa?.Nombre">
                                 @p.Empresa?.Nombre
-                            </button>
+                            </span>
                         </td>
                         <td class="text-center text-secondary small">
                             <span class="badge bg-light text-secondary border px-2 py-1">
@@ -109,9 +106,6 @@
                                     <i class="bi bi-trash3 fs-6"></i>
                                 </button>
                             }
-                            <button class="btn btn-link btn-sm text-info p-0 me-2" @onclick="() => AbrirModalDetalleSociedad(p.Id)" title="Ver Detalle en Pop-up">
-                                <i class="bi bi-eye fs-6"></i>
-                            </button>
                             <button class="btn btn-link btn-sm text-secondary p-0 me-2" @onclick="() => Detalle(p)" title="Detalle Sociedad">
                                 <i class="bi bi-file-earmark-text fs-6"></i>
                             </button>
@@ -207,11 +201,6 @@
     <ModalDescarga idModulo="1" idEstado="1" OnFinalizado="ManejarCierreDescarga" />
 }
 
-@if (mostrarPopupSociedad && idSociedadPopup > 0)
-{
-    <ModalDetalleSociedad SociedadId="@idSociedadPopup" OnCerrar="() => mostrarPopupSociedad = false" />
-}
-
 @code {
     private List<Sociedad> Listgral = new();
     private List<Sociedad> ListgralBuscar = new();
@@ -229,15 +218,6 @@
     private int idSociedad = 0;
     private int idRol = 0;
     private bool descarga = false;
-    private int idSociedadPopup = 0;
-    private bool mostrarPopupSociedad = false;
-
-    private void AbrirModalDetalleSociedad(int socId)
-    {
-        if (socId <= 0) return;
-        idSociedadPopup = socId;
-        mostrarPopupSociedad = true;
-    }
 
     [Inject] private ISociedad repository { get; set; } = null!;
 

@@ -80,11 +80,7 @@ namespace SociePolar.Infrastructure.Repositories
             {
                 Id = item.Id,
                 TipoAccionistaV = item.TipoAccionistaNombre,
-                Nombre = (item.TipoAccionistaId != 3)
-                    ? item.Nombre
-                    : (!string.IsNullOrEmpty(item.NombreSusesion) && item.NombreSusesion.Length > 50
-                        ? item.NombreSusesion.Substring(0, 50)
-                        : item.NombreSusesion ?? item.Nombre),
+                Nombre = item.Nombre,
                 TipoDocumentoV = item.TipoDocumento1Nombre,
                 Documento = item.Documento1,
                 Telefono = item.Telefono1,

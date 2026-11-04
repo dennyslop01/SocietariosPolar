@@ -1,4 +1,5 @@
-@rendermode InteractiveServer
+@inject NavigationManager navManager
+@implements IDisposable
 
 <MudNavMenu Class="polar-nav-menu" Rounded="true" Margin="Margin.Normal" Color="Color.Primary">
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Dashboard">
@@ -94,16 +95,49 @@
 @code {
     private int userrol = 0;
 
+    protected override void OnInitialized()
+    {
+        navManager.LocationChanged += OnLocationChanged;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender || userrol == 0)
+        {
+            await HydrateUserRolAsync();
+        }
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (userrol == 0)
+        {
+            await InvokeAsync(HydrateUserRolAsync);
+        }
+    }
+
+    private async Task HydrateUserRolAsync()
+    {
+        try
         {
             var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
-            if (!string.IsNullOrEmpty(userrolaux.Value))
+            if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
             {
-                userrol = int.Parse(userrolaux.Value);
+                if (int.TryParse(userrolaux.Value, out var rolVal) && userrol != rolVal)
+                {
+                    userrol = rolVal;
+                    StateHasChanged();
+                }
             }
-            StateHasChanged();
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error hidratando rol en NavMenu: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        navManager.LocationChanged -= OnLocationChanged;
     }
 }

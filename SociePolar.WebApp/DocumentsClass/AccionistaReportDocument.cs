@@ -158,8 +158,6 @@ namespace SociePolar.WebApp.DocumentsClass
                         table.Cell().PaddingVertical(3).Text(t => { t.Span("Año Actualización: ").Bold(); t.Span(ValorOGuion(_accionista.AnoActualizacion?.ToString())); });
                         table.Cell().PaddingVertical(3).Text(t => { t.Span("¿Hace falta actualizar?: ").Bold(); t.Span(SiNoGuion(_accionista.FaltaActualizar)); });
                         table.Cell().PaddingVertical(3).Text(t => { t.Span("Fecha de Ingreso: ").Bold(); t.Span(ValorOGuion(_accionista.FechaIngreso?.ToString("yyyy-MM-dd"))); });
-                        table.Cell().PaddingVertical(3).Text(t => { t.Span("Fecha de Creación: ").Bold(); t.Span(_accionista.CreateDate.ToString("yyyy-MM-dd")); });
-                        table.Cell().PaddingVertical(3).Text(t => { t.Span("Última Modificación: ").Bold(); t.Span(_accionista.UpdateDate.ToString("yyyy-MM-dd")); });
                     });
 
                     // Sub-sección Persona Jurídica

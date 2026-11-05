@@ -37,6 +37,12 @@
                             style="height: 32px; font-weight: 500;" title="Generar csv">
                         <i class="bi bi-filetype-csv me-2"></i> Descargar
                     </button>
+
+                    <button class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center"
+                            @onclick="DescargarListaPdf"
+                            style="height: 32px; font-weight: 500;" title="Descargar Lista en PDF">
+                        <i class="bi bi-file-earmark-pdf me-2"></i> Descargar Lista Pdf
+                    </button>
                 </div>
             </div>
         </div>
@@ -779,6 +785,47 @@
     private void MostrarDescarga()
     {
         descarga = true;
+    }
+
+    private async Task DescargarListaPdf()
+    {
+        try
+        {
+            cargando = true;
+            StateHasChanged();
+
+            var columnas = new string[] { "Número", "Acciones", "Preferente", "Ubicación", "Fecha", "Observaciones" };
+            var anchos = new float[] { 1.5f, 1.8f, 1.5f, 2.0f, 1.5f, 3.5f };
+            var filas = Listgral.Select(p => new string[]
+            {
+                p.Numero ?? "-",
+                UtilClass.FormatearMiles(p.Acciones),
+                p.Preferente ?? "-",
+                p.Ubicacion ?? "-",
+                p.Fecha?.ToString("dd/MM/yyyy") ?? "-",
+                p.Observaciones ?? "-"
+            }).ToList();
+
+            string subtitulo = string.IsNullOrWhiteSpace(nombreComplemento) ? "" : nombreComplemento.TrimEnd('-', ' ');
+
+            await ReportService.GenerarYDescargarReporteListaAsync(
+                titulo: "LISTA DE TÍTULOS",
+                columnas: columnas,
+                filas: filas,
+                nombreArchivoBase: "Lista_Titulos",
+                anchosRelativos: anchos,
+                subtitulo: subtitulo
+            );
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al generar PDF: " + ex.Message, true);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task ManejarCierreDescarga(bool guardadoExitoso)

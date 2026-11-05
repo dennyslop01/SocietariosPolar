@@ -29,6 +29,11 @@
                                 @onclick="MostrarDescarga" style="height: 32px; font-weight: 500;" title="Generar csv">
                             <i class="bi bi-filetype-csv me-2"></i> Descargar
                         </button>
+
+                        <button class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center"
+                                @onclick="DescargarListaPdf" style="height: 32px; font-weight: 500;" title="Descargar Lista en PDF">
+                            <i class="bi bi-file-earmark-pdf me-2"></i> Descargar Lista Pdf
+                        </button>
                     }
                 </div>
             </div>
@@ -360,6 +365,45 @@ StringComparison.OrdinalIgnoreCase))
     private void MostrarDescarga()
     {
         descarga = true;
+    }
+
+    private async Task DescargarListaPdf()
+    {
+        try
+        {
+            cargando = true;
+            StateHasChanged();
+
+            var columnas = new string[] { "Sociedad", "Clase", "Tipo", "Tomo en Uso", "Folio", "Fecha Desde", "Libros Sellados" };
+            var anchos = new float[] { 3.5f, 2.0f, 2.0f, 1.5f, 1.2f, 1.6f, 1.5f };
+            var filas = Listgral.Select(p => new string[]
+            {
+                p.Sociedad?.Empresa?.Nombre ?? "-",
+                p.ClaseLibro?.Nombre ?? "-",
+                p.TipoLibro?.Nombre ?? "-",
+                p.TomoUso ?? "-",
+                p.Folios ?? "-",
+                p.FechaDesde?.ToString("dd/MM/yyyy") ?? "-",
+                p.LibrosSellados == "1" ? "Sí" : "No"
+            }).ToList();
+
+            await ReportService.GenerarYDescargarReporteListaAsync(
+                titulo: "LISTA DE LIBROS SOCIETARIOS - SOCIEDADES INACTIVAS",
+                columnas: columnas,
+                filas: filas,
+                nombreArchivoBase: "Lista_Libros_Societarios_Inactivas",
+                anchosRelativos: anchos
+            );
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al generar PDF: " + ex.Message, true);
+        }
+        finally
+        {
+            cargando = false;
+            StateHasChanged();
+        }
     }
 
     private async Task ManejarCierreDescarga(bool guardadoExitoso)

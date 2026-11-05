@@ -358,16 +358,18 @@ namespace SociePolar.WebApp.DocumentsClass
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(2.5f);
                                 columns.RelativeColumn(1.2f);
                                 columns.RelativeColumn(1.2f);
-                                columns.RelativeColumn(1.5f);
                                 columns.RelativeColumn(1.2f);
+                                columns.RelativeColumn(1.4f);
+                                columns.RelativeColumn(1.1f);
                             });
 
                             table.Header(header =>
                             {
                                 header.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Sociedad").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("RIF").Bold();
                                 header.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Estatus Soc.").Bold();
                                 header.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text("Estatus Acc.").Bold();
                                 header.Cell().Background(Colors.Grey.Lighten3).Padding(4).AlignRight().Text("Nro. Acciones").Bold();
@@ -378,6 +380,7 @@ namespace SociePolar.WebApp.DocumentsClass
                             {
                                 table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(ValorOGuion(part.SociedadNombre));
                                 table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(ValorOGuion(part.DocumentoIdentidad));
+                                table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(ValorOGuion(part.EstatusSociedadNombre));
                                 table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(4).Text(ValorOGuion(part.TipoAccionistaNombre));
                                 table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text(UtilClass.FormatearMiles(part.NroAcciones ?? 0));
                                 table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(4).AlignRight().Text($"{(part.Participacion ?? 0):N6}%");

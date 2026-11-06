@@ -1,0 +1,964 @@
+@page "/reportes"
+@rendermode InteractiveServer
+@using System.Text
+@using SociePolar.Domain.Models
+@using SociePolar.Domain.Entities
+@using SociePolar.Application.Interfaces
+@using SociePolar.WebApp.Services
+@using SociePolar.WebApp.Utilities
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 h-auto">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Parte Izquierda: Icono y Título -->
+                <div class="d-flex align-items-center">
+                    <div class="p-2 rounded-3 me-3 shadow-sm" style="background-color: #00338D !important;">
+                        <i class="bi bi-clipboard-data-fill text-white fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark">
+                            Generación de Reportes
+                        </h5>
+                        <small class="text-muted">Seleccione el tipo de reporte y los parámetros de consulta</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            @if (procesandoReporte)
+            {
+                <div class="d-flex flex-column justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Generando...</span>
+                    </div>
+                    <span class="text-secondary fw-semibold">Generando reporte, por favor espere...</span>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    <!-- Selector de Tipo de Reporte (Nivel 1) -->
+                    <div class="col-md-6 col-lg-4">
+                        <label class="form-label fw-bold text-secondary small">
+                            Tipo de Reporte <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-sm shadow-sm" value="@tipoReporteSeleccionado" @onchange="OnTipoReporteChanged">
+                            <option value="0">Seleccione...</option>
+                            @foreach (var modulo in ListModulos)
+                            {
+                                <option value="@modulo.Id">@modulo.Nombre</option>
+                            }
+                        </select>
+                    </div>
+
+                    @if (tipoReporteSeleccionado == 1)
+                    {
+                        <!-- Selector de Criterio para Sociedades (Nivel 2) -->
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Criterio de Sociedades <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-sm shadow-sm @(errorFiltroSociedad ? "is-invalid" : "")"
+                                    value="@filtroSociedadSeleccionado"
+                                    @onchange="OnFiltroSociedadChanged">
+                                <option value="">Seleccione...</option>
+                                <option value="activas">Activas</option>
+                                <option value="inactivas">Inactivas</option>
+                                <option value="region">Región</option>
+                                <option value="unidad_negocio">Unidad de Negocio</option>
+                                <option value="tipo_sociedad">Tipo de Sociedad</option>
+                            </select>
+                            @if (errorFiltroSociedad)
+                            {
+                                <div class="invalid-feedback small">Debe seleccionar un criterio.</div>
+                            }
+                        </div>
+
+                        @if (RequiereTerceraLista)
+                        {
+                            <!-- Selector de Tabla Básica (Nivel 3) -->
+                            <div class="col-md-6 col-lg-4">
+                                <label class="form-label fw-bold text-secondary small">
+                                    @TituloTerceraLista <span class="text-danger">*</span>
+                                </label>
+                                @if (cargandoCatalogo)
+                                {
+                                    <div class="d-flex align-items-center mt-1">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                        <span class="text-muted small">Cargando datos...</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <select class="form-select form-select-sm shadow-sm @(errorValorTercerNivel ? "is-invalid" : "")"
+                                            @bind="valorTercerNivel">
+                                        <option value="0">Seleccione...</option>
+                                        @foreach (var item in listaTercerNivel)
+                                        {
+                                            <option value="@item.Id">@item.Nombre</option>
+                                        }
+                                    </select>
+                                    @if (errorValorTercerNivel)
+                                    {
+                                        <div class="invalid-feedback small">Debe seleccionar una opción de @TituloTerceraLista.</div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+
+                    @if (tipoReporteSeleccionado == 2)
+                    {
+                        <!-- Selector de Sociedad para Accionistas (Nivel 2) con buscador integrado -->
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Sociedad <span class="text-danger">*</span>
+                            </label>
+                            @if (cargandoSociedades)
+                            {
+                                <div class="d-flex align-items-center mt-1">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    <span class="text-muted small">Cargando sociedades...</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="dropdown">
+                                    <button class="form-select form-select-sm text-start d-flex justify-content-between align-items-center shadow-sm @(errorSociedadAccionista ? "is-invalid" : "")"
+                                            type="button"
+                                            @onclick="ToggleDropdownSociedad">
+                                        <span class="text-truncate me-2">@ObtenerNombreSociedadSeleccionada()</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 shadow-lg @(isDropdownOpenSociedad ? "show" : "")"
+                                        style="max-height: 280px; overflow-y: auto; z-index: 1060;">
+                                        <li class="mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white border-end-0 text-muted">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text"
+                                                       class="form-control border-start-0"
+                                                       placeholder="Buscar sociedad..."
+                                                       style="font-size: 0.8rem;"
+                                                       @bind="textoBusquedaSociedad"
+                                                       @bind:event="oninput" />
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item py-1 @(sociedadAccionistaSeleccionada == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarSociedad(0)">
+                                                Seleccione...
+                                            </button>
+                                        </li>
+
+                                        @foreach (var soc in listaSociedadesAccionista.Where(s => string.IsNullOrEmpty(textoBusquedaSociedad) || (s.Empresa?.Nombre?.Contains(textoBusquedaSociedad, StringComparison.OrdinalIgnoreCase) ?? false)))
+                                        {
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item py-1 @(sociedadAccionistaSeleccionada == soc.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarSociedad(soc.Id)">
+                                                    @soc.Empresa?.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                                @if (errorSociedadAccionista)
+                                {
+                                    <div class="invalid-feedback d-block small">Debe seleccionar una sociedad.</div>
+                                }
+                            }
+                        </div>
+
+                        <!-- Selector de Estatus de Accionistas (Nivel 3) -->
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Estatus Accionistas <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-sm shadow-sm @(errorEstatusAccionista ? "is-invalid" : "")"
+                                    @bind="estatusAccionistaSeleccionado">
+                                <option value="">Seleccione...</option>
+                                <option value="activos">Activos</option>
+                                <option value="inactivos">Inactivos</option>
+                            </select>
+                            @if (errorEstatusAccionista)
+                            {
+                                <div class="invalid-feedback small">Debe seleccionar un estatus.</div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Fila de formato para Sociedades cuando se ha seleccionado un criterio -->
+                @if (tipoReporteSeleccionado == 1 && !string.IsNullOrWhiteSpace(filtroSociedadSeleccionado))
+                {
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Tipo de Formato <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-sm shadow-sm @(errorTipoFormato ? "is-invalid" : "")"
+                                    @bind="tipoFormatoSeleccionado">
+                                <option value="">Seleccione...</option>
+                                <option value="CSV">CSV</option>
+                                <option value="PDF">PDF</option>
+                            </select>
+                            @if (errorTipoFormato)
+                            {
+                                <div class="invalid-feedback small">El Tipo de Formato es obligatorio.</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Fila de formato para Accionistas cuando se ha seleccionado Sociedad y Estatus -->
+                @if (tipoReporteSeleccionado == 2)
+                {
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Tipo de Formato <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-sm shadow-sm @(errorTipoFormato ? "is-invalid" : "")"
+                                    @bind="tipoFormatoSeleccionado">
+                                <option value="">Seleccione...</option>
+                                <option value="CSV">CSV</option>
+                                <option value="PDF">PDF</option>
+                            </select>
+                            @if (errorTipoFormato)
+                            {
+                                <div class="invalid-feedback small">El Tipo de Formato es obligatorio.</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Controles de Fechas y Formato para los otros módulos (Dividendos, Listado de accionistas, etc.) -->
+                @if (tipoReporteSeleccionado > 2)
+                {
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label fw-bold text-secondary small">
+                                Fecha Desde <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   class="form-control form-control-sm shadow-sm @(errorFechaDesde ? "is-invalid" : "")"
+                                   @bind="fechaDesde" />
+                            @if (errorFechaDesde)
+                            {
+                                <div class="invalid-feedback small">La Fecha Desde es obligatoria.</div>
+                            }
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label fw-bold text-secondary small">
+                                Fecha Hasta <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   class="form-control form-control-sm shadow-sm @(errorFechaHasta ? "is-invalid" : "")"
+                                   @bind="fechaHasta" />
+                            @if (errorFechaHasta)
+                            {
+                                <div class="invalid-feedback small">La Fecha Hasta es obligatoria.</div>
+                            }
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <label class="form-label fw-bold text-secondary small">
+                                Tipo de Formato <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select form-select-sm shadow-sm @(errorTipoFormato ? "is-invalid" : "")"
+                                    @bind="tipoFormatoSeleccionado">
+                                <option value="">Seleccione...</option>
+                                <option value="CSV">CSV</option>
+                                <option value="PDF">PDF</option>
+                            </select>
+                            @if (errorTipoFormato)
+                            {
+                                <div class="invalid-feedback small">El Tipo de Formato es obligatorio.</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Botonera -->
+                <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 shadow-sm" @onclick="Cancelar">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar
+                    </button>
+                    @if (MostrarBotonGenerar)
+                    {
+                        <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" @onclick="GenerarReporte">
+                            <i class="bi bi-file-earmark-check me-1"></i> Generar
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (mostrarAlerta)
+{
+    <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+        <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+            <i class="bi @iconoAlerta me-2 fs-5"></i>
+            <div class="fw-bold">@mensajeAlerta</div>
+        </div>
+    </div>
+}
+
+@code {
+    public class Modulos
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public class ItemCatalogo
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public List<Modulos> ListModulos = new List<Modulos>
+    {
+        new Modulos { Id = 1, Nombre = "Sociedades" },
+        new Modulos { Id = 2, Nombre = "Accionistas" },
+        new Modulos { Id = 3, Nombre = "Dividendos" },
+        new Modulos { Id = 4, Nombre = "Listado de accionistas" },
+    };
+
+    [Inject] private ISociedad repoSociedad { get; set; } = null!;
+    [Inject] private IUnidadNegocio repoUnidadNegocio { get; set; } = null!;
+    [Inject] private IAccionistaSociedad repoAccionistaSociedad { get; set; } = null!;
+
+    private int tipoReporteSeleccionado = 0;
+    private string filtroSociedadSeleccionado = "";
+    private int valorTercerNivel = 0;
+    private List<ItemCatalogo> listaTercerNivel = new();
+    private bool cargandoCatalogo = false;
+    private bool procesandoReporte = false;
+
+    // Variables para módulo Accionistas (Id = 2)
+    private int sociedadAccionistaSeleccionada = 0;
+    private string estatusAccionistaSeleccionado = "";
+    private List<Sociedad> listaSociedadesAccionista = new();
+    private bool cargandoSociedades = false;
+    private bool errorSociedadAccionista = false;
+    private bool errorEstatusAccionista = false;
+    private bool isDropdownOpenSociedad = false;
+    private string textoBusquedaSociedad = "";
+
+    private DateTime? fechaDesde;
+    private DateTime? fechaHasta;
+
+    private string tipoFormatoSeleccionado = "";
+
+    private bool errorFiltroSociedad = false;
+    private bool errorValorTercerNivel = false;
+    private bool errorFechaDesde = false;
+    private bool errorFechaHasta = false;
+    private bool errorTipoFormato = false;
+
+    private bool mostrarAlerta = false;
+    private string mensajeAlerta = "";
+    private string claseAlerta = "alert-success";
+    private string iconoAlerta = "bi-check-circle-fill";
+
+    private bool RequiereTerceraLista =>
+        filtroSociedadSeleccionado == "region" ||
+        filtroSociedadSeleccionado == "unidad_negocio" ||
+        filtroSociedadSeleccionado == "tipo_sociedad";
+
+    private string TituloTerceraLista => filtroSociedadSeleccionado switch
+    {
+        "region" => "Región",
+        "unidad_negocio" => "Unidad de Negocio",
+        "tipo_sociedad" => "Tipo de Sociedad",
+        _ => "Opción"
+    };
+
+    private bool MostrarBotonGenerar
+    {
+        get
+        {
+            if (tipoReporteSeleccionado == 0) return false;
+            if (tipoReporteSeleccionado == 1)
+            {
+                return !string.IsNullOrWhiteSpace(filtroSociedadSeleccionado);
+            }
+            if (tipoReporteSeleccionado == 2)
+            {
+                return sociedadAccionistaSeleccionada > 0 && !string.IsNullOrWhiteSpace(estatusAccionistaSeleccionado);
+            }
+            return true;
+        }
+    }
+
+    private async Task OnTipoReporteChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int id))
+        {
+            tipoReporteSeleccionado = id;
+        }
+        else
+        {
+            tipoReporteSeleccionado = 0;
+        }
+
+        filtroSociedadSeleccionado = "";
+        valorTercerNivel = 0;
+        listaTercerNivel.Clear();
+        sociedadAccionistaSeleccionada = 0;
+        estatusAccionistaSeleccionado = "";
+        isDropdownOpenSociedad = false;
+        textoBusquedaSociedad = "";
+        fechaDesde = null;
+        fechaHasta = null;
+        tipoFormatoSeleccionado = "";
+
+        errorFiltroSociedad = false;
+        errorValorTercerNivel = false;
+        errorSociedadAccionista = false;
+        errorEstatusAccionista = false;
+        errorFechaDesde = false;
+        errorFechaHasta = false;
+        errorTipoFormato = false;
+
+        if (tipoReporteSeleccionado == 2 && !listaSociedadesAccionista.Any())
+        {
+            await CargarSociedadesParaAccionistasAsync();
+        }
+    }
+
+    private async Task CargarSociedadesParaAccionistasAsync()
+    {
+        cargandoSociedades = true;
+        StateHasChanged();
+        try
+        {
+            var todas = await repoAccionistaSociedad.GetAllSociedadesAsync(1);
+            var inactivas = await repoAccionistaSociedad.GetAllSociedadesAsync(2);
+
+            var todasConAccionistas = todas
+                .Concat(inactivas)
+                .GroupBy(x => x.Id)
+                .Select(g => g.First())
+                .Where(x => !string.IsNullOrEmpty(x.Empresa?.Nombre))
+                .OrderBy(x => x.Empresa?.Nombre ?? "")
+                .ToList();
+
+            listaSociedadesAccionista = todasConAccionistas;
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error cargando sociedades: " + ex.Message, true);
+        }
+        finally
+        {
+            cargandoSociedades = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleDropdownSociedad()
+    {
+        isDropdownOpenSociedad = !isDropdownOpenSociedad;
+        if (!isDropdownOpenSociedad)
+        {
+            textoBusquedaSociedad = "";
+        }
+    }
+
+    private string ObtenerNombreSociedadSeleccionada()
+    {
+        if (sociedadAccionistaSeleccionada == 0 || listaSociedadesAccionista == null)
+        {
+            return "Seleccione...";
+        }
+        var soc = listaSociedadesAccionista.FirstOrDefault(s => s.Id == sociedadAccionistaSeleccionada);
+        return soc?.Empresa?.Nombre ?? "Seleccione...";
+    }
+
+    private void SeleccionarSociedad(int id)
+    {
+        sociedadAccionistaSeleccionada = id;
+        errorSociedadAccionista = false;
+        isDropdownOpenSociedad = false;
+        textoBusquedaSociedad = "";
+    }
+
+    private async Task OnFiltroSociedadChanged(ChangeEventArgs e)
+    {
+        filtroSociedadSeleccionado = e.Value?.ToString() ?? "";
+        valorTercerNivel = 0;
+        listaTercerNivel.Clear();
+        errorFiltroSociedad = false;
+        errorValorTercerNivel = false;
+        errorTipoFormato = false;
+
+        if (RequiereTerceraLista)
+        {
+            await CargarCatalogoTerceraListaAsync();
+        }
+    }
+
+    private async Task CargarCatalogoTerceraListaAsync()
+    {
+        cargandoCatalogo = true;
+        StateHasChanged();
+        try
+        {
+            if (filtroSociedadSeleccionado == "region")
+            {
+                var lista = await GetEntityListAsync("regiones");
+                listaTercerNivel = lista.Select(x => new ItemCatalogo { Id = x.Id, Nombre = x.Nombre ?? "" }).ToList();
+            }
+            else if (filtroSociedadSeleccionado == "unidad_negocio")
+            {
+                var lista = await repoUnidadNegocio.GetAllAsync();
+                listaTercerNivel = lista.OrderBy(x => x.Nombre).Select(x => new ItemCatalogo { Id = x.Id, Nombre = x.Nombre ?? "" }).ToList();
+            }
+            else if (filtroSociedadSeleccionado == "tipo_sociedad")
+            {
+                var lista = await GetEntityListAsync("tiposociedad");
+                listaTercerNivel = lista.Select(x => new ItemCatalogo { Id = x.Id, Nombre = x.Nombre ?? "" }).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al cargar datos básicos: " + ex.Message, true);
+        }
+        finally
+        {
+            cargandoCatalogo = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<List<IBaseEntity>> GetEntityListAsync(string entityName)
+    {
+        var repo = RepoFactory.GetRepository(entityName);
+        var method = repo.GetType().GetMethod("GetAllAsync");
+
+        if (method == null) return new List<IBaseEntity>();
+
+        var task = (Task)method.Invoke(repo, null)!;
+        await task;
+
+        var resultProperty = task.GetType().GetProperty("Result");
+        var result = (IEnumerable<IBaseEntity>)resultProperty!.GetValue(task)!;
+
+        return result.OrderBy(x => x.Nombre).ToList();
+    }
+
+    private void Cancelar()
+    {
+        navManager.NavigateTo("/");
+    }
+
+    private async Task GenerarReporte()
+    {
+        // 1. Validación de Tipo de Formato (aplica a todos los reportes)
+        errorTipoFormato = string.IsNullOrWhiteSpace(tipoFormatoSeleccionado);
+        if (errorTipoFormato)
+        {
+            await MostrarNotificacion("Debe seleccionar el Tipo de Formato (CSV o PDF).", true);
+            return;
+        }
+
+        // 2. Procesamiento específico para Sociedades
+        if (tipoReporteSeleccionado == 1)
+        {
+            await GenerarReporteSociedadesAsync();
+            return;
+        }
+
+        // 3. Procesamiento específico para Accionistas (Sociedad + Estatus)
+        if (tipoReporteSeleccionado == 2)
+        {
+            await GenerarReporteAccionistasAsync();
+            return;
+        }
+
+        // 4. Validación específica para otros módulos (requieren fechas)
+        errorFechaDesde = !fechaDesde.HasValue;
+        errorFechaHasta = !fechaHasta.HasValue;
+
+        if (errorFechaDesde || errorFechaHasta)
+        {
+            await MostrarNotificacion("Debe ingresar tanto la Fecha Desde como la Fecha Hasta.", true);
+            return;
+        }
+
+        if (fechaDesde > fechaHasta)
+        {
+            await MostrarNotificacion("La Fecha Desde no puede ser mayor que la Fecha Hasta.", true);
+            return;
+        }
+
+        var modulo = ListModulos.FirstOrDefault(m => m.Id == tipoReporteSeleccionado);
+        string nombreReporte = modulo?.Nombre ?? "Reporte";
+
+        await MostrarNotificacion($"Parámetros listos para generar el reporte de {nombreReporte} ({fechaDesde:dd/MM/yyyy} - {fechaHasta:dd/MM/yyyy}) en formato {tipoFormatoSeleccionado}.");
+    }
+
+    private async Task GenerarReporteSociedadesAsync()
+    {
+        errorFiltroSociedad = string.IsNullOrWhiteSpace(filtroSociedadSeleccionado);
+        if (errorFiltroSociedad)
+        {
+            await MostrarNotificacion("Debe seleccionar un criterio para Sociedades.", true);
+            return;
+        }
+
+        if (RequiereTerceraLista)
+        {
+            errorValorTercerNivel = valorTercerNivel <= 0;
+            if (errorValorTercerNivel)
+            {
+                await MostrarNotificacion($"Debe seleccionar una opción válida de {TituloTerceraLista}.", true);
+                return;
+            }
+        }
+
+        procesandoReporte = true;
+        StateHasChanged();
+
+        try
+        {
+            // Consultar datos usando el repositorio de Sociedades
+            var todas = await repoSociedad.GetAllAsync();
+
+            IEnumerable<Sociedad> filtradas = filtroSociedadSeleccionado switch
+            {
+                "activas" => todas.Where(x => x.EstatusSociedad?.Id == 1),
+                "inactivas" => todas.Where(x => x.EstatusSociedad?.Id == 2),
+                "region" => todas.Where(x => (x.Region?.Id == valorTercerNivel) || (x.UnidadNegocio?.Region?.Id == valorTercerNivel)),
+                "unidad_negocio" => todas.Where(x => x.UnidadNegocio?.Id == valorTercerNivel),
+                "tipo_sociedad" => todas.Where(x => (x.TipoSociedadActiva?.Id == valorTercerNivel) ||
+                                                    (x.TipoSociedadInactiva?.Id == valorTercerNivel) ||
+                                                    (x.TipoSociedad?.Id == valorTercerNivel)),
+                _ => todas
+            };
+
+            var listaFinal = filtradas
+                .OrderBy(x => x.Empresa?.Nombre ?? string.Empty)
+                .ToList();
+
+            if (!listaFinal.Any())
+            {
+                await MostrarNotificacion("No se encontraron sociedades con el criterio seleccionado.", true);
+                return;
+            }
+
+            string nombreOpcion = "";
+            if (RequiereTerceraLista)
+            {
+                nombreOpcion = listaTercerNivel.FirstOrDefault(x => x.Id == valorTercerNivel)?.Nombre ?? "";
+            }
+
+            string detalleCriterio = filtroSociedadSeleccionado switch
+            {
+                "activas" => "Activas",
+                "inactivas" => "Inactivas",
+                "region" => $"Región: {nombreOpcion}",
+                "unidad_negocio" => $"Unidad de Negocio: {nombreOpcion}",
+                "tipo_sociedad" => $"Tipo de Sociedad: {nombreOpcion}",
+                _ => "General"
+            };
+
+            string sufijoArchivo = filtroSociedadSeleccionado switch
+            {
+                "activas" => "Activas",
+                "inactivas" => "Inactivas",
+                _ => $"{filtroSociedadSeleccionado}_{nombreOpcion}".Replace(" ", "_")
+            };
+
+            if (tipoFormatoSeleccionado.Equals("CSV", StringComparison.OrdinalIgnoreCase))
+            {
+                string csv = GenerarCsvSociedades(listaFinal, ";");
+                string fileName = $"Data-Sociedades-{sufijoArchivo}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csv);
+                await MostrarNotificacion($"Archivo CSV descargado con {listaFinal.Count} registros.");
+            }
+            else if (tipoFormatoSeleccionado.Equals("PDF", StringComparison.OrdinalIgnoreCase))
+            {
+                var columnas = new string[] { "Sociedad", "Tipo Doc.", "Documento", "Ejercicio Económico", "Duración", "Objeto" };
+                var anchos = new float[] { 3.5f, 1.2f, 1.8f, 2.5f, 1.2f, 4.0f };
+                var filas = listaFinal.Select(p => new string[]
+                {
+                    p.Empresa?.Nombre ?? "-",
+                    p.TipoDocumento1?.Nombre ?? "-",
+                    UtilClass.ObtenerNumeroDocumentoLimpio(p.TipoDocumento1?.Nombre, p.Documento1),
+                    p.EjercicioEconomico ?? "-",
+                    p.Duracion != null ? $"{p.Duracion}" : "-",
+                    p.Objeto ?? "-"
+                }).ToList();
+
+                string tituloPdf = $"LISTA DE SOCIEDADES ({detalleCriterio.ToUpper()})";
+                string baseFileName = $"Lista_Sociedades_{sufijoArchivo}";
+
+                await ReportService.GenerarYDescargarReporteListaAsync(
+                    titulo: tituloPdf,
+                    columnas: columnas,
+                    filas: filas,
+                    nombreArchivoBase: baseFileName,
+                    anchosRelativos: anchos,
+                    subtitulo: $"Criterio aplicado: {detalleCriterio}"
+                );
+
+                await MostrarNotificacion($"Reporte PDF generado exitosamente con {listaFinal.Count} registros.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al generar el reporte: " + ex.Message, true);
+        }
+        finally
+        {
+            procesandoReporte = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string EscaparCsv(object? valor, string separador)
+    {
+        if (valor == null) return string.Empty;
+        string texto = valor.ToString() ?? string.Empty;
+        texto = texto.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ").Trim();
+        if (texto.Contains(separador) || texto.Contains('"'))
+        {
+            string escapado = texto.Replace("\"", "\"\"");
+            return "\"" + escapado + "\"";
+        }
+        return texto;
+    }
+
+    private string GenerarCsvSociedades(List<Sociedad> lista, string separador)
+    {
+        var sb = new StringBuilder();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Region", "UnidadNegocio", "Empresa", "NumeroSap", "EstatusSociedad",
+            "TipoSociedadActiva", "Objeto", "Domicilio", "DireccionFiscal", "DatosConstitucion",
+            "FechaConstitucion", "FechaVencimiento", "Duracion", "NumeroAcciones", "AplicaCapital",
+            "Moneda", "CapitalSuscrito", "CapitalPagado", "ClaseAcciones", "FormaAdministracion",
+            "EjercicioEconomico", "NumeroExpediente", "Observaciones", "Documento1", "Nit",
+            "ValorAccion", "AnoPublicacion", "NumeroPublicacion", "FechaPublicacion", "NombreDiario",
+            "ValorPatrimonial", "Documento2", "Documento3", "TipoDocumento1", "TipoDocumento2", "TipoDocumento3"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in lista)
+        {
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(item.Region?.Nombre, separador),
+                EscaparCsv(item.UnidadNegocio?.Nombre, separador),
+                EscaparCsv(item.Empresa?.Nombre, separador),
+                EscaparCsv(item.NumeroSap, separador),
+                EscaparCsv(item.EstatusSociedad?.Nombre, separador),
+                EscaparCsv(item.TipoSociedadActiva?.Nombre ?? item.TipoSociedadInactiva?.Nombre ?? item.TipoSociedad?.Nombre, separador),
+                EscaparCsv(item.Objeto, separador),
+                EscaparCsv(item.Domicilio, separador),
+                EscaparCsv(item.DireccionFiscal, separador),
+                EscaparCsv(item.DatosConstitucion, separador),
+                EscaparCsv(item.FechaConstitucion?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.FechaVencimiento?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.Duracion, separador),
+                EscaparCsv(item.NumeroAcciones, separador),
+                EscaparCsv(item.AplicaCapital, separador),
+                EscaparCsv(item.Moneda?.Nombre, separador),
+                EscaparCsv(item.CapitalSuscrito, separador),
+                EscaparCsv(item.CapitalPagado, separador),
+                EscaparCsv(item.ClaseAcciones, separador),
+                EscaparCsv(item.FormaAdministracion, separador),
+                EscaparCsv(item.EjercicioEconomico, separador),
+                EscaparCsv(item.NumeroExpediente, separador),
+                EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.Documento1, separador),
+                EscaparCsv(item.Nit, separador),
+                EscaparCsv(item.ValorAccion, separador),
+                EscaparCsv(item.AnoPublicacion, separador),
+                EscaparCsv(item.NumeroPublicacion, separador),
+                EscaparCsv(item.FechaPublicacion?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.NombreDiario?.Nombre, separador),
+                EscaparCsv(item.ValorPatrimonial, separador),
+                EscaparCsv(item.Documento2, separador),
+                EscaparCsv(item.Documento3, separador),
+                EscaparCsv(item.TipoDocumento1?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento2?.Nombre, separador),
+                EscaparCsv(item.TipoDocumento3?.Nombre, separador)
+            });
+            sb.AppendLine(linea);
+        }
+
+        return sb.ToString();
+    }
+
+    private async Task GenerarReporteAccionistasAsync()
+    {
+        errorSociedadAccionista = sociedadAccionistaSeleccionada <= 0;
+        errorEstatusAccionista = string.IsNullOrWhiteSpace(estatusAccionistaSeleccionado);
+
+        if (errorSociedadAccionista || errorEstatusAccionista)
+        {
+            await MostrarNotificacion("Debe seleccionar una Sociedad y un Estatus (Activos / Inactivos).", true);
+            return;
+        }
+
+        procesandoReporte = true;
+        StateHasChanged();
+
+        try
+        {
+            int estatusId = estatusAccionistaSeleccionado == "activos" ? 1 : 2;
+            string estatusTexto = estatusAccionistaSeleccionado == "activos" ? "Activos" : "Inactivos";
+
+            var sociedad = await repoSociedad.GetByIdAsync(sociedadAccionistaSeleccionada);
+            string nombreSociedad = sociedad?.Empresa?.Nombre ?? $"Sociedad_{sociedadAccionistaSeleccionada}";
+
+            long totalAccionesSociedad = 0;
+            if (!string.IsNullOrEmpty(sociedad?.NumeroAcciones) &&
+                long.TryParse(sociedad.NumeroAcciones.Replace(".", "").Replace(",", "").Trim(), out long numParsed))
+            {
+                totalAccionesSociedad = numParsed;
+            }
+
+            var todosAccionistas = await repoAccionistaSociedad.GetBySociedadIdAsync(sociedadAccionistaSeleccionada);
+            var directos = todosAccionistas
+                .Where(x => x.EstatusAccionista?.Id == estatusId && x.CustodioId == null)
+                .OrderByDescending(x => x.NroAcciones ?? 0)
+                .ToList();
+
+            if (!directos.Any())
+            {
+                await MostrarNotificacion($"No se encontraron accionistas {estatusTexto.ToLower()} para la sociedad {nombreSociedad}.", true);
+                return;
+            }
+
+            var custodiosIds = await repoAccionistaSociedad.GetCustodiosIdBySociedadAsync(sociedadAccionistaSeleccionada, estatusId);
+            var custodiosSet = new HashSet<int>(custodiosIds);
+
+            string nombreLimpioSociedad = System.Text.RegularExpressions.Regex.Replace(nombreSociedad, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+
+            if (tipoFormatoSeleccionado.Equals("CSV", StringComparison.OrdinalIgnoreCase))
+            {
+                string csv = GenerarCsvAccionistasSociedad(directos, nombreSociedad, totalAccionesSociedad, custodiosSet, ";");
+                string fileName = $"Accionistas-{nombreLimpioSociedad}-{estatusTexto}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csv);
+                await MostrarNotificacion($"Archivo CSV descargado con {directos.Count} accionistas de {nombreSociedad}.");
+            }
+            else if (tipoFormatoSeleccionado.Equals("PDF", StringComparison.OrdinalIgnoreCase))
+            {
+                var columnas = new string[] { "Accionista", "Tipo Accionista", "Documento", "Nro. Acciones", "% Participación" };
+                var anchos = new float[] { 4.0f, 2.5f, 2.0f, 2.0f, 2.0f };
+
+                var filas = directos.Select(p =>
+                {
+                    long nro = p.NroAcciones ?? 0;
+                    decimal porc = (totalAccionesSociedad > 0 && nro > 0)
+                        ? Math.Round((decimal)nro / totalAccionesSociedad * 100, 4)
+                        : 0;
+
+                    string nombreAccionista = (p.Accionista?.TipoAccionista?.Id == 3)
+                        ? (p.Accionista?.NombreSusesion ?? p.Accionista?.Nombre ?? "-")
+                        : (p.Accionista?.Nombre ?? "-");
+
+                    return new string[]
+                    {
+                        nombreAccionista,
+                        p.Accionista?.TipoAccionista?.Nombre ?? "-",
+                        p.Accionista?.Documento1 ?? "-",
+                        nro.ToString("N0"),
+                        $"{porc:N4} %"
+                    };
+                }).ToList();
+
+                string tituloPdf = $"NÓMINA DE ACCIONISTAS ({estatusTexto.ToUpper()})";
+                string baseFileName = $"Nomina_{nombreLimpioSociedad}_{estatusTexto}";
+
+                await ReportService.GenerarYDescargarReporteListaAsync(
+                    titulo: tituloPdf,
+                    columnas: columnas,
+                    filas: filas,
+                    nombreArchivoBase: baseFileName,
+                    anchosRelativos: anchos,
+                    subtitulo: $"Sociedad: {nombreSociedad}"
+                );
+
+                await MostrarNotificacion($"Reporte PDF generado exitosamente con {directos.Count} accionistas.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error al generar el reporte de accionistas: " + ex.Message, true);
+        }
+        finally
+        {
+            procesandoReporte = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GenerarCsvAccionistasSociedad(List<AccionistaSociedad> directos, string nombreSociedad, long totalAccionesSociedad, HashSet<int> custodiosSet, string separador)
+    {
+        var sb = new StringBuilder();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Sociedad", "TipoDocumento", "NroDocumento", "NombreAccionista", "TipoAccionista",
+            "NroAcciones", "PorcentajeParticipacion", "EsCustodio"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in directos)
+        {
+            long nroAcciones = item.NroAcciones ?? 0;
+            decimal porc = 0;
+            if (totalAccionesSociedad > 0 && nroAcciones > 0)
+            {
+                porc = Math.Round((decimal)nroAcciones / totalAccionesSociedad * 100, 4);
+            }
+
+            string nombreFinal = (item.Accionista?.TipoAccionista?.Id == 3)
+                ? (item.Accionista?.NombreSusesion ?? item.Accionista?.Nombre ?? string.Empty)
+                : (item.Accionista?.Nombre ?? string.Empty);
+
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(nombreSociedad, separador),
+                EscaparCsv(item.Accionista?.TipoDocumento1?.Nombre ?? "-", separador),
+                EscaparCsv(item.Accionista?.Documento1 ?? "-", separador),
+                EscaparCsv(nombreFinal, separador),
+                EscaparCsv(item.Accionista?.TipoAccionista?.Nombre ?? "-", separador),
+                EscaparCsv(nroAcciones, separador),
+                EscaparCsv(porc.ToString("0.0000", new System.Globalization.CultureInfo("es-VE")) + "%", separador),
+                EscaparCsv(custodiosSet.Contains(item.Id) ? "Si" : "No", separador)
+            });
+            sb.AppendLine(linea);
+        }
+
+        return sb.ToString();
+    }
+
+    private async Task MostrarNotificacion(string mensaje, bool esError = false)
+    {
+        mensajeAlerta = mensaje;
+        claseAlerta = esError ? "alert-danger" : "alert-success";
+        iconoAlerta = esError ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+
+        mostrarAlerta = true;
+        StateHasChanged();
+
+        await Task.Delay(4000);
+        mostrarAlerta = false;
+        StateHasChanged();
+    }
+}

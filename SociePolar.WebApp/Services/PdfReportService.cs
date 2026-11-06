@@ -61,12 +61,12 @@ namespace SociePolar.WebApp.Services
             var asambleasAll = await _repoAsamblea.GetBySociedadIdAsync(sociedadId);
             var asambleas = asambleasAll
                 .Where(x => x.IndicadorAsamblea == 1)
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
 
             var reformas = asambleasAll
                 .Where(x => (x.IndicadorAsamblea == 0 || x.TipoReforma != null))
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
 
             var certificacionesAll = await _repoCertificacion.GetBySociedadIdAsync(sociedadId);
@@ -76,7 +76,7 @@ namespace SociePolar.WebApp.Services
 
             var librosAll = await _repoLibros.GetBySociedadIdAsync(sociedadId);
             var libros = librosAll
-                .OrderBy(x => x.FechaDesde)
+                .OrderByDescending(x => x.FechaDesde)
                 .ToList();
 
             // 2. Cargar los bytes de la imagen desde wwwroot de manera segura

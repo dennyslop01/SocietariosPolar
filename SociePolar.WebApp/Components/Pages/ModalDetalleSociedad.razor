@@ -774,12 +774,12 @@
             var listAsamblea = await repoAsamblea.GetBySociedadIdAsync(SociedadId);
             ListAsambleaGral = listAsamblea
                 .Where(x => x.IndicadorAsamblea == 1)
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
 
             ListReformaGral = listAsamblea
                 .Where(x => x.IndicadorAsamblea == 0 || x.TipoReforma != null)
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
 
             var listCertificaciones = await repoCertificacion.GetBySociedadIdAsync(SociedadId);
@@ -789,7 +789,7 @@
 
             var listLibros = await repoLibros.GetBySociedadIdAsync(SociedadId);
             ListLibrosgral = listLibros
-                .OrderBy(x => x.FechaDesde)
+                .OrderByDescending(x => x.FechaDesde)
                 .ToList();
 
             var listAaccionista = await repoaccionista.GetBySociedadIdAsync(SociedadId);

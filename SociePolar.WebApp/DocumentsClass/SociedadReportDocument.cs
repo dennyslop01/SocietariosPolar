@@ -213,7 +213,7 @@ namespace SociePolar.WebApp.DocumentsClass
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Lugar de Reg.").Bold();
                     });
 
-                    foreach (var asam in _asambleas)
+                    foreach (var asam in _asambleas.OrderByDescending(x => x.FechaCelebracion))
                     {
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(asam.TipoAsamblea?.Nombre);
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(asam.FechaCelebracion?.ToString("dd/MM/yyyy"));
@@ -240,7 +240,7 @@ namespace SociePolar.WebApp.DocumentsClass
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Número").Bold();
                     });
 
-                    foreach (var refm in _reformas)
+                    foreach (var refm in _reformas.OrderByDescending(x => x.FechaCelebracion))
                     {
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(refm.TipoReforma?.Nombre);
                         table.Cell().BorderBottom(0.5f, Unit.Point).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(refm.FechaCelebracion?.ToString("dd/MM/yyyy"));

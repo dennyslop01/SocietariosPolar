@@ -800,12 +800,12 @@
             var listAsamblea = await repoAsamblea.GetBySociedadIdAsync(int.Parse(id));
             ListAsambleaGral = listAsamblea
                 .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && x.IndicadorAsamblea == 1)
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
         
             ListReformaGral = listAsamblea
                 .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && (x.IndicadorAsamblea == 0 || x.TipoReforma != null))
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
         
             var listCertificaciones = await repoCertificacion.GetBySociedadIdAsync(int.Parse(id));
@@ -817,7 +817,7 @@
             var listLibros = await repoLibros.GetBySociedadIdAsync(int.Parse(id));
             ListLibrosgral = listLibros
                 .Where(x => x.Sociedad?.EstatusSociedad?.Id == 1)
-                .OrderBy(x => x.FechaDesde)
+                .OrderByDescending(x => x.FechaDesde)
                 .ToList();
 
             List<AccionistaSociedadVerDto> listNewAccionista = new();

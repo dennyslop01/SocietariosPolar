@@ -21,7 +21,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.Registro)
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoReforma)
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToListAsync();
         }
 
@@ -52,7 +52,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .Include(b => b.NombreDiario)
                 .Include(b => b.TipoReforma)
                 .Where(x => x.Sociedad!.Id == sociedadId)
-                .OrderBy(x => x.FechaCelebracion)
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToListAsync();
         }
 
@@ -163,7 +163,7 @@ namespace SociePolar.Infrastructure.Repositories
             editAsamblea.NumeroPublicacion = entity.NumeroPublicacion;
             editAsamblea.FechaPublicacion = entity.FechaPublicacion;
             editAsamblea.NombreDiario = nombreDiario;
-            editAsamblea.AplicaReforma =  entity.AplicaReforma;
+            editAsamblea.AplicaReforma = entity.AplicaReforma;
             editAsamblea.TipoReforma = tipoReforma;
             editAsamblea.UpdateDate = DateTime.UtcNow;
             editAsamblea.UpdateUserId = entity.UpdateUserId;

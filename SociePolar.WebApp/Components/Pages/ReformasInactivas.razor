@@ -34,8 +34,8 @@
 
                         <button class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center"
                         @onclick="DescargarListaPdf"
-                        style="height: 32px; font-weight: 500;" title="Descargar Lista en PDF">
-                            <i class="bi bi-file-earmark-pdf me-2"></i> Descargar Lista Pdf
+                        style="height: 32px; font-weight: 500;" title="Descargar PDF">
+                            <i class="bi bi-file-earmark-pdf me-2"></i> Descargar PDF
                         </button>
                     }
                 </div>
@@ -249,7 +249,7 @@
         try
         {
             var listAsamblea = await repository.GetAllAsync();
-            Listgral = listAsamblea.Where(x => x.Sociedad?.EstatusSociedad?.Id == 2 && (x.IndicadorAsamblea == 0 || x.TipoReforma != null)).OrderBy(x => x.FechaCelebracion).ToList();
+            Listgral = listAsamblea.Where(x => x.Sociedad?.EstatusSociedad?.Id == 2 && (x.IndicadorAsamblea == 0 || x.TipoReforma != null)).OrderByDescending(x => x.FechaCelebracion).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -281,6 +281,7 @@
         {
             Listgral = ListgralBuscar
                 .Where(b => b.Sociedad.Empresa.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
 
             // if (Listgral.Count() == 0)
@@ -386,7 +387,7 @@
 
             var columnas = new string[] { "Sociedad", "Tipo Reforma", "Fecha Celebración", "Fecha Registro", "Registro", "Número", "Tomo" };
             var anchos = new float[] { 3.5f, 2.0f, 1.6f, 1.6f, 3.0f, 1.2f, 1.2f };
-            var filas = Listgral.Select(p => new string[]
+            var filas = Listgral.OrderByDescending(x => x.FechaCelebracion).Select(p => new string[]
             {
                 p.Sociedad?.Empresa?.Nombre ?? "-",
                 p.TipoReforma?.Nombre ?? "-",

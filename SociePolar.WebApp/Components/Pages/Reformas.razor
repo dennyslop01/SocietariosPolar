@@ -21,21 +21,18 @@
                     {
                         <!-- Botón Agregar -->
                         <button class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="AbrirModalNuevo"
-                        style="height: 32px; font-weight: 500;">
+                                @onclick="AbrirModalNuevo" style="height: 32px; font-weight: 500;">
                             <i class="bi bi-plus-lg me-2"></i> Agregar
                         </button>
 
                         <button class="btn btn-secondary btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="MostrarDescarga"
-                        style="height: 32px; font-weight: 500;" title="Generar csv">
+                                @onclick="MostrarDescarga" style="height: 32px; font-weight: 500;" title="Generar csv">
                             <i class="bi bi-filetype-csv me-2"></i> Descargar
                         </button>
 
                         <button class="btn btn-danger btn-sm px-3 shadow-sm d-flex align-items-center"
-                        @onclick="DescargarListaPdf"
-                        style="height: 32px; font-weight: 500;" title="Descargar Lista en PDF">
-                            <i class="bi bi-file-earmark-pdf me-2"></i> Descargar Lista Pdf
+                                @onclick="DescargarListaPdf" style="height: 32px; font-weight: 500;" title="Descargar PDF">
+                            <i class="bi bi-file-earmark-pdf me-2"></i> Descargar PDF
                         </button>
                     }
                 </div>
@@ -50,128 +47,136 @@
                         <span class="input-group-text bg-white border-end-0 text-secondary">
                             <i class="bi bi-search"></i>
                         </span>
-                        <input type="text"
-                               class="form-control border-start-0 ps-0"
-                               placeholder="Buscar por nombre..."
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar por nombre..."
                                @oninput="FiltrarBusqueda" />
                     </div>
                 </div>
             </div>
-            <PaginationComponent TItem="Asamblea" Items="Listgral" DefaultPageSize="15" TableClass="polar-table-compact" ContainerStyle="max-height: calc(100vh - 280px);">
+            <PaginationComponent TItem="Asamblea" Items="Listgral" DefaultPageSize="15" TableClass="polar-table-compact"
+                                 ContainerStyle="max-height: calc(100vh - 280px);">
                 <ChildContentHeader>
                     <tr class="table-light border-bottom text-nowrap">
-                        <th class="polar-sticky-col-direct ps-3 text-start" style="min-width: 170px; max-width: 220px;">Sociedad</th>
-                        <th class="text-start" style="min-width: 120px;">Tipo Reforma</th>
-                        <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Celebración</th>
-                        <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Registro</th>
-                        <th class="text-start" style="min-width: 160px; max-width: 260px;">Registro</th>
-                        <th class="text-center" style="width: 75px; min-width: 75px;">Número</th>
-                        <th class="text-center" style="width: 75px; min-width: 75px;">Tomo</th>
-                        <th class="text-end pe-3 polar-sticky-col-actions" style="width: 95px; min-width: 95px;">Acciones</th>
-                    </tr>
-                </ChildContentHeader>
-                <ChildContentRow Context="p">
-                    <tr class="align-middle border-bottom">
-                        <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
-                            <button type="button" class="btn btn-link p-0 text-decoration-none text-start fw-semibold text-dark polar-truncate"
-                                    style="max-width: 200px;"
-                                    @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)"
-                                    title="Ver detalle de sociedad: @p.Sociedad?.Empresa?.Nombre">
-                                @(p.Sociedad?.Empresa?.Nombre ?? "-")
-                            </button>
-                        </td>
-                        <td class="text-start">
-                            <span class="badge bg-light text-dark border">@(p.TipoReforma?.Nombre ?? "-")</span>
-                        </td>
-                        <td class="polar-date text-secondary">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
-                        <td class="polar-date text-secondary">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
-                        <td class="text-start text-secondary">
-                            <span class="polar-truncate" style="max-width: 250px;" title="@p.Registro?.Nombre">
-                                @(p.Registro?.Nombre ?? "-")
-                            </span>
-                        </td>
-                        <td class="text-center text-secondary">@p.NumeroRegistro</td>
-                        <td class="text-center text-secondary">@p.Tomo</td>
-                        <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
-                            <button class="btn btn-link btn-sm text-info p-0 me-2" @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)" title="Ver Detalle Sociedad">
-                                <i class="bi bi-eye fs-6"></i>
-                            </button>
-                            @if (idRol == 1 || idRol == 2 || idRol == 3)
-                            {
-                                <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)" title="Editar">
-                                    <i class="bi bi-pencil-square fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-danger p-0 me-2" @onclick="() => VerificarEliminar(p)" title="Eliminar">
-                                    <i class="bi bi-trash3 fs-6"></i>
-                                </button>
-                                <button class="btn btn-link btn-sm text-secondary p-0 me-1"
-                                        @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
-                                    <i class="bi bi-file-earmark-pdf fs-6"></i>
-                                </button>
-                            }
-                        </td>
-                    </tr>
-                </ChildContentRow>
-            </PaginationComponent>
-        </div>
-    </div>
-
-    @if (mostrarAlerta)
-    {
-        <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
-            <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
-                <i class="bi @iconoAlerta me-2 fs-5"></i>
-                <div class="fw-bold">
-                    @mensajeAlerta
+                        <th class="polar-sticky-col-direct ps-3 text-start" style="min-width: 170px; max-width: 220px;">
+                            Sociedad</th>
+                            <th class="text-start" style="min-width: 120px;">Tipo Reforma</th>
+                            <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Celebración</th>
+                            <th class="polar-date" style="width: 110px; min-width: 110px;">Fecha Registro</th>
+                            <th class="text-start" style="min-width: 160px; max-width: 260px;">Registro</th>
+                            <th class="text-center" style="width: 75px; min-width: 75px;">Número</th>
+                            <th class="text-center" style="width: 75px; min-width: 75px;">Tomo</th>
+                            <th class="text-end pe-3 polar-sticky-col-actions" style="width: 95px; min-width: 95px;">
+                                Acciones</th>
+                            </tr>
+                        </ChildContentHeader>
+                        <ChildContentRow Context="p">
+                            <tr class="align-middle border-bottom">
+                                <td class="polar-sticky-col-direct ps-3 text-start fw-semibold text-dark">
+                                    <button type="button"
+                                            class="btn btn-link p-0 text-decoration-none text-start fw-semibold text-dark polar-truncate"
+                                            style="max-width: 200px;"
+                                            @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)"
+                                            title="Ver detalle de sociedad: @p.Sociedad?.Empresa?.Nombre">
+                                        @(p.Sociedad?.Empresa?.Nombre ?? "-")
+                                    </button>
+                                </td>
+                                <td class="text-start">
+                                    <span class="badge bg-light text-dark border">@(p.TipoReforma?.Nombre ?? "-")</span>
+                                </td>
+                                <td class="polar-date text-secondary">@p.FechaCelebracion?.ToString("dd/MM/yyyy")</td>
+                                <td class="polar-date text-secondary">@p.FechaRegistro?.ToString("dd/MM/yyyy")</td>
+                                <td class="text-start text-secondary">
+                                    <span class="polar-truncate" style="max-width: 250px;" title="@p.Registro?.Nombre">
+                                        @(p.Registro?.Nombre ?? "-")
+                                    </span>
+                                </td>
+                                <td class="text-center text-secondary">@p.NumeroRegistro</td>
+                                <td class="text-center text-secondary">@p.Tomo</td>
+                                <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
+                                    <button class="btn btn-link btn-sm text-info p-0 me-2"
+                                            @onclick="() => AbrirModalDetalleSociedad(p.Sociedad?.Id ?? 0)"
+                                            title="Ver Detalle Sociedad">
+                                        <i class="bi bi-eye fs-6"></i>
+                                    </button>
+                                    @if (idRol == 1 || idRol == 2 || idRol == 3)
+                                    {
+                                        <button class="btn btn-link btn-sm text-primary p-0 me-2" @onclick="() => Editar(p)"
+                                                title="Editar">
+                                            <i class="bi bi-pencil-square fs-6"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-danger p-0 me-2"
+                                                @onclick="() => VerificarEliminar(p)" title="Eliminar">
+                                            <i class="bi bi-trash3 fs-6"></i>
+                                        </button>
+                                        <button class="btn btn-link btn-sm text-secondary p-0 me-1"
+                                                @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                            <i class="bi bi-file-earmark-pdf fs-6"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        </ChildContentRow>
+                    </PaginationComponent>
                 </div>
             </div>
-        </div>
-    }
 
-</div>
-
-@if (cargando)
-{
-    <ModalCargando />
-}
-
-
-@if (mostrarModal)
-{
-    <ReformasGuardar id="@idAsamblea.ToString()" OnFinalizado="ManejarCierreModal" />
-}
-
-
-@if (mostrarModalEliminar)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-body text-center py-4">
-                    <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
-                    <h5 class="fw-bold">¿Estás seguro?</h5>
-                    <p class="text-secondary small">
-                        Vas a eliminar <strong>@entidadParaEliminar?.TipoReforma.Nombre</strong>. Esta acción no se puede deshacer.
-                    </p>
+            @if (mostrarAlerta)
+            {
+                <div class="alerta-top shadow-sm animate__animated animate__fadeInDown">
+                    <div class="alert @claseAlerta d-flex align-items-center mb-0 px-4 py-2 border-0 shadow-lg" role="alert">
+                        <i class="bi @iconoAlerta me-2 fs-5"></i>
+                        <div class="fw-bold">
+                            @mensajeAlerta
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
-                    <button class="btn btn-outline-secondary btn-sm px-4 me-2" @onclick="CerrarModalEliminar">Cancelar</button>
-                    <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+            }
+
+        </div>
+
+        @if (cargando)
+        {
+            <ModalCargando />
+        }
+
+
+        @if (mostrarModal)
+        {
+            <ReformasGuardar id="@idAsamblea.ToString()" OnFinalizado="ManejarCierreModal" />
+        }
+
+
+        @if (mostrarModalEliminar)
+        {
+            <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-body text-center py-4">
+                            <i class="bi bi-exclamation-octagon text-danger fs-1 mb-3 d-block"></i>
+                            <h5 class="fw-bold">¿Estás seguro?</h5>
+                            <p class="text-secondary small">
+                                Vas a eliminar <strong>@entidadParaEliminar?.TipoReforma.Nombre</strong>. Esta acción no se puede
+                                deshacer.
+                            </p>
+                        </div>
+                        <div class="modal-footer bg-light border-0 d-flex justify-content-center pb-4">
+                            <button class="btn btn-outline-secondary btn-sm px-4 me-2"
+                                    @onclick="CerrarModalEliminar">Cancelar</button>
+                            <button class="btn btn-danger btn-sm px-4 shadow-sm" @onclick="ConfirmarEliminar">Eliminar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-}
+        }
 
-@if (descarga)
-{
-    <ModalDescarga idModulo="4" idEstado="1" OnFinalizado="ManejarCierreDescarga" />
-}
+        @if (descarga)
+        {
+            <ModalDescarga idModulo="4" idEstado="1" OnFinalizado="ManejarCierreDescarga" />
+        }
 
-@if (mostrarPopupSociedad && idSociedadPopup > 0)
-{
-    <ModalDetalleSociedad SociedadId="@idSociedadPopup" OnCerrar="() => mostrarPopupSociedad = false" />
-}
+        @if (mostrarPopupSociedad && idSociedadPopup > 0)
+        {
+            <ModalDetalleSociedad SociedadId="@idSociedadPopup" OnCerrar="() => mostrarPopupSociedad = false" />
+        }
 
 @code {
     private List<Asamblea> Listgral = new();
@@ -249,7 +254,8 @@
         try
         {
             var listAsamblea = await repository.GetAllAsync();
-            Listgral = listAsamblea.Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && (x.IndicadorAsamblea == 0 || x.TipoReforma != null)).OrderBy(x => x.FechaCelebracion).ToList();
+            Listgral = listAsamblea.Where(x => x.Sociedad?.EstatusSociedad?.Id == 1 && (x.IndicadorAsamblea == 0 || x.TipoReforma !=
+null)).OrderByDescending(x => x.FechaCelebracion).ToList();
             ListgralBuscar = Listgral;
         }
         catch (Exception ex)
@@ -280,14 +286,16 @@
         else
         {
             Listgral = ListgralBuscar
-                .Where(b => b.Sociedad.Empresa.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.Sociedad.Empresa.Nombre != null && b.Sociedad.Empresa.Nombre.Contains(searchTerm,
+StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.FechaCelebracion)
                 .ToList();
 
             // if (Listgral.Count() == 0)
             // {
-            //     Listgral = ListgralBuscar
-            //     .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-            //     .ToList();
+            // Listgral = ListgralBuscar
+            // .Where(b => b.Nombre != null && b.Nombre.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            // .ToList();
             // }
         }
     }
@@ -384,9 +392,10 @@
             cargando = true;
             StateHasChanged();
 
-            var columnas = new string[] { "Sociedad", "Tipo Reforma", "Fecha Celebración", "Fecha Registro", "Registro", "Número", "Tomo" };
+            var columnas = new string[] { "Sociedad", "Tipo Reforma", "Fecha Celebración", "Fecha Registro", "Registro", "Número",
+"Tomo" };
             var anchos = new float[] { 3.5f, 2.0f, 1.6f, 1.6f, 3.0f, 1.2f, 1.2f };
-            var filas = Listgral.Select(p => new string[]
+            var filas = Listgral.OrderByDescending(x => x.FechaCelebracion).Select(p => new string[]
             {
                 p.Sociedad?.Empresa?.Nombre ?? "-",
                 p.TipoReforma?.Nombre ?? "-",

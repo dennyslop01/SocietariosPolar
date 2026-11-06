@@ -56,24 +56,24 @@
                                     <label class="form-label fw-bold text-secondary small">Contenido a Descargar</label>
                                     <div class="d-flex flex-column gap-2 p-2 border rounded-3 bg-light-subtle">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="tipoExp" id="expDirectos" value="1" 
-                                                   checked="@(tipoExportacionAccionistas == 1)" 
+                                            <input class="form-check-input" type="radio" name="tipoExp" id="expDirectos" value="1"
+                                                   checked="@(tipoExportacionAccionistas == 1)"
                                                    @onchange="@(() => tipoExportacionAccionistas = 1)">
                                             <label class="form-check-label small fw-medium text-dark" for="expDirectos" style="cursor: pointer;">
                                                 Accionistas de la Sociedad <span class="text-muted" style="font-size: 0.8rem;">(Directos + Bloque Custodio)</span>
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="tipoExp" id="expCustodia" value="2" 
-                                                   checked="@(tipoExportacionAccionistas == 2)" 
+                                            <input class="form-check-input" type="radio" name="tipoExp" id="expCustodia" value="2"
+                                                   checked="@(tipoExportacionAccionistas == 2)"
                                                    @onchange="@(() => tipoExportacionAccionistas = 2)">
                                             <label class="form-check-label small fw-medium text-dark" for="expCustodia" style="cursor: pointer;">
                                                 Accionistas en Custodia <span class="text-muted" style="font-size: 0.8rem;">(Desglose Sub-Cuentas C.V.V.)</span>
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="tipoExp" id="expAmbos" value="3" 
-                                                   checked="@(tipoExportacionAccionistas == 3)" 
+                                            <input class="form-check-input" type="radio" name="tipoExp" id="expAmbos" value="3"
+                                                   checked="@(tipoExportacionAccionistas == 3)"
                                                    @onchange="@(() => tipoExportacionAccionistas = 3)">
                                             <label class="form-check-label small fw-medium text-dark" for="expAmbos" style="cursor: pointer;">
                                                 Ambos archivos <span class="text-muted" style="font-size: 0.8rem;">(Descargar los 2 por separado)</span>
@@ -277,7 +277,7 @@
             "FechaConstitucion", "FechaVencimiento", "Duracion", "NumeroAcciones", "AplicaCapital",
             "Moneda", "CapitalSuscrito", "CapitalPagado", "ClaseAcciones", "FormaAdministracion",
             "EjercicioEconomico", "NumeroExpediente", "Observaciones", "Documento1", "Nit",
-            "ValorAccion", "AnoPublicacion", "NumeroPublicacion",
+            "CreateDate", "UpdateDate", "ValorAccion", "AnoPublicacion", "NumeroPublicacion",
             "FechaPublicacion", "NombreDiario", "ValorPatrimonial", "Documento2", "Documento3",
             "TipoDocumento1", "TipoDocumento2", "TipoDocumento3"
         });
@@ -312,6 +312,8 @@
                 EscaparCsv(item.Observaciones, separador),
                 EscaparCsv(item.Documento1, separador),
                 EscaparCsv(item.Nit, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
                 EscaparCsv(item.ValorAccion, separador),
                 EscaparCsv(item.AnoPublicacion, separador),
                 EscaparCsv(item.NumeroPublicacion, separador),
@@ -343,7 +345,7 @@
 
         string encabezado = string.Join(separador, new string[] {
             "Id", "Sociedad", "Cargo", "Nombre", "TipoDocumento1", "TipoDocumento2",
-            "Documento1", "Documento2", "Duracion"
+            "Documento1", "Documento2", "Duracion", "CreateDate", "UpdateDate"
         });
         sb.AppendLine(encabezado);
 
@@ -358,7 +360,9 @@
                 EscaparCsv(item.TipoDocumento2?.Nombre, separador),
                 EscaparCsv(item.Documento1, separador),
                 EscaparCsv(item.Documento2, separador),
-                EscaparCsv(item.Duracion, separador)
+                EscaparCsv(item.Duracion, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
             });
             sb.AppendLine(linea);
         }
@@ -375,14 +379,14 @@
             .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado &&
                         (x.IndicadorAsamblea == 0 ||
                          ((reforma == 1 && x.TipoReforma != null) || (reforma != 1 && x.TipoReforma == null))))
-            .OrderBy(x => x.FechaCelebracion)
+            .OrderByDescending(x => x.FechaCelebracion)
             .ToList();
 
         string encabezado = string.Join(separador, new string[] {
             "Id", "Sociedad", "TipoAsamblea", "FechaCelebracion", "NumeroActa", "FechaRegistro",
             "Registro", "NumeroRegistro", "Tomo", "AnoPublicacion", "FechaPublicacion",
             "NumeroPublicacion", "NombreDiario", "IndicadorAsamblea", "AplicaReforma",
-            "TipoReforma", "Observacion"
+            "TipoReforma", "CreateDate", "UpdateDate", "Observacion"
         });
         sb.AppendLine(encabezado);
 
@@ -405,6 +409,8 @@
                 EscaparCsv(item.IndicadorAsamblea, separador),
                 EscaparCsv(item.AplicaReforma, separador),
                 EscaparCsv(item.TipoReforma?.Nombre, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
                 EscaparCsv(item.Observacion, separador)
             });
             sb.AppendLine(linea);
@@ -423,7 +429,7 @@
             .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
             .ToList();
 
-        string encabezado = string.Join(separador, new string[] { "Id", "Sociedad", "Cargo", "Fecha" });
+        string encabezado = string.Join(separador, new string[] { "Id", "Sociedad", "Cargo", "Fecha", "CreateDate", "UpdateDate" });
         sb.AppendLine(encabezado);
 
         foreach (var item in listGral)
@@ -432,7 +438,9 @@
                 EscaparCsv(item.Id, separador),
                 EscaparCsv(item.Sociedad?.Empresa?.Nombre, separador),
                 EscaparCsv(item.Cargo?.Nombre, separador),
-                EscaparCsv(item.Fecha?.ToString("yyyy-MM-dd"), separador)
+                EscaparCsv(item.Fecha?.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
             });
             sb.AppendLine(linea);
         }
@@ -447,12 +455,12 @@
 
         var listGral = listaGral
             .Where(x => x.Sociedad?.EstatusSociedad?.Id == targetEstado)
-            .OrderBy(x => x.FechaDesde)
+            .OrderBy(x => x.Sociedad?.Empresa?.Nombre ?? string.Empty)
             .ToList();
 
         string encabezado = string.Join(separador, new string[] {
             "Id", "Sociedad", "ClaseLibro", "TipoLibro", "TomoUso", "Folios",
-            "LibrosSellados", "Observaciones",
+            "LibrosSellados", "Observaciones", "CreateDate", "UpdateDate",
             "FechaDesde", "FechaHasta", "FechaSello", "Vacio", "Ubicacion"
         });
         sb.AppendLine(encabezado);
@@ -468,6 +476,8 @@
                 EscaparCsv(item.Folios, separador),
                 EscaparCsv(item.LibrosSellados, separador),
                 EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
                 EscaparCsv(item.FechaDesde?.ToString("yyyy-MM-dd"), separador),
                 EscaparCsv(item.FechaHasta?.ToString("yyyy-MM-dd"), separador),
                 EscaparCsv(item.FechaSello?.ToString("yyyy-MM-dd"), separador),
@@ -503,7 +513,7 @@
             "CondicionEspecial", "Observaciones", "DocumentosRelacionados", "AnoDuracion", "JuntaDirectiva",
             "VigenciaJunta", "FechaVencimientoJunta", "RegistradaEn", "NombreSusesion", "CedulaSusesion",
             "FechaEmisionSucesion", "FechaVencimientoSucesion", "OtroDocumentoSucesion", "FechaEmisionOtroSucesion",
-            "FechaVencimientoOtroSucesion"
+            "FechaVencimientoOtroSucesion", "CreateDate", "UpdateDate"
         });
         sb.AppendLine(encabezado);
 
@@ -599,7 +609,9 @@
                 EscaparCsv(item.FechaVencimientoSucesion, separador),
                 EscaparCsv(item.OtroDocumentoSucesion, separador),
                 EscaparCsv(item.FechaEmisionOtroSucesion, separador),
-                EscaparCsv(item.FechaVencimientoOtroSucesion, separador)
+                EscaparCsv(item.FechaVencimientoOtroSucesion, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
             });
             sb.AppendLine(linea);
         }
@@ -614,12 +626,12 @@
 
         var listGral = listaGral
             .Where(x => x.AccionistaSociedad?.Id == targetId)
-            .OrderBy(x => x.Fecha)
+            .OrderBy(x => x.AccionistaSociedad?.Sociedad?.Empresa?.Nombre ?? string.Empty)
             .ToList();
 
         string encabezado = string.Join(separador, new string[] {
             "Id", "AccionistaSociedad", "Numero", "Acciones", "Preferente", "Ubicacion",
-            "Anulado", "Endosado", "Fecha", "Observaciones"
+            "Anulado", "Endosado", "Fecha", "Observaciones", "CreateDate", "UpdateDate"
         });
         sb.AppendLine(encabezado);
 
@@ -635,7 +647,9 @@
                 EscaparCsv(item.Anulado, separador),
                 EscaparCsv(item.Endosado, separador),
                 EscaparCsv(item.Fecha?.ToString("yyyy-MM-dd"), separador),
-                EscaparCsv(item.Observaciones, separador)
+                EscaparCsv(item.Observaciones, separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd HH:mm:ss"), separador)
             });
             sb.AppendLine(linea);
         }
@@ -725,7 +739,7 @@
 
         string encabezado = string.Join(separador, new string[] {
             "Sociedad", "TipoDocumento", "NroDocumento", "NombreAccionista", "TipoAccionista",
-            "NroAcciones", "PorcentajeParticipacion", "EsCustodio"
+            "NroAcciones", "PorcentajeParticipacion", "EsCustodio", "FechaIngreso", "UltimaModificacion"
         });
         sb.AppendLine(encabezado);
 
@@ -738,9 +752,7 @@
                 porc = Math.Round((decimal)nroAcciones / totalAccionesSociedad * 100, 6);
             }
 
-            string nombreFinal = (item.Accionista?.TipoAccionista?.Id != 3)
-                ? (item.Accionista?.Nombre ?? string.Empty)
-                : (item.Accionista?.NombreSusesion ?? item.Accionista?.Nombre ?? string.Empty);
+            string nombreFinal = item.Accionista?.Nombre ?? string.Empty;
 
             string linea = string.Join(separador, new string[] {
                 EscaparCsv(nombreSociedad, separador),
@@ -750,7 +762,9 @@
                 EscaparCsv(item.Accionista?.TipoAccionista?.Nombre ?? "-", separador),
                 EscaparCsv(nroAcciones, separador),
                 EscaparCsv(FormatearPorcentajeCsv(porc, separador), separador),
-                EscaparCsv(custodiosSet.Contains(item.Id) ? "Si" : "No", separador)
+                EscaparCsv(custodiosSet.Contains(item.Id) ? "Si" : "No", separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd"), separador)
             });
             sb.AppendLine(linea);
         }
@@ -782,7 +796,7 @@
 
         string encabezado = string.Join(separador, new string[] {
             "Sociedad", "Custodio", "TipoDocumento", "NroDocumento", "NombreAccionista",
-            "TipoAccionista", "NroAcciones", "PorcentajeSobreSociedad"
+            "TipoAccionista", "NroAcciones", "PorcentajeSobreSociedad", "FechaIngreso", "UltimaModificacion"
         });
         sb.AppendLine(encabezado);
 
@@ -803,9 +817,7 @@
                     porc = Math.Round((decimal)nroAcciones / totalAccionesSociedad * 100, 6);
                 }
 
-                string nombreFinal = (sub.Accionista?.TipoAccionista?.Id != 3)
-                    ? (sub.Accionista?.Nombre ?? string.Empty)
-                    : (sub.Accionista?.NombreSusesion ?? sub.Accionista?.Nombre ?? string.Empty);
+                string nombreFinal = sub.Accionista?.Nombre ?? string.Empty;
 
                 string linea = string.Join(separador, new string[] {
                     EscaparCsv(nombreSociedad, separador),
@@ -815,7 +827,9 @@
                     EscaparCsv(nombreFinal, separador),
                     EscaparCsv(sub.Accionista?.TipoAccionista?.Nombre ?? "-", separador),
                     EscaparCsv(nroAcciones, separador),
-                    EscaparCsv(FormatearPorcentajeCsv(porc, separador), separador)
+                    EscaparCsv(FormatearPorcentajeCsv(porc, separador), separador),
+                    EscaparCsv(sub.CreateDate.ToString("yyyy-MM-dd"), separador),
+                    EscaparCsv(sub.UpdateDate.ToString("yyyy-MM-dd"), separador)
                 });
                 sb.AppendLine(linea);
             }

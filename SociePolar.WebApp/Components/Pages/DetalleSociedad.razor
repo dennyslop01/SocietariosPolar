@@ -584,7 +584,8 @@
                                     <th class="text-start" style="min-width: 240px;">Nombre y Apellido</th>
                                     <th class="text-start" style="min-width: 160px;">Tipo Accionista</th>
                                     <th class="polar-num" style="min-width: 130px;">Nro. Acciones</th>
-                                    <th class="polar-num pe-3" style="min-width: 130px;">% Participación</th>
+                                    <th class="polar-num" style="min-width: 130px;">% Participación</th>
+                                    <th class="text-center pe-3" style="width: 80px;">Acciones</th>
                                 </tr>
                             </ChildContentHeader>
                             <ChildContentRow Context="p">
@@ -597,7 +598,19 @@
                                                 <i class="bi @(p.MostrarCustodiados ? "bi-dash-square-fill" : "bi-plus-square-fill") text-primary"></i>
                                             </button>
                                         }
-                                        <span>@p.AccionistaNombre</span>
+                                        @if (p.AccionistaId > 0)
+                                        {
+                                            <button type="button" class="btn btn-link p-0 text-decoration-none text-dark fw-semibold text-start align-baseline"
+                                                    style="font-size: inherit;"
+                                                    @onclick="() => AbrirModalAccionista(p.AccionistaId)"
+                                                    title="Ver detalle de @p.AccionistaNombre">
+                                                @p.AccionistaNombre
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span>@p.AccionistaNombre</span>
+                                        }
                                         @if (p.EsCustodio)
                                         {
                                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" style="font-size: 0.7rem;">Custodio</span>
@@ -607,12 +620,22 @@
                                         <span class="badge bg-light text-dark border">@(p.TipoAccionistaNombre ?? "-")</span>
                                     </td>
                                     <td class="polar-num">@UtilClass.FormatearMiles(p.NroAcciones)</td>
-                                    <td class="polar-num pe-3">@((p.Participacion ?? 0).ToString("N6"))%</td>
+                                    <td class="polar-num">@((p.Participacion ?? 0).ToString("N6"))%</td>
+                                    <td class="text-center pe-3">
+                                        @if (p.AccionistaId > 0)
+                                        {
+                                            <button type="button" class="btn btn-link btn-sm text-info p-0"
+                                                    @onclick="() => AbrirModalAccionista(p.AccionistaId)"
+                                                    title="Ver detalle de @p.AccionistaNombre">
+                                                <i class="bi bi-eye fs-6"></i>
+                                            </button>
+                                        }
+                                    </td>
                                 </tr>
                                 @if (p.MostrarCustodiados && p.SubCustodiados.Any())
                                 {
                                     <tr>
-                                        <td colspan="5" class="p-0 border-0">
+                                        <td colspan="6" class="p-0 border-0">
                                             <div class="bg-light p-3 ps-4 border-start border-4 border-primary shadow-sm my-2 rounded-2">
                                                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2 pb-2 border-bottom">
                                                     <div>
@@ -643,7 +666,8 @@
                                                                 <th class="py-2">Sub-Accionista</th>
                                                                 <th class="py-2">Tipo</th>
                                                                 <th class="py-2 text-end">Nro. Acciones</th>
-                                                                <th class="pe-3 py-2 text-end">% Participación</th>
+                                                                <th class="py-2 text-end">% Participación</th>
+                                                                <th class="pe-3 py-2 text-center" style="width: 70px;">Acciones</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -652,11 +676,33 @@
                                                                 <tr class="border-bottom">
                                                                     <td class="ps-3 font-monospace small text-secondary">@(string.IsNullOrWhiteSpace(sub.DocumentoIdentidad) ? "-" : sub.DocumentoIdentidad)</td>
                                                                     <td class="fw-semibold text-dark">
-                                                                        <span>@sub.AccionistaNombre</span>
+                                                                        @if (sub.AccionistaId > 0)
+                                                                        {
+                                                                            <button type="button" class="btn btn-link p-0 text-decoration-none text-dark fw-semibold text-start align-baseline"
+                                                                                    style="font-size: inherit;"
+                                                                                    @onclick="() => AbrirModalAccionista(sub.AccionistaId)"
+                                                                                    title="Ver detalle de @sub.AccionistaNombre">
+                                                                                @sub.AccionistaNombre
+                                                                            </button>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <span>@sub.AccionistaNombre</span>
+                                                                        }
                                                                     </td>
                                                                     <td><span class="badge bg-light text-secondary border">@(sub.TipoAccionistaNombre ?? "Sub-Cuenta")</span></td>
                                                                     <td class="text-end font-monospace fw-bold text-primary">@UtilClass.FormatearMiles(sub.NroAcciones ?? 0)</td>
-                                                                    <td class="pe-3 text-end text-secondary small">@((sub.Participacion ?? 0).ToString("N6"))%</td>
+                                                                    <td class="text-end text-secondary small">@((sub.Participacion ?? 0).ToString("N6"))%</td>
+                                                                    <td class="pe-3 text-center">
+                                                                        @if (sub.AccionistaId > 0)
+                                                                        {
+                                                                            <button type="button" class="btn btn-link btn-sm text-info p-0"
+                                                                                    @onclick="() => AbrirModalAccionista(sub.AccionistaId)"
+                                                                                    title="Ver detalle de @sub.AccionistaNombre">
+                                                                                <i class="bi bi-eye fs-6"></i>
+                                                                            </button>
+                                                                        }
+                                                                    </td>
                                                                 </tr>
                                                             }
                                                         </tbody>

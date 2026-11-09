@@ -33,5 +33,6 @@ namespace SociePolar.Application.Interfaces
         Task<List<AccionistaSociedadResumenDto>> GetResumenBySociedadIdAsync(int sociedadId);
         Task ActualizarSaldosYAuditoriaConciliacionLoteAsync(int procesoId, int sociedadId, int? custodioId, int userId);
         Task<List<AccionistaSociedad>> GetByAccionistaIdAsync(int accionistaId);
+        Task<List<AccionistaListadoCorteDto>> GetListadoAccionistasAlCorteAsync(int sociedadId, DateTime fechaHasta);
     }
 }

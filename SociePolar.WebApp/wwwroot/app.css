@@ -225,6 +225,33 @@ table td:last-child {
     padding-right: 1.25rem !important;
 }
 
+/* Columna Congelada Flotante a la Derecha (Acciones) */
+.polar-sticky-col-actions,
+.table th.polar-sticky-col-actions,
+.table td.polar-sticky-col-actions {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 8 !important;
+    background-color: #FFFFFF !important;
+    box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.08) !important;
+}
+
+thead .polar-sticky-col-actions,
+thead th.polar-sticky-col-actions,
+.table thead th.polar-sticky-col-actions {
+    position: sticky !important;
+    top: 0 !important;
+    right: 0 !important;
+    z-index: 15 !important;
+    background-color: #F8FAFC !important;
+    box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.08) !important;
+}
+
+tr:hover td.polar-sticky-col-actions,
+.table tbody tr:hover td.polar-sticky-col-actions {
+    background-color: #F1F5F9 !important;
+}
+
 /* Botones de acción con iconos en tablas */
 .table td button.btn-link:has(i.bi):not(.text-decoration-underline),
 .table td .btn-icon-action,

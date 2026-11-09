@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SociePolar.Application.Interfaces;
+using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
 using SociePolar.Infrastructure.DataContext;
 
@@ -84,6 +85,153 @@ namespace SociePolar.Infrastructure.Repositories
                 context.Entry(entity.Accionista).State = EntityState.Detached;
                 context.Entry(entity.Moneda).State = EntityState.Detached;
             }
+        }
+
+        public async Task<List<Sociedad>> GetSociedadesConDividendosDefinitivosAsync()
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var sociedades = await context.Set<DividendoDefinitivo>()
+                .AsNoTracking()
+                .Include(d => d.Sociedad)
+                    .ThenInclude(s => s!.Empresa)
+                .Where(d => d.Sociedad != null && d.Sociedad.Empresa != null)
+                .Select(d => d.Sociedad!)
+                .ToListAsync();
+
+            return sociedades
+                .GroupBy(s => s.Id)
+                .Select(g => g.First())
+                .OrderBy(s => s.Empresa?.Nombre ?? "")
+                .ToList();
+        }
+
+        public async Task<List<DividendoListadoReporteDto>> GetDividendosReporteAsync(int sociedadId, DateTime fechaDesde, DateTime fechaHasta)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            DateTime fechaInicio = fechaDesde.Date;
+            DateTime fechaFinLimite = fechaHasta.Date.AddDays(1);
+
+            // Buscar procesos de dividendos definitivos por fecha de creación o por fecha de decreto en el rango
+            var procesosDirectos = await context.Set<DividendoDefinitivo>()
+                .AsNoTracking()
+                .Include(d => d.Sociedad)
+                    .ThenInclude(s => s!.Empresa)
+                .Include(d => d.Moneda)
+                .Where(d => d.Sociedad != null && d.Sociedad.Id == sociedadId &&
+                            d.CreateDate >= fechaInicio && d.CreateDate < fechaFinLimite)
+                .ToListAsync();
+
+            var procesosPorDetalleIds = await context.Set<DividendoDefinitivoDetalle>()
+                .AsNoTracking()
+                .Where(det => det.FechaDecreto.HasValue &&
+                              det.FechaDecreto.Value >= fechaInicio && det.FechaDecreto.Value < fechaFinLimite)
+                .Select(det => det.DividendoDefinitivoId)
+                .Distinct()
+                .ToListAsync();
+
+            List<DividendoDefinitivo> procesosPorDetalle = new();
+            if (procesosPorDetalleIds.Any())
+            {
+                procesosPorDetalle = await context.Set<DividendoDefinitivo>()
+                    .AsNoTracking()
+                    .Include(d => d.Sociedad)
+                        .ThenInclude(s => s!.Empresa)
+                    .Include(d => d.Moneda)
+                    .Where(d => d.Sociedad != null && d.Sociedad.Id == sociedadId && procesosPorDetalleIds.Contains(d.Id))
+                    .ToListAsync();
+            }
+
+            var todosProcesos = procesosDirectos
+                .Concat(procesosPorDetalle)
+                .GroupBy(p => p.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            if (!todosProcesos.Any()) return new List<DividendoListadoReporteDto>();
+
+            var idsProcesos = todosProcesos.Select(p => p.Id).ToList();
+            var procesosDict = todosProcesos.ToDictionary(p => p.Id);
+
+            // Cargar detalles de dividendos para esos procesos
+            var detalles = await context.Set<DividendoDefinitivoDetalle>()
+                .AsNoTracking()
+                .Include(det => det.Accionista)
+                    .ThenInclude(a => a!.TipoDocumento1)
+                .Include(det => det.Accionista)
+                    .ThenInclude(a => a!.TipoAccionista)
+                .Include(det => det.Moneda)
+                .Where(det => idsProcesos.Contains(det.DividendoDefinitivoId))
+                .ToListAsync();
+
+            var resultado = new List<DividendoListadoReporteDto>();
+
+            foreach (var det in detalles)
+            {
+                procesosDict.TryGetValue(det.DividendoDefinitivoId, out var proc);
+                var acc = det.Accionista;
+
+                string cedulaRif = acc != null ? FormatearCedulaRifReporte(acc.TipoDocumento1?.Nombre, acc.Documento1) : string.Empty;
+
+                string nombreAccionista = string.Empty;
+                if (acc != null)
+                {
+                    nombreAccionista = (acc.TipoAccionista?.Id == 3 && !string.IsNullOrWhiteSpace(acc.NombreSusesion))
+                        ? acc.NombreSusesion.Trim()
+                        : (acc.Nombre?.Trim() ?? string.Empty);
+
+                    if (acc.Difunto == 1)
+                    {
+                        nombreAccionista += acc.FechaDefuncion.HasValue
+                            ? $" (DIFUNTO {acc.FechaDefuncion.Value:MM/yyyy})"
+                            : " (DIFUNTO)";
+                    }
+                }
+
+                string moneda = det.Moneda?.Simbolo ?? proc?.Moneda?.Simbolo ?? "Bs.";
+
+                resultado.Add(new DividendoListadoReporteDto
+                {
+                    DividendoDefinitivoId = det.DividendoDefinitivoId,
+                    ProcesoNombre = proc?.NombreDividendos ?? proc?.Explicacion ?? $"Proceso {det.DividendoDefinitivoId}",
+                    AccionistaId = acc?.Id ?? 0,
+                    CedulaRif = cedulaRif,
+                    NombreAccionista = nombreAccionista,
+                    MontoDecretado = det.MontoDecretado,
+                    MontoRetenido = det.MontoRetenido,
+                    Porcion1Monto = det.Porcion1Monto,
+                    Porcion2Monto = det.Porcion2Monto,
+                    Porcion3Monto = det.Porcion3Monto,
+                    Porcion4Monto = det.Porcion4Monto,
+                    TipoPago = det.TipoPago,
+                    EjercicioFiscal = det.EjercicioFiscal,
+                    FechaDecreto = det.FechaDecreto,
+                    FechaProceso = proc?.CreateDate ?? DateTime.MinValue,
+                    MonedaSimbolo = moneda
+                });
+            }
+
+            // Ordenar alfabéticamente por accionista
+            resultado = resultado
+                .OrderBy(x => x.NombreAccionista, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.FechaDecreto)
+                .ToList();
+
+            for (int i = 0; i < resultado.Count; i++)
+            {
+                resultado[i].Numero = i + 1;
+            }
+
+            return resultado;
+        }
+
+        private static string FormatearCedulaRifReporte(string? tipoDoc, string? documento)
+        {
+            if (string.IsNullOrWhiteSpace(documento)) return string.Empty;
+            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(documento, @"[^\d]", "");
+            if (string.IsNullOrEmpty(soloDigitos)) return documento.Trim();
+            string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "V";
+            if (prefijo.Length > 1) prefijo = prefijo.Substring(0, 1);
+            return $"{prefijo}{soloDigitos.PadLeft(15, '0')}";
         }
     }
 }

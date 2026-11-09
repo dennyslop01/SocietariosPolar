@@ -101,5 +101,183 @@ namespace SociePolar.Infrastructure.Repositories
             return await context.Set<ConciliacionDetalle>()
                 .FirstOrDefaultAsync(b => b.Id == id);
         }
+
+        public async Task<List<Sociedad>> GetSociedadesConConciliacionesAsync()
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var sociedadIds = await context.Set<Conciliacion>()
+                .AsNoTracking()
+                .Where(c => c.Sociedad != null)
+                .Select(c => c.Sociedad!.Id)
+                .Distinct()
+                .ToListAsync();
+
+            return await context.Set<Sociedad>()
+                .AsNoTracking()
+                .Include(s => s.Empresa)
+                .Where(s => sociedadIds.Contains(s.Id) && s.Empresa != null)
+                .OrderBy(s => s.Empresa!.Nombre)
+                .ToListAsync();
+        }
+
+        public async Task<List<ConciliacionListadoReporteDto>> GetConciliacionesReporteAsync(int sociedadId, DateTime fechaDesde, DateTime fechaHasta)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            var fechaInicio = fechaDesde.Date;
+            var fechaLimite = fechaHasta.Date.AddDays(1);
+
+            // 1. Obtener las conciliaciones en el rango de fechas para la sociedad indicada
+            var conciliaciones = await context.Set<Conciliacion>()
+                .AsNoTracking()
+                .Include(c => c.Sociedad)
+                    .ThenInclude(s => s!.Empresa)
+                .Where(c => c.Sociedad!.Id == sociedadId &&
+                       (c.FechaArchivo != null
+                           ? (c.FechaArchivo >= fechaInicio && c.FechaArchivo < fechaLimite)
+                           : (c.CreateDate >= fechaInicio && c.CreateDate < fechaLimite)))
+                .OrderBy(c => c.FechaArchivo ?? c.CreateDate)
+                .ToListAsync();
+
+            if (!conciliaciones.Any())
+            {
+                return new List<ConciliacionListadoReporteDto>();
+            }
+
+            var dictConciliaciones = conciliaciones.ToDictionary(c => c.Id);
+            var conciliacionIds = conciliaciones.Select(c => c.Id).ToList();
+
+            // 2. Obtener los detalles de las conciliaciones
+            var detalles = await context.Set<ConciliacionDetalle>()
+                .AsNoTracking()
+                .Where(cd => conciliacionIds.Contains(cd.ConciliacionId))
+                .ToListAsync();
+
+            if (!detalles.Any())
+            {
+                return new List<ConciliacionListadoReporteDto>();
+            }
+
+            var accionistaIds = detalles.Select(d => d.AccionistaId).Distinct().ToList();
+
+            // 3. Obtener datos de los accionistas
+            var accionistas = await context.Set<Accionista>()
+                .AsNoTracking()
+                .Include(a => a.TipoDocumento1)
+                .Where(a => accionistaIds.Contains(a.Id))
+                .ToListAsync();
+
+            var dictAccionistas = accionistas
+                .GroupBy(a => a.Id)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            // 4. Obtener histórico de acciones previas (AccionistasSociedadesHistoricoNroAcciones)
+            var historicos = await context.Set<AccionistaSociedadHistorico>()
+                .AsNoTracking()
+                .Where(h => h.Sociedad!.Id == sociedadId && accionistaIds.Contains(h.Accionista!.Id))
+                .OrderByDescending(h => h.CreateDate)
+                .ToListAsync();
+
+            // 5. Obtener saldos de la tabla actual (AccionistasSociedades)
+            var actuales = await context.Set<AccionistaSociedad>()
+                .AsNoTracking()
+                .Where(a => a.Sociedad!.Id == sociedadId && accionistaIds.Contains(a.Accionista!.Id))
+                .ToListAsync();
+
+            var dictActuales = actuales
+                .Where(a => a.Accionista != null)
+                .GroupBy(a => a.Accionista!.Id)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            // 6. Consolidar el movimiento de cada registro de conciliación
+            var listaResultado = new List<ConciliacionListadoReporteDto>();
+
+            foreach (var cd in detalles)
+            {
+                dictConciliaciones.TryGetValue(cd.ConciliacionId, out var conc);
+                var fechaMovimiento = conc?.FechaArchivo ?? conc?.CreateDate ?? cd.CreateDate;
+                var nombreArchivo = conc?.NombreConciliaciones ?? "Sin Archivo";
+
+                dictAccionistas.TryGetValue(cd.AccionistaId, out var acc);
+                string tipoDoc = acc?.TipoDocumento1?.Nombre ?? "";
+                string nroDoc = acc?.Documento1 ?? "";
+                string nombreAcc = acc?.Nombre ?? "Sin Nombre";
+                string accion = string.IsNullOrWhiteSpace(cd.Accion) ? "Actualizado" : cd.Accion;
+                long totalAcciones = cd.TotalAcciones;
+
+                long saldoAnterior = 0;
+                long saldoNuevo = 0;
+
+                if (accion.Equals("Creado", StringComparison.OrdinalIgnoreCase))
+                {
+                    saldoAnterior = 0;
+                    saldoNuevo = totalAcciones;
+                }
+                else if (accion.Equals("Inactivado", StringComparison.OrdinalIgnoreCase))
+                {
+                    saldoNuevo = 0;
+                    // Buscar en el histórico snapshot previo a la conciliación
+                    var hist = historicos.FirstOrDefault(h => h.Accionista?.Id == cd.AccionistaId && h.CreateDate <= fechaMovimiento);
+                    if (hist != null && hist.NroAcciones.HasValue && hist.NroAcciones.Value > 0)
+                    {
+                        saldoAnterior = hist.NroAcciones.Value;
+                    }
+                    else if (totalAcciones > 0)
+                    {
+                        saldoAnterior = totalAcciones;
+                    }
+                    else if (dictActuales.TryGetValue(cd.AccionistaId, out var act) && act.NroAcciones.HasValue)
+                    {
+                        saldoAnterior = act.NroAcciones.Value;
+                    }
+                }
+                else // Actualizado
+                {
+                    saldoNuevo = totalAcciones;
+                    var hist = historicos.FirstOrDefault(h => h.Accionista?.Id == cd.AccionistaId && h.CreateDate <= fechaMovimiento);
+                    if (hist != null && hist.NroAcciones.HasValue)
+                    {
+                        saldoAnterior = hist.NroAcciones.Value;
+                    }
+                    else if (dictActuales.TryGetValue(cd.AccionistaId, out var act) && act.NroAcciones.HasValue)
+                    {
+                        saldoAnterior = act.NroAcciones.Value;
+                    }
+                    else
+                    {
+                        saldoAnterior = 0;
+                    }
+                }
+
+                long variacion = saldoNuevo - saldoAnterior;
+
+                listaResultado.Add(new ConciliacionListadoReporteDto
+                {
+                    ConciliacionId = cd.ConciliacionId,
+                    NombreArchivo = nombreArchivo,
+                    FechaConciliacion = fechaMovimiento,
+                    Accion = accion,
+                    TipoDocumento = tipoDoc,
+                    CedulaRif = nroDoc,
+                    NombreAccionista = nombreAcc,
+                    SaldoAnterior = saldoAnterior,
+                    SaldoNuevo = saldoNuevo,
+                    Variacion = variacion
+                });
+            }
+
+            // Ordenar por Fecha, luego por Nombre de Accionista
+            var ordenados = listaResultado
+                .OrderBy(x => x.FechaConciliacion)
+                .ThenBy(x => x.NombreAccionista)
+                .ToList();
+
+            for (int i = 0; i < ordenados.Count; i++)
+            {
+                ordenados[i].Numero = i + 1;
+            }
+
+            return ordenados;
+        }
     }
 }

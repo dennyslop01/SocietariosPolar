@@ -1,4 +1,5 @@
-﻿using SociePolar.Domain.Entities;
+using SociePolar.Domain.Dtos;
+using SociePolar.Domain.Entities;
 
 namespace SociePolar.Application.Interfaces
 {
@@ -10,5 +11,7 @@ namespace SociePolar.Application.Interfaces
         Task<List<DividendoDefinitivoDetalle>?> GetDetalleByIdAsync(Int32 id);
         Task<int> CreateAsync(DividendoDefinitivo entity);
         Task CreateDetalleAsync(List<DividendoDefinitivoDetalle> entities);
+        Task<List<Sociedad>> GetSociedadesConDividendosDefinitivosAsync();
+        Task<List<DividendoListadoReporteDto>> GetDividendosReporteAsync(int sociedadId, DateTime fechaDesde, DateTime fechaHasta);
     }
 }

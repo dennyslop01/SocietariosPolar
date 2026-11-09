@@ -1,4 +1,4 @@
-﻿using SociePolar.Domain.Dtos;
+using SociePolar.Domain.Dtos;
 using SociePolar.Domain.Entities;
 
 namespace SociePolar.Application.Interfaces
@@ -11,5 +11,7 @@ namespace SociePolar.Application.Interfaces
         Task AddDetalleAsync(List<ConciliacionDetalle> entity);
         Task<List<ConciliacionDetalle>?> GetDetalleByIdAsync(Int32 id);
         Task<ConciliacionDetalle?> GetDetalleByIdItemAsync(Int32 id);
+        Task<List<Sociedad>> GetSociedadesConConciliacionesAsync();
+        Task<List<ConciliacionListadoReporteDto>> GetConciliacionesReporteAsync(int sociedadId, DateTime fechaDesde, DateTime fechaHasta);
     }
 }

@@ -10,7 +10,7 @@
                     </h5>
                     @if (DividendoPadre != null)
                     {
-                        <span class="badge bg-white text-dark shadow-sm">
+                        <span class="badge shadow-sm" style="background-color: #FFFFFF !important; color: #00338D !important; font-weight: 700; font-size: 0.85rem; border: 1px solid #E2E8F0;">
                             🏢 @(DividendoPadre.Sociedad?.Empresa?.Nombre ?? "-")
                         </span>
                     }
@@ -73,115 +73,127 @@
                     </div>
                 </div>
 
-                <PaginationComponent TItem="DividendoDefinitivoDetalle" Items="Listgral" DefaultPageSize="50" TableClass="polar-table-compact" ContainerStyle="max-height: 65vh;">
-                    <ChildContentHeader>
-                        <tr class="table-light border-bottom text-nowrap">
-                            <th class="polar-sticky-col-direct text-start" style="min-width: 220px; max-width: 260px;">Nombre Accionista</th>
-                            <th class="text-start" style="min-width: 100px;">RIF</th>
-                            <th class="text-start" style="min-width: 110px;">Tipo de Pago</th>
-                            <th class="text-center" style="min-width: 80px;">Moneda</th>
-                            <th class="text-center" style="min-width: 90px;">Notificado</th>
-                            <th class="polar-date" style="min-width: 110px;">Fecha Notif.</th>
-                            <th class="polar-num" style="min-width: 120px;">Monto Decretado</th>
-                            <th class="polar-date" style="min-width: 110px;">Fecha Decreto</th>
-                            <th class="polar-num" style="min-width: 120px;">Monto Retenido</th>
-                            <th class="polar-date" style="min-width: 100px;">Ejercicio</th>
-                            <th class="polar-num" style="min-width: 110px;">P1 Monto</th>
-                            <th class="polar-date" style="min-width: 70px;">P1 %</th>
-                            <th class="polar-date" style="min-width: 100px;">P1 Fecha</th>
-                            <th class="polar-num" style="min-width: 110px;">P2 Monto</th>
-                            <th class="polar-date" style="min-width: 70px;">P2 %</th>
-                            <th class="polar-date" style="min-width: 100px;">P2 Fecha</th>
-                            <th class="polar-num" style="min-width: 110px;">P3 Monto</th>
-                            <th class="polar-date" style="min-width: 70px;">P3 %</th>
-                            <th class="polar-date" style="min-width: 100px;">P3 Fecha</th>
-                            <th class="polar-num" style="min-width: 110px;">P4 Monto</th>
-                            <th class="polar-date" style="min-width: 70px;">P4 %</th>
-                            <th class="polar-date" style="min-width: 100px;">P4 Fecha</th>
-                            <th class="text-start" style="min-width: 150px;">Observaciones</th>
-                            <th class="text-center" style="min-width: 80px;">Soporte 1</th>
-                            <th class="polar-date" style="min-width: 100px;">Fecha Sop. 1</th>
-                            <th class="text-center" style="min-width: 80px;">Soporte 2</th>
-                            <th class="polar-date" style="min-width: 100px;">Fecha Sop. 2</th>
-                            <th class="text-center" style="min-width: 80px;">Soporte 3</th>
-                            <th class="polar-date" style="min-width: 100px;">Fecha Sop. 3</th>
-                            <th class="text-center" style="min-width: 80px;">Soporte 4</th>
-                            <th class="polar-date" style="min-width: 100px;">Fecha Sop. 4</th>
-                            <th class="text-end pe-3" style="width: 140px; min-width: 140px;">Acciones</th>
-                        </tr>
-                    </ChildContentHeader>
-                    <ChildContentRow Context="p">
-                        <tr class="align-middle border-bottom text-nowrap">
-                            <td class="polar-sticky-col-direct text-start text-dark fw-semibold">
-                                <span class="polar-truncate" style="max-width: 250px;" title="@ObtenerNombreAccionista(p)">
-                                    @ObtenerNombreAccionista(p)
-                                </span>
-                            </td>
-                            <td class="text-start text-secondary small">@(p.Accionista?.Documento1 ?? "-")</td>
-                            <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.TipoPago) ? "-" : p.TipoPago)</td>
-                            <td class="text-center text-secondary small">@(p.Moneda?.Nombre ?? p.Moneda?.Simbolo ?? "-")</td>
-                            <td class="text-center small">
-                                <span class="badge @(p.Notificado ? "bg-success" : "bg-light text-secondary border")">
-                                    @(p.Notificado ? "Sí" : "No")
-                                </span>
-                            </td>
-                            <td class="polar-date text-secondary small">@(p.FechaNotificacion?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="polar-num text-dark fw-semibold">@FormatearMonto(p.MontoDecretado)</td>
-                            <td class="polar-date text-secondary small">@(p.FechaDecreto?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="polar-num text-secondary small">@FormatearMonto(p.MontoRetenido)</td>
-                            <td class="polar-date text-secondary small">@(string.IsNullOrEmpty(p.EjercicioFiscal) ? "-" : p.EjercicioFiscal)</td>
-                            <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion1Monto)</td>
-                            <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion1Porcentaje)</td>
-                            <td class="polar-date text-secondary small">@(p.Porcion1FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion2Monto)</td>
-                            <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion2Porcentaje)</td>
-                            <td class="polar-date text-secondary small">@(p.Porcion2FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion3Monto)</td>
-                            <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion3Porcentaje)</td>
-                            <td class="polar-date text-secondary small">@(p.Porcion3FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion4Monto)</td>
-                            <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion4Porcentaje)</td>
-                            <td class="polar-date text-secondary small">@(p.Porcion4FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="text-start text-secondary small">
-                                <span class="polar-truncate" style="max-width: 150px;" title="@p.Observaciones">
-                                    @(string.IsNullOrEmpty(p.Observaciones) ? "-" : p.Observaciones)
-                                </span>
-                            </td>
-                            <td class="text-center small">
-                                <span class="badge @(p.SoporteEnviadoP1 ? "bg-success" : "bg-light text-secondary border")">
-                                    @(p.SoporteEnviadoP1 ? "Sí" : "No")
-                                </span>
-                            </td>
-                            <td class="polar-date text-secondary small">@(p.SoporteFechaP1?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="text-center small">
-                                <span class="badge @(p.SoporteEnviadoP2 ? "bg-success" : "bg-light text-secondary border")">
-                                    @(p.SoporteEnviadoP2 ? "Sí" : "No")
-                                </span>
-                            </td>
-                            <td class="polar-date text-secondary small">@(p.SoporteFechaP2?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="text-center small">
-                                <span class="badge @(p.SoporteEnviadoP3 ? "bg-success" : "bg-light text-secondary border")">
-                                    @(p.SoporteEnviadoP3 ? "Sí" : "No")
-                                </span>
-                            </td>
-                            <td class="polar-date text-secondary small">@(p.SoporteFechaP3?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="text-center small">
-                                <span class="badge @(p.SoporteEnviadoP4 ? "bg-success" : "bg-light text-secondary border")">
-                                    @(p.SoporteEnviadoP4 ? "Sí" : "No")
-                                </span>
-                            </td>
-                            <td class="polar-date text-secondary small">@(p.SoporteFechaP4?.ToString("dd/MM/yyyy") ?? "-")</td>
-                            <td class="text-end pe-3 text-nowrap">
-                                @if (idRol == 1 || idRol == 2 || idRol == 3)
-                                {
-                                    <button class="btn btn-link btn-sm text-secondary p-0" @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
-                                        <i class="bi bi-file-earmark-pdf fs-6"></i>
-                                    </button>
-                                }
-                            </td>
-                        </tr>
-                    </ChildContentRow>
-                </PaginationComponent>
+                @if (ListgralCompleta.Count == 0 && !cargando)
+                {
+                    <div class="alert alert-warning d-flex align-items-center gap-2 my-4 shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                        <div>
+                            <strong>Sin detalles registrados:</strong> No se encontraron registros de detalle para este decreto de dividendo en la base de datos (Id: @id).
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <PaginationComponent TItem="DividendoDefinitivoDetalle" Items="Listgral" DefaultPageSize="50" TableClass="polar-table-compact" ContainerStyle="max-height: 65vh;">
+                        <ChildContentHeader>
+                            <tr class="table-light border-bottom text-nowrap">
+                                <th class="polar-sticky-col-direct text-start" style="min-width: 220px; max-width: 260px;">Nombre Accionista</th>
+                                <th class="text-start" style="min-width: 100px;">RIF</th>
+                                <th class="text-start" style="min-width: 110px;">Tipo de Pago</th>
+                                <th class="text-center" style="min-width: 80px;">Moneda</th>
+                                <th class="text-center" style="min-width: 90px;">Notificado</th>
+                                <th class="polar-date" style="min-width: 110px;">Fecha Notif.</th>
+                                <th class="polar-num" style="min-width: 120px;">Monto Decretado</th>
+                                <th class="polar-date" style="min-width: 110px;">Fecha Decreto</th>
+                                <th class="polar-num" style="min-width: 120px;">Monto Retenido</th>
+                                <th class="polar-date" style="min-width: 100px;">Ejercicio</th>
+                                <th class="polar-num" style="min-width: 110px;">P1 Monto</th>
+                                <th class="polar-date" style="min-width: 70px;">P1 %</th>
+                                <th class="polar-date" style="min-width: 100px;">P1 Fecha</th>
+                                <th class="polar-num" style="min-width: 110px;">P2 Monto</th>
+                                <th class="polar-date" style="min-width: 70px;">P2 %</th>
+                                <th class="polar-date" style="min-width: 100px;">P2 Fecha</th>
+                                <th class="polar-num" style="min-width: 110px;">P3 Monto</th>
+                                <th class="polar-date" style="min-width: 70px;">P3 %</th>
+                                <th class="polar-date" style="min-width: 100px;">P3 Fecha</th>
+                                <th class="polar-num" style="min-width: 110px;">P4 Monto</th>
+                                <th class="polar-date" style="min-width: 70px;">P4 %</th>
+                                <th class="polar-date" style="min-width: 100px;">P4 Fecha</th>
+                                <th class="text-start" style="min-width: 150px;">Observaciones</th>
+                                <th class="text-center" style="min-width: 80px;">Soporte 1</th>
+                                <th class="polar-date" style="min-width: 100px;">Fecha Sop. 1</th>
+                                <th class="text-center" style="min-width: 80px;">Soporte 2</th>
+                                <th class="polar-date" style="min-width: 100px;">Fecha Sop. 2</th>
+                                <th class="text-center" style="min-width: 80px;">Soporte 3</th>
+                                <th class="polar-date" style="min-width: 100px;">Fecha Sop. 3</th>
+                                <th class="text-center" style="min-width: 80px;">Soporte 4</th>
+                                <th class="polar-date" style="min-width: 100px;">Fecha Sop. 4</th>
+                                <th class="text-end pe-3 polar-sticky-col-actions" style="width: 100px; min-width: 100px;">Acciones</th>
+                            </tr>
+                        </ChildContentHeader>
+                        <ChildContentRow Context="p">
+                            <tr class="align-middle border-bottom text-nowrap">
+                                <td class="polar-sticky-col-direct text-start text-dark fw-semibold">
+                                    <span class="polar-truncate" style="max-width: 250px;" title="@ObtenerNombreAccionista(p)">
+                                        @ObtenerNombreAccionista(p)
+                                    </span>
+                                </td>
+                                <td class="text-start text-secondary small">@(p.Accionista?.Documento1 ?? "-")</td>
+                                <td class="text-start text-secondary small">@(string.IsNullOrEmpty(p.TipoPago) ? "-" : p.TipoPago)</td>
+                                <td class="text-center text-secondary small">@(p.Moneda?.Nombre ?? p.Moneda?.Simbolo ?? "-")</td>
+                                <td class="text-center small">
+                                    <span class="badge @(p.Notificado ? "bg-success" : "bg-light text-secondary border")">
+                                        @(p.Notificado ? "Sí" : "No")
+                                    </span>
+                                </td>
+                                <td class="polar-date text-secondary small">@(p.FechaNotificacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="polar-num text-dark fw-semibold">@FormatearMonto(p.MontoDecretado)</td>
+                                <td class="polar-date text-secondary small">@(p.FechaDecreto?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="polar-num text-secondary small">@FormatearMonto(p.MontoRetenido)</td>
+                                <td class="polar-date text-secondary small">@(string.IsNullOrEmpty(p.EjercicioFiscal) ? "-" : p.EjercicioFiscal)</td>
+                                <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion1Monto)</td>
+                                <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion1Porcentaje)</td>
+                                <td class="polar-date text-secondary small">@(p.Porcion1FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion2Monto)</td>
+                                <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion2Porcentaje)</td>
+                                <td class="polar-date text-secondary small">@(p.Porcion2FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion3Monto)</td>
+                                <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion3Porcentaje)</td>
+                                <td class="polar-date text-secondary small">@(p.Porcion3FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="polar-num text-secondary small">@FormatearMonto(p.Porcion4Monto)</td>
+                                <td class="polar-date text-secondary small">@FormatearPorcentaje(p.Porcion4Porcentaje)</td>
+                                <td class="polar-date text-secondary small">@(p.Porcion4FechaPago?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-start text-secondary small">
+                                    <span class="polar-truncate" style="max-width: 150px;" title="@p.Observaciones">
+                                        @(string.IsNullOrEmpty(p.Observaciones) ? "-" : p.Observaciones)
+                                    </span>
+                                </td>
+                                <td class="text-center small">
+                                    <span class="badge @(p.SoporteEnviadoP1 ? "bg-success" : "bg-light text-secondary border")">
+                                        @(p.SoporteEnviadoP1 ? "Sí" : "No")
+                                    </span>
+                                </td>
+                                <td class="polar-date text-secondary small">@(p.SoporteFechaP1?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-center small">
+                                    <span class="badge @(p.SoporteEnviadoP2 ? "bg-success" : "bg-light text-secondary border")">
+                                        @(p.SoporteEnviadoP2 ? "Sí" : "No")
+                                    </span>
+                                </td>
+                                <td class="polar-date text-secondary small">@(p.SoporteFechaP2?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-center small">
+                                    <span class="badge @(p.SoporteEnviadoP3 ? "bg-success" : "bg-light text-secondary border")">
+                                        @(p.SoporteEnviadoP3 ? "Sí" : "No")
+                                    </span>
+                                </td>
+                                <td class="polar-date text-secondary small">@(p.SoporteFechaP3?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-center small">
+                                    <span class="badge @(p.SoporteEnviadoP4 ? "bg-success" : "bg-light text-secondary border")">
+                                        @(p.SoporteEnviadoP4 ? "Sí" : "No")
+                                    </span>
+                                </td>
+                                <td class="polar-date text-secondary small">@(p.SoporteFechaP4?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
+                                    @if (idRol == 1 || idRol == 2 || idRol == 3)
+                                    {
+                                        <button class="btn btn-link btn-sm text-secondary p-0" @onclick="() => AdminDocumentos(p)" title="Documentos Soporte">
+                                            <i class="bi bi-file-earmark-pdf fs-6"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        </ChildContentRow>
+                    </PaginationComponent>
+                }
             </div>
         </div>
     </div>
@@ -218,23 +230,57 @@
         try
         {
             var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
-            if (!string.IsNullOrEmpty(userrolaux.Value))
+            if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
             {
-                idRol = int.Parse(userrolaux.Value);
+                if (int.TryParse(userrolaux.Value, out var rolVal))
+                {
+                    idRol = rolVal;
+                }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            await MostrarNotificacion("Error al cargar los datos del usuario: " + ex.Message, true);
+            // Silencioso en prerenderizado SSR: JSInterop (SessionStorage) requiere circuito interactivo
         }
 
-        cargando = true;
         await LoadGenericDataAsync();
-        cargando = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var userrolaux = await SessionStorage.GetAsync<string>("UserRol");
+                if (userrolaux.Success && !string.IsNullOrEmpty(userrolaux.Value))
+                {
+                    if (int.TryParse(userrolaux.Value, out var rolVal) && idRol != rolVal)
+                    {
+                        idRol = rolVal;
+                        StateHasChanged();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error hidratando rol en AfterRender: {ex.Message}");
+            }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (DividendoPadre == null || DividendoPadre.Id != id)
+        {
+            await LoadGenericDataAsync();
+        }
     }
 
     private async Task LoadGenericDataAsync()
     {
+        cargando = true;
+        StateHasChanged();
         try
         {
             DividendoPadre = await repository.GetByIdAsync(id);
@@ -243,9 +289,13 @@
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error cargando detalle de dividendo: {ex.Message}");
+            await MostrarNotificacion("No se pudieron cargar los datos: " + ex.Message, true);
+        }
+        finally
+        {
             cargando = false;
             StateHasChanged();
-            await MostrarNotificacion("No se pudieron cargar los datos " + ex.Message.ToString(), true);
         }
     }
 

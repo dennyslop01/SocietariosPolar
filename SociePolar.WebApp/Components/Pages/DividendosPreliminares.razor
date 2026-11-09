@@ -149,7 +149,7 @@
                                 <i class="bi @(columnaOrden == "Fecha" ? (ordenAscendente ? "bi-arrow-up text-primary fw-bold" : "bi-arrow-down text-primary fw-bold") : "bi-arrow-down-up opacity-25")"></i>
                             </div>
                         </th>
-                        <th class="text-end pe-3" style="width: 110px; min-width: 110px;">Acciones</th>
+                        <th class="text-end pe-3 polar-sticky-col-actions" style="width: 110px; min-width: 110px;">Acciones</th>
                     </tr>
                 </ChildContentHeader>
                 <ChildContentRow Context="p">
@@ -246,7 +246,7 @@
                         </td>
                         <td class="polar-num text-dark fw-bold">@((p.MontoTotalRepartir ?? 0).ToString("N2"))</td>
                         <td class="polar-date text-secondary">@p.CreateDate.ToString("dd/MM/yyyy")</td>
-                        <td class="text-end pe-3 text-nowrap">
+                        <td class="text-end pe-3 text-nowrap polar-sticky-col-actions">
                             @if (idRol == 1 || idRol == 2)
                             {
                                 <button class="btn btn-link btn-sm text-success p-0 me-2"

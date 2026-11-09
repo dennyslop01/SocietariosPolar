@@ -248,5 +248,111 @@ namespace SociePolar.WebApp.Services
 
             return relativeUrl;
         }
+
+        public async Task<string> GenerarYDescargarReporteListadoAccionistasCorteAsync(
+            SociedadEncabezadoReporteDto encabezado,
+            DateTime fechaCorte,
+            List<AccionistaListadoCorteDto> accionistas,
+            string nombreArchivoBase)
+        {
+            byte[] logoBytes = Array.Empty<byte>();
+            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg");
+            if (File.Exists(rutaLogo))
+            {
+                logoBytes = await File.ReadAllBytesAsync(rutaLogo);
+            }
+
+            var document = new ListaAccionistasCorteReportDocument(encabezado, fechaCorte, accionistas, logoBytes);
+            var pdfBytes = document.GeneratePdf();
+
+            string nombreLimpio = System.Text.RegularExpressions.Regex.Replace(nombreArchivoBase, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+            if (string.IsNullOrWhiteSpace(nombreLimpio)) nombreLimpio = "Listado_Accionistas";
+            string nombreArchivo = $"{nombreLimpio}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            string reportsFolder = Path.Combine(_env.WebRootPath, "reports");
+            if (!Directory.Exists(reportsFolder))
+            {
+                Directory.CreateDirectory(reportsFolder);
+            }
+            string physicalPath = Path.Combine(reportsFolder, nombreArchivo);
+            await File.WriteAllBytesAsync(physicalPath, pdfBytes);
+
+            string relativeUrl = $"reports/{nombreArchivo}";
+
+            string base64Data = Convert.ToBase64String(pdfBytes);
+            await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
+
+            return relativeUrl;
+        }
+
+        public async Task<string> GenerarYDescargarReporteDividendosAsync(
+            DividendoEncabezadoReporteDto encabezado,
+            List<DividendoListadoReporteDto> detalles,
+            string nombreArchivoBase)
+        {
+            byte[] logoBytes = Array.Empty<byte>();
+            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg");
+            if (File.Exists(rutaLogo))
+            {
+                logoBytes = await File.ReadAllBytesAsync(rutaLogo);
+            }
+
+            var document = new DividendoReportDocument(encabezado, detalles, logoBytes);
+            var pdfBytes = document.GeneratePdf();
+
+            string nombreLimpio = System.Text.RegularExpressions.Regex.Replace(nombreArchivoBase, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+            if (string.IsNullOrWhiteSpace(nombreLimpio)) nombreLimpio = "Reporte_Dividendos";
+            string nombreArchivo = $"{nombreLimpio}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            string reportsFolder = Path.Combine(_env.WebRootPath, "reports");
+            if (!Directory.Exists(reportsFolder))
+            {
+                Directory.CreateDirectory(reportsFolder);
+            }
+            string physicalPath = Path.Combine(reportsFolder, nombreArchivo);
+            await File.WriteAllBytesAsync(physicalPath, pdfBytes);
+
+            string relativeUrl = $"reports/{nombreArchivo}";
+
+            string base64Data = Convert.ToBase64String(pdfBytes);
+            await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
+
+            return relativeUrl;
+        }
+
+        public async Task<string> GenerarYDescargarReporteConciliacionesAsync(
+            ConciliacionEncabezadoReporteDto encabezado,
+            List<ConciliacionListadoReporteDto> detalles,
+            string nombreArchivoBase)
+        {
+            byte[] logoBytes = Array.Empty<byte>();
+            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg");
+            if (File.Exists(rutaLogo))
+            {
+                logoBytes = await File.ReadAllBytesAsync(rutaLogo);
+            }
+
+            var document = new ConciliacionReportDocument(encabezado, detalles, logoBytes);
+            var pdfBytes = document.GeneratePdf();
+
+            string nombreLimpio = System.Text.RegularExpressions.Regex.Replace(nombreArchivoBase, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+            if (string.IsNullOrWhiteSpace(nombreLimpio)) nombreLimpio = "Reporte_Conciliaciones";
+            string nombreArchivo = $"{nombreLimpio}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            string reportsFolder = Path.Combine(_env.WebRootPath, "reports");
+            if (!Directory.Exists(reportsFolder))
+            {
+                Directory.CreateDirectory(reportsFolder);
+            }
+            string physicalPath = Path.Combine(reportsFolder, nombreArchivo);
+            await File.WriteAllBytesAsync(physicalPath, pdfBytes);
+
+            string relativeUrl = $"reports/{nombreArchivo}";
+
+            string base64Data = Convert.ToBase64String(pdfBytes);
+            await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
+
+            return relativeUrl;
+        }
     }
 }

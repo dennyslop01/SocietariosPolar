@@ -8,7 +8,7 @@
 @using SociePolar.WebApp.Utilities
 
 <div class="container-fluid mt-4">
-    <div class="card shadow-sm border-0 h-auto">
+    <div class="card shadow-sm border-0" style="min-height: 580px;">
         <div class="card-header bg-white py-3">
             <div class="d-flex align-items-center justify-content-between">
                 <!-- Parte Izquierda: Icono y Título -->
@@ -26,10 +26,10 @@
             </div>
         </div>
 
-        <div class="card-body p-4">
+        <div class="card-body p-4 d-flex flex-column">
             @if (procesandoReporte)
             {
-                <div class="d-flex flex-column justify-content-center align-items-center py-5">
+                <div class="d-flex flex-column justify-content-center align-items-center my-auto py-5">
                     <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Generando...</span>
                     </div>
@@ -109,7 +109,155 @@
                         }
                     }
 
-                    @if (tipoReporteSeleccionado == 2)
+                    @if (tipoReporteSeleccionado == 3)
+                    {
+                        <!-- Selector de Sociedad para Dividendos con buscador integrado (Solo sociedades con dividendos definitivos cerrados) -->
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Sociedad <span class="text-danger">*</span>
+                            </label>
+                            @if (cargandoSociedadesDividendos)
+                            {
+                                <div class="d-flex align-items-center mt-1">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    <span class="text-muted small">Cargando sociedades con dividendos...</span>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (isDropdownOpenSociedadDividendo)
+                                {
+                                    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1055;"
+                                         @onclick="() => isDropdownOpenSociedadDividendo = false"></div>
+                                }
+                                <div class="dropdown position-relative" style="z-index: 1060;">
+                                    <button class="form-select form-select-sm text-start d-flex justify-content-between align-items-center shadow-sm @(errorSociedadDividendo ? "is-invalid" : "")"
+                                            type="button"
+                                            @onclick="ToggleDropdownSociedadDividendo">
+                                        <span class="text-truncate me-2">@ObtenerNombreSociedadDividendoSeleccionada()</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 shadow-lg @(isDropdownOpenSociedadDividendo ? "show" : "")"
+                                        style="max-height: 320px; overflow-y: auto; z-index: 1060;">
+                                        <li class="mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white border-end-0 text-muted">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text"
+                                                       class="form-control border-start-0"
+                                                       placeholder="Buscar sociedad..."
+                                                       style="font-size: 0.8rem;"
+                                                       @bind="textoBusquedaSociedadDividendo"
+                                                       @bind:event="oninput" />
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item py-1 @(sociedadDividendoSeleccionada == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarSociedadDividendo(0)">
+                                                Seleccione...
+                                            </button>
+                                        </li>
+
+                                        @foreach (var soc in listaSociedadesDividendos.Where(s => string.IsNullOrEmpty(textoBusquedaSociedadDividendo) || (s.Empresa?.Nombre?.Contains(textoBusquedaSociedadDividendo, StringComparison.OrdinalIgnoreCase) ?? false)))
+                                        {
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item py-1 @(sociedadDividendoSeleccionada == soc.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarSociedadDividendo(soc.Id)">
+                                                    @soc.Empresa?.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                                @if (errorSociedadDividendo)
+                                {
+                                    <div class="invalid-feedback d-block small">Debe seleccionar una sociedad.</div>
+                                }
+                            }
+                        </div>
+                    }
+
+                    @if (tipoReporteSeleccionado == 5)
+                    {
+                        <!-- Selector de Sociedad para Conciliaciones con buscador integrado (Solo sociedades que tienen procesos de conciliación) -->
+                        <div class="col-md-6 col-lg-4">
+                            <label class="form-label fw-bold text-secondary small">
+                                Sociedad <span class="text-danger">*</span>
+                            </label>
+                            @if (cargandoSociedadesConciliacion)
+                            {
+                                <div class="d-flex align-items-center mt-1">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    <span class="text-muted small">Cargando sociedades con conciliaciones...</span>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (isDropdownOpenSociedadConciliacion)
+                                {
+                                    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1055;"
+                                         @onclick="() => isDropdownOpenSociedadConciliacion = false"></div>
+                                }
+                                <div class="dropdown position-relative" style="z-index: 1060;">
+                                    <button class="form-select form-select-sm text-start d-flex justify-content-between align-items-center shadow-sm @(errorSociedadConciliacion ? "is-invalid" : "")"
+                                            type="button"
+                                            @onclick="ToggleDropdownSociedadConciliacion">
+                                        <span class="text-truncate me-2">@ObtenerNombreSociedadConciliacionSeleccionada()</span>
+                                    </button>
+
+                                    <ul class="dropdown-menu w-100 p-2 shadow-lg @(isDropdownOpenSociedadConciliacion ? "show" : "")"
+                                        style="max-height: 320px; overflow-y: auto; z-index: 1060;">
+                                        <li class="mb-2">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white border-end-0 text-muted">
+                                                    <i class="bi bi-search"></i>
+                                                </span>
+                                                <input type="text"
+                                                       class="form-control border-start-0"
+                                                       placeholder="Buscar sociedad..."
+                                                       style="font-size: 0.8rem;"
+                                                       @bind="textoBusquedaSociedadConciliacion"
+                                                       @bind:event="oninput" />
+                                            </div>
+                                        </li>
+
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item py-1 @(sociedadConciliacionSeleccionada == 0 ? "active bg-primary text-white" : "")"
+                                                    style="font-size: 0.8rem;"
+                                                    @onclick="() => SeleccionarSociedadConciliacion(0)">
+                                                Seleccione...
+                                            </button>
+                                        </li>
+
+                                        @foreach (var soc in listaSociedadesConciliacion.Where(s => string.IsNullOrEmpty(textoBusquedaSociedadConciliacion) || (s.Empresa?.Nombre?.Contains(textoBusquedaSociedadConciliacion, StringComparison.OrdinalIgnoreCase) ?? false)))
+                                        {
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item py-1 @(sociedadConciliacionSeleccionada == soc.Id ? "active bg-primary text-white" : "")"
+                                                        style="font-size: 0.8rem;"
+                                                        @onclick="() => SeleccionarSociedadConciliacion(soc.Id)">
+                                                    @soc.Empresa?.Nombre
+                                                </button>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                                @if (errorSociedadConciliacion)
+                                {
+                                    <div class="invalid-feedback d-block small">Debe seleccionar una sociedad.</div>
+                                }
+                            }
+                        </div>
+                    }
+
+                    @if (tipoReporteSeleccionado == 2 || tipoReporteSeleccionado == 4)
                     {
                         <!-- Selector de Sociedad para Accionistas (Nivel 2) con buscador integrado -->
                         <div class="col-md-6 col-lg-4">
@@ -125,7 +273,12 @@
                             }
                             else
                             {
-                                <div class="dropdown">
+                                @if (isDropdownOpenSociedad)
+                                {
+                                    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1055;"
+                                         @onclick="() => isDropdownOpenSociedad = false"></div>
+                                }
+                                <div class="dropdown position-relative" style="z-index: 1060;">
                                     <button class="form-select form-select-sm text-start d-flex justify-content-between align-items-center shadow-sm @(errorSociedadAccionista ? "is-invalid" : "")"
                                             type="button"
                                             @onclick="ToggleDropdownSociedad">
@@ -133,7 +286,7 @@
                                     </button>
 
                                     <ul class="dropdown-menu w-100 p-2 shadow-lg @(isDropdownOpenSociedad ? "show" : "")"
-                                        style="max-height: 280px; overflow-y: auto; z-index: 1060;">
+                                        style="max-height: 320px; overflow-y: auto; z-index: 1060;">
                                         <li class="mb-2">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-white border-end-0 text-muted">
@@ -177,22 +330,25 @@
                             }
                         </div>
 
-                        <!-- Selector de Estatus de Accionistas (Nivel 3) -->
-                        <div class="col-md-6 col-lg-4">
-                            <label class="form-label fw-bold text-secondary small">
-                                Estatus Accionistas <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select form-select-sm shadow-sm @(errorEstatusAccionista ? "is-invalid" : "")"
-                                    @bind="estatusAccionistaSeleccionado">
-                                <option value="">Seleccione...</option>
-                                <option value="activos">Activos</option>
-                                <option value="inactivos">Inactivos</option>
-                            </select>
-                            @if (errorEstatusAccionista)
-                            {
-                                <div class="invalid-feedback small">Debe seleccionar un estatus.</div>
-                            }
-                        </div>
+                        @if (tipoReporteSeleccionado == 2)
+                        {
+                            <!-- Selector de Estatus de Accionistas (Nivel 3) -->
+                            <div class="col-md-6 col-lg-4">
+                                <label class="form-label fw-bold text-secondary small">
+                                    Estatus Accionistas <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select form-select-sm shadow-sm @(errorEstatusAccionista ? "is-invalid" : "")"
+                                        @bind="estatusAccionistaSeleccionado">
+                                    <option value="">Seleccione...</option>
+                                    <option value="activos">Activos</option>
+                                    <option value="inactivos">Inactivos</option>
+                                </select>
+                                @if (errorEstatusAccionista)
+                                {
+                                    <div class="invalid-feedback small">Debe seleccionar un estatus.</div>
+                                }
+                            </div>
+                        }
                     }
                 </div>
 
@@ -240,8 +396,8 @@
                     </div>
                 }
 
-                <!-- Controles de Fechas y Formato para los otros módulos (Dividendos, Listado de accionistas, etc.) -->
-                @if (tipoReporteSeleccionado > 2)
+                <!-- Controles de Fechas y Formato para los otros módulos (Dividendos, Listados de accionistas, Conciliaciones, etc.) -->
+                @if (tipoReporteSeleccionado == 3 || tipoReporteSeleccionado == 4 || tipoReporteSeleccionado == 5)
                 {
                     <div class="row g-3 mt-1">
                         <div class="col-md-6 col-lg-3">
@@ -289,7 +445,7 @@
                 }
 
                 <!-- Botonera -->
-                <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                <div class="d-flex gap-2 justify-content-end mt-auto pt-3 border-top">
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4 shadow-sm" @onclick="Cancelar">
                         <i class="bi bi-x-circle me-1"></i> Cancelar
                     </button>
@@ -333,12 +489,16 @@
         new Modulos { Id = 1, Nombre = "Sociedades" },
         new Modulos { Id = 2, Nombre = "Accionistas" },
         new Modulos { Id = 3, Nombre = "Dividendos" },
-        new Modulos { Id = 4, Nombre = "Listado de accionistas" },
+        new Modulos { Id = 4, Nombre = "Listados de Accionistas" },
+        new Modulos { Id = 5, Nombre = "Conciliaciones" },
     };
 
     [Inject] private ISociedad repoSociedad { get; set; } = null!;
     [Inject] private IUnidadNegocio repoUnidadNegocio { get; set; } = null!;
     [Inject] private IAccionistaSociedad repoAccionistaSociedad { get; set; } = null!;
+    [Inject] private IAccionista repoAccionista { get; set; } = null!;
+    [Inject] private IDividendoDefinitivo repoDividendoDefinitivo { get; set; } = null!;
+    [Inject] private IConciliacion repoConciliacion { get; set; } = null!;
 
     private int tipoReporteSeleccionado = 0;
     private string filtroSociedadSeleccionado = "";
@@ -347,7 +507,7 @@
     private bool cargandoCatalogo = false;
     private bool procesandoReporte = false;
 
-    // Variables para módulo Accionistas (Id = 2)
+    // Variables para módulo Accionistas (Id = 2) y Listados de Accionistas (Id = 4)
     private int sociedadAccionistaSeleccionada = 0;
     private string estatusAccionistaSeleccionado = "";
     private List<Sociedad> listaSociedadesAccionista = new();
@@ -356,6 +516,22 @@
     private bool errorEstatusAccionista = false;
     private bool isDropdownOpenSociedad = false;
     private string textoBusquedaSociedad = "";
+
+    // Variables para módulo Dividendos (Id = 3)
+    private int sociedadDividendoSeleccionada = 0;
+    private List<Sociedad> listaSociedadesDividendos = new();
+    private bool cargandoSociedadesDividendos = false;
+    private bool errorSociedadDividendo = false;
+    private bool isDropdownOpenSociedadDividendo = false;
+    private string textoBusquedaSociedadDividendo = "";
+
+    // Variables para módulo Conciliaciones (Id = 5)
+    private int sociedadConciliacionSeleccionada = 0;
+    private List<Sociedad> listaSociedadesConciliacion = new();
+    private bool cargandoSociedadesConciliacion = false;
+    private bool errorSociedadConciliacion = false;
+    private bool isDropdownOpenSociedadConciliacion = false;
+    private string textoBusquedaSociedadConciliacion = "";
 
     private DateTime? fechaDesde;
     private DateTime? fechaHasta;
@@ -399,6 +575,10 @@
             {
                 return sociedadAccionistaSeleccionada > 0 && !string.IsNullOrWhiteSpace(estatusAccionistaSeleccionado);
             }
+            if (tipoReporteSeleccionado == 4)
+            {
+                return true;
+            }
             return true;
         }
     }
@@ -421,6 +601,12 @@
         estatusAccionistaSeleccionado = "";
         isDropdownOpenSociedad = false;
         textoBusquedaSociedad = "";
+        sociedadDividendoSeleccionada = 0;
+        isDropdownOpenSociedadDividendo = false;
+        textoBusquedaSociedadDividendo = "";
+        sociedadConciliacionSeleccionada = 0;
+        isDropdownOpenSociedadConciliacion = false;
+        textoBusquedaSociedadConciliacion = "";
         fechaDesde = null;
         fechaHasta = null;
         tipoFormatoSeleccionado = "";
@@ -428,15 +614,133 @@
         errorFiltroSociedad = false;
         errorValorTercerNivel = false;
         errorSociedadAccionista = false;
+        errorSociedadDividendo = false;
+        errorSociedadConciliacion = false;
         errorEstatusAccionista = false;
         errorFechaDesde = false;
         errorFechaHasta = false;
         errorTipoFormato = false;
 
-        if (tipoReporteSeleccionado == 2 && !listaSociedadesAccionista.Any())
+        if ((tipoReporteSeleccionado == 2 || tipoReporteSeleccionado == 4) && !listaSociedadesAccionista.Any())
         {
             await CargarSociedadesParaAccionistasAsync();
         }
+
+        if (tipoReporteSeleccionado == 3 && !listaSociedadesDividendos.Any())
+        {
+            await CargarSociedadesParaDividendosAsync();
+        }
+
+        if (tipoReporteSeleccionado == 5 && !listaSociedadesConciliacion.Any())
+        {
+            await CargarSociedadesParaConciliacionesAsync();
+        }
+    }
+
+    private async Task CargarSociedadesParaConciliacionesAsync()
+    {
+        cargandoSociedadesConciliacion = true;
+        StateHasChanged();
+        try
+        {
+            listaSociedadesConciliacion = await repoConciliacion.GetSociedadesConConciliacionesAsync();
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error cargando sociedades de conciliaciones: " + ex.Message, true);
+        }
+        finally
+        {
+            cargandoSociedadesConciliacion = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleDropdownSociedadConciliacion()
+    {
+        isDropdownOpenSociedadConciliacion = !isDropdownOpenSociedadConciliacion;
+        if (isDropdownOpenSociedadConciliacion)
+        {
+            if (!listaSociedadesConciliacion.Any())
+            {
+                await CargarSociedadesParaConciliacionesAsync();
+            }
+        }
+        else
+        {
+            textoBusquedaSociedadConciliacion = "";
+        }
+    }
+
+    private string ObtenerNombreSociedadConciliacionSeleccionada()
+    {
+        if (sociedadConciliacionSeleccionada == 0 || listaSociedadesConciliacion == null)
+        {
+            return "Seleccione...";
+        }
+        var soc = listaSociedadesConciliacion.FirstOrDefault(s => s.Id == sociedadConciliacionSeleccionada);
+        return soc?.Empresa?.Nombre ?? "Seleccione...";
+    }
+
+    private void SeleccionarSociedadConciliacion(int id)
+    {
+        sociedadConciliacionSeleccionada = id;
+        errorSociedadConciliacion = false;
+        isDropdownOpenSociedadConciliacion = false;
+        textoBusquedaSociedadConciliacion = "";
+    }
+
+    private async Task CargarSociedadesParaDividendosAsync()
+    {
+        cargandoSociedadesDividendos = true;
+        StateHasChanged();
+        try
+        {
+            listaSociedadesDividendos = await repoDividendoDefinitivo.GetSociedadesConDividendosDefinitivosAsync();
+        }
+        catch (Exception ex)
+        {
+            await MostrarNotificacion("Error cargando sociedades de dividendos: " + ex.Message, true);
+        }
+        finally
+        {
+            cargandoSociedadesDividendos = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleDropdownSociedadDividendo()
+    {
+        isDropdownOpenSociedadDividendo = !isDropdownOpenSociedadDividendo;
+        if (isDropdownOpenSociedadDividendo)
+        {
+            if (!listaSociedadesDividendos.Any())
+            {
+                await CargarSociedadesParaDividendosAsync();
+            }
+        }
+        else
+        {
+            textoBusquedaSociedadDividendo = "";
+        }
+    }
+
+    private string ObtenerNombreSociedadDividendoSeleccionada()
+    {
+        if (sociedadDividendoSeleccionada == 0 || listaSociedadesDividendos == null)
+        {
+            return "Seleccione...";
+        }
+        var soc = listaSociedadesDividendos.FirstOrDefault(s => s.Id == sociedadDividendoSeleccionada);
+        return soc?.Empresa?.Nombre ?? "Seleccione...";
+    }
+
+    private void SeleccionarSociedadDividendo(int id)
+    {
+        sociedadDividendoSeleccionada = id;
+        errorSociedadDividendo = false;
+        isDropdownOpenSociedadDividendo = false;
+        textoBusquedaSociedadDividendo = "";
     }
 
     private async Task CargarSociedadesParaAccionistasAsync()
@@ -469,10 +773,17 @@
         }
     }
 
-    private void ToggleDropdownSociedad()
+    private async Task ToggleDropdownSociedad()
     {
         isDropdownOpenSociedad = !isDropdownOpenSociedad;
-        if (!isDropdownOpenSociedad)
+        if (isDropdownOpenSociedad)
+        {
+            if (!listaSociedadesAccionista.Any())
+            {
+                await CargarSociedadesParaAccionistasAsync();
+            }
+        }
+        else
         {
             textoBusquedaSociedad = "";
         }
@@ -602,6 +913,48 @@
         if (fechaDesde > fechaHasta)
         {
             await MostrarNotificacion("La Fecha Desde no puede ser mayor que la Fecha Hasta.", true);
+            return;
+        }
+
+        // 5. Procesamiento específico para Dividendos (Sociedad + Rango de Fechas + Formato)
+        if (tipoReporteSeleccionado == 3)
+        {
+            errorSociedadDividendo = sociedadDividendoSeleccionada <= 0;
+            if (errorSociedadDividendo)
+            {
+                await MostrarNotificacion("Debe seleccionar una sociedad con procesos de dividendos.", true);
+                return;
+            }
+
+            await GenerarReporteDividendosAsync();
+            return;
+        }
+
+        // 6. Procesamiento específico para Listados de Accionistas
+        if (tipoReporteSeleccionado == 4)
+        {
+            errorSociedadAccionista = sociedadAccionistaSeleccionada <= 0;
+            if (errorSociedadAccionista)
+            {
+                await MostrarNotificacion("Debe seleccionar una sociedad.", true);
+                return;
+            }
+
+            await GenerarReporteListadosAccionistasAsync();
+            return;
+        }
+
+        // 7. Procesamiento específico para Conciliaciones (Sociedad + Rango de Fechas + Formato)
+        if (tipoReporteSeleccionado == 5)
+        {
+            errorSociedadConciliacion = sociedadConciliacionSeleccionada <= 0;
+            if (errorSociedadConciliacion)
+            {
+                await MostrarNotificacion("Debe seleccionar una sociedad con procesos de conciliación.", true);
+                return;
+            }
+
+            await GenerarReporteConciliacionesAsync();
             return;
         }
 
@@ -941,6 +1294,514 @@
                 EscaparCsv(nroAcciones, separador),
                 EscaparCsv(porc.ToString("0.0000", new System.Globalization.CultureInfo("es-VE")) + "%", separador),
                 EscaparCsv(custodiosSet.Contains(item.Id) ? "Si" : "No", separador)
+            });
+            sb.AppendLine(linea);
+        }
+
+        return sb.ToString();
+    }
+
+    private async Task GenerarReporteListadosAccionistasAsync()
+    {
+        procesandoReporte = true;
+        StateHasChanged();
+
+        try
+        {
+            var sociedad = await repoSociedad.GetByIdAsync(sociedadAccionistaSeleccionada);
+            string nombreSociedad = sociedad?.Empresa?.Nombre ?? $"Sociedad_{sociedadAccionistaSeleccionada}";
+            string nombreLimpioSociedad = System.Text.RegularExpressions.Regex.Replace(nombreSociedad, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+
+            long totalAccionesSociedad = 0;
+            if (!string.IsNullOrEmpty(sociedad?.NumeroAcciones))
+            {
+                string soloNum = System.Text.RegularExpressions.Regex.Replace(sociedad.NumeroAcciones, @"[^\d]", "");
+                if (long.TryParse(soloNum, out long numParsed))
+                {
+                    totalAccionesSociedad = numParsed;
+                }
+            }
+
+            // Obtener listado de accionistas al corte de fechaHasta reconciliando AccionistasSociedades y AccionistasSociedadesHistoricoNroAcciones
+            var listado = await repoAccionistaSociedad.GetListadoAccionistasAlCorteAsync(sociedadAccionistaSeleccionada, fechaHasta!.Value);
+
+            if (!listado.Any())
+            {
+                await MostrarNotificacion($"No se encontraron accionistas para {nombreSociedad} a la fecha de corte {fechaHasta:dd/MM/yyyy}.", true);
+                return;
+            }
+
+            decimal? capitalSocial = sociedad?.CapitalPagado ?? sociedad?.CapitalSuscrito;
+            decimal? valorNominal = sociedad?.ValorAccion;
+            if ((valorNominal == null || valorNominal == 0) && capitalSocial.HasValue && totalAccionesSociedad > 0)
+            {
+                valorNominal = Math.Round(capitalSocial.Value / (decimal)totalAccionesSociedad, 3);
+            }
+
+            var encabezado = new SociedadEncabezadoReporteDto
+            {
+                SociedadId = sociedadAccionistaSeleccionada,
+                NombreEmpresa = nombreSociedad,
+                CapitalSocial = capitalSocial,
+                TotalAcciones = totalAccionesSociedad > 0 ? totalAccionesSociedad : listado.Sum(x => x.NroAcciones),
+                ValorNominal = valorNominal,
+                Moneda = sociedad?.Moneda?.Simbolo ?? "Bs."
+            };
+
+            if (tipoFormatoSeleccionado.Equals("CSV", StringComparison.OrdinalIgnoreCase))
+            {
+                string csv = GenerarCsvListadoAccionistasAlCorte(encabezado, fechaHasta.Value, listado, ";");
+                string fileName = $"Listado-Accionistas-{nombreLimpioSociedad}-al-{fechaHasta:yyyyMMdd}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csv);
+                await MostrarNotificacion($"Archivo CSV generado con {listado.Count} accionistas de {nombreSociedad}.");
+            }
+            else if (tipoFormatoSeleccionado.Equals("PDF", StringComparison.OrdinalIgnoreCase))
+            {
+                string baseFileName = $"Listado_Accionistas_{nombreLimpioSociedad}_al_{fechaHasta:yyyyMMdd}";
+                await ReportService.GenerarYDescargarReporteListadoAccionistasCorteAsync(
+                    encabezado,
+                    fechaHasta.Value,
+                    listado,
+                    baseFileName
+                );
+
+                await MostrarNotificacion($"Reporte PDF generado exitosamente con {listado.Count} accionistas de {nombreSociedad}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            string errorDetallado = ex.InnerException != null ? $"{ex.Message} -> {ex.InnerException.Message}" : ex.Message;
+            await MostrarNotificacion("Error al generar el listado de accionistas: " + errorDetallado, true);
+        }
+        finally
+        {
+            procesandoReporte = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GenerarReporteDividendosAsync()
+    {
+        procesandoReporte = true;
+        StateHasChanged();
+
+        try
+        {
+            var sociedad = await repoSociedad.GetByIdAsync(sociedadDividendoSeleccionada);
+            string nombreSociedad = sociedad?.Empresa?.Nombre ?? $"Sociedad_{sociedadDividendoSeleccionada}";
+            string nombreLimpioSociedad = System.Text.RegularExpressions.Regex.Replace(nombreSociedad, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+
+            var detalles = await repoDividendoDefinitivo.GetDividendosReporteAsync(sociedadDividendoSeleccionada, fechaDesde!.Value, fechaHasta!.Value);
+
+            if (!detalles.Any())
+            {
+                await MostrarNotificacion($"No se encontraron dividendos definitivos para {nombreSociedad} en el rango seleccionado ({fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy}).", true);
+                return;
+            }
+
+            var encabezado = new DividendoEncabezadoReporteDto
+            {
+                SociedadId = sociedadDividendoSeleccionada,
+                NombreEmpresa = nombreSociedad,
+                FechaDesde = fechaDesde.Value,
+                FechaHasta = fechaHasta.Value,
+                TotalProcesos = detalles.Select(d => d.DividendoDefinitivoId).Distinct().Count(),
+                MontoTotalDecretado = detalles.Sum(d => d.MontoDecretado),
+                MontoTotalRetenido = detalles.Sum(d => d.MontoRetenido),
+                MonedaSimbolo = detalles.FirstOrDefault()?.MonedaSimbolo ?? "Bs."
+            };
+
+            if (tipoFormatoSeleccionado.Equals("CSV", StringComparison.OrdinalIgnoreCase))
+            {
+                string csv = GenerarCsvReporteDividendos(encabezado, detalles, ";");
+                string fileName = $"Reporte-Dividendos-{nombreLimpioSociedad}-{fechaDesde:yyyyMMdd}-{fechaHasta:yyyyMMdd}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csv);
+                await MostrarNotificacion($"Archivo CSV generado con {detalles.Count} registros de dividendos de {nombreSociedad}.");
+            }
+            else if (tipoFormatoSeleccionado.Equals("PDF", StringComparison.OrdinalIgnoreCase))
+            {
+                string baseFileName = $"Reporte_Dividendos_{nombreLimpioSociedad}_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}";
+                await ReportService.GenerarYDescargarReporteDividendosAsync(
+                    encabezado,
+                    detalles,
+                    baseFileName
+                );
+
+                await MostrarNotificacion($"Reporte PDF generado exitosamente con {detalles.Count} registros de dividendos.");
+            }
+        }
+        catch (Exception ex)
+        {
+            string errorDetallado = ex.InnerException != null ? $"{ex.Message} -> {ex.InnerException.Message}" : ex.Message;
+            await MostrarNotificacion("Error al generar el reporte de dividendos: " + errorDetallado, true);
+        }
+        finally
+        {
+            procesandoReporte = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GenerarCsvReporteDividendos(DividendoEncabezadoReporteDto enc, List<DividendoListadoReporteDto> detalles, string separador)
+    {
+        var sb = new StringBuilder();
+        var cultura = new System.Globalization.CultureInfo("es-VE");
+        string moneda = enc.MonedaSimbolo ?? "Bs.";
+
+        // Fila 1: Nombre de la Empresa en Columna C
+        string lineaEmpresa = string.Join(separador, new string[] {
+            "", "", EscaparCsv(enc.NombreEmpresa ?? "", separador), "", "", "", "", "", ""
+        });
+        sb.AppendLine(lineaEmpresa);
+
+        // Fila 2: PERÍODO en Columna C
+        string lineaPeriodo = string.Join(separador, new string[] {
+            "", "", "PERÍODO:", $"{enc.FechaDesde:dd/MM/yyyy} al {enc.FechaHasta:dd/MM/yyyy}", "", "", "", "", ""
+        });
+        sb.AppendLine(lineaPeriodo);
+
+        // Fila 3: TOTAL DECRETADO
+        string lineaTotalDecretado = string.Join(separador, new string[] {
+            "", "", "MONTO TOTAL DECRETADO:", moneda, enc.MontoTotalDecretado.ToString("N2", cultura), "", "", "", ""
+        });
+        sb.AppendLine(lineaTotalDecretado);
+
+        // Fila 4: TOTAL RETENIDO
+        string lineaTotalRetenido = string.Join(separador, new string[] {
+            "", "", "MONTO TOTAL RETENIDO:", moneda, enc.MontoTotalRetenido.ToString("N2", cultura), "", "", "", ""
+        });
+        sb.AppendLine(lineaTotalRetenido);
+
+        // Fila 5: TOTAL NETO PAGADO
+        string lineaTotalNeto = string.Join(separador, new string[] {
+            "", "", "MONTO NETO PAGADO:", moneda, enc.MontoTotalNetoPagado.ToString("N2", cultura), "", "", "", ""
+        });
+        sb.AppendLine(lineaTotalNeto);
+
+        // Fila 6: En blanco
+        sb.AppendLine();
+
+        // Fila 7: Título del Listado iniciando en Columna A
+        string lineaTitulo = string.Join(separador, new string[] {
+            $"REPORTE DE DIVIDENDOS DEFINITIVOS ({enc.FechaDesde:dd.MM.yyyy} AL {enc.FechaHasta:dd.MM.yyyy})", "", "", "", "", "", "", "", ""
+        });
+        sb.AppendLine(lineaTitulo);
+
+        // Fila 8: Encabezados de Columna (iniciando en Columna A)
+        string encabezado = string.Join(separador, new string[] {
+            "#", "Cédulas o R.I.F.", "ACCIONISTAS", "MONTO DECRETADO", "MONTO RETENIDO", "MONTO NETO", "TIPO PAGO", "EJERCICIO", "FECHA DECRETO"
+        });
+        sb.AppendLine(encabezado);
+
+        // Filas de Detalle (iniciando en Columna A)
+        foreach (var item in detalles)
+        {
+            string linea = string.Join(separador, new string[] {
+                item.Numero.ToString(),
+                EscaparCsv(item.CedulaRif ?? "", separador),
+                EscaparCsv(item.NombreAccionista ?? "", separador),
+                item.MontoDecretado.ToString("N2", cultura),
+                item.MontoRetenido.ToString("N2", cultura),
+                item.MontoNetoPagado.ToString("N2", cultura),
+                EscaparCsv(item.TipoPago ?? "-", separador),
+                EscaparCsv(item.EjercicioFiscal ?? "-", separador),
+                item.FechaDecreto?.ToString("dd/MM/yyyy") ?? "-"
+            });
+            sb.AppendLine(linea);
+        }
+
+        // Fila Totalizadora
+        decimal totalDecretado = detalles.Sum(x => x.MontoDecretado);
+        decimal totalRetenido = detalles.Sum(x => x.MontoRetenido);
+        decimal totalNeto = detalles.Sum(x => x.MontoNetoPagado);
+
+        string lineaTotal = string.Join(separador, new string[] {
+            "",
+            "",
+            "TOTALES",
+            totalDecretado.ToString("N2", cultura),
+            totalRetenido.ToString("N2", cultura),
+            totalNeto.ToString("N2", cultura),
+            "",
+            "",
+            ""
+        });
+        sb.AppendLine(lineaTotal);
+
+        return sb.ToString();
+    }
+
+    private async Task GenerarReporteConciliacionesAsync()
+    {
+        procesandoReporte = true;
+        StateHasChanged();
+
+        try
+        {
+            var sociedad = await repoSociedad.GetByIdAsync(sociedadConciliacionSeleccionada);
+            string nombreSociedad = sociedad?.Empresa?.Nombre ?? $"Sociedad_{sociedadConciliacionSeleccionada}";
+            string nombreLimpioSociedad = System.Text.RegularExpressions.Regex.Replace(nombreSociedad, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+
+            var detalles = await repoConciliacion.GetConciliacionesReporteAsync(sociedadConciliacionSeleccionada, fechaDesde!.Value, fechaHasta!.Value);
+
+            if (!detalles.Any())
+            {
+                await MostrarNotificacion($"No se encontraron procesos de conciliación para {nombreSociedad} en el rango seleccionado ({fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy}).", true);
+                return;
+            }
+
+            var encabezado = new ConciliacionEncabezadoReporteDto
+            {
+                SociedadId = sociedadConciliacionSeleccionada,
+                NombreEmpresa = nombreSociedad,
+                FechaDesde = fechaDesde.Value,
+                FechaHasta = fechaHasta.Value,
+                TotalProcesosConciliacion = detalles.Select(d => d.ConciliacionId).Distinct().Count(),
+                CantidadTotalAcciones = detalles.Where(x => !string.Equals(x.Accion, "Inactivado", StringComparison.OrdinalIgnoreCase)).Sum(x => x.SaldoNuevo),
+                TotalAccionistasConciliados = detalles.Where(x => !string.Equals(x.Accion, "Inactivado", StringComparison.OrdinalIgnoreCase)).Select(x => x.CedulaRif).Distinct().Count(),
+                TotalNuevos = detalles.Count(x => string.Equals(x.Accion, "Creado", StringComparison.OrdinalIgnoreCase)),
+                TotalActualizados = detalles.Count(x => string.Equals(x.Accion, "Actualizado", StringComparison.OrdinalIgnoreCase)),
+                TotalInactivados = detalles.Count(x => string.Equals(x.Accion, "Inactivado", StringComparison.OrdinalIgnoreCase)),
+                TotalSaldoAnterior = detalles.Sum(x => x.SaldoAnterior),
+                TotalSaldoNuevo = detalles.Sum(x => x.SaldoNuevo),
+                TotalVariacion = detalles.Sum(x => x.Variacion)
+            };
+
+            if (tipoFormatoSeleccionado.Equals("CSV", StringComparison.OrdinalIgnoreCase))
+            {
+                string csv = GenerarCsvReporteConciliaciones(encabezado, detalles, ";");
+                string fileName = $"Reporte-Conciliaciones-{nombreLimpioSociedad}-{fechaDesde:yyyyMMdd}-{fechaHasta:yyyyMMdd}.csv";
+                await jsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, csv);
+                await MostrarNotificacion($"Archivo CSV generado con {detalles.Count} movimientos de conciliación de {nombreSociedad}.");
+            }
+            else if (tipoFormatoSeleccionado.Equals("PDF", StringComparison.OrdinalIgnoreCase))
+            {
+                string baseFileName = $"Reporte_Conciliaciones_{nombreLimpioSociedad}_{fechaDesde:yyyyMMdd}_{fechaHasta:yyyyMMdd}";
+                await ReportService.GenerarYDescargarReporteConciliacionesAsync(
+                    encabezado,
+                    detalles,
+                    baseFileName
+                );
+
+                await MostrarNotificacion($"Reporte PDF generado exitosamente con {detalles.Count} movimientos de conciliación.");
+            }
+        }
+        catch (Exception ex)
+        {
+            string errorDetallado = ex.InnerException != null ? $"{ex.Message} -> {ex.InnerException.Message}" : ex.Message;
+            await MostrarNotificacion("Error al generar el reporte de conciliaciones: " + errorDetallado, true);
+        }
+        finally
+        {
+            procesandoReporte = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GenerarCsvReporteConciliaciones(ConciliacionEncabezadoReporteDto enc, List<ConciliacionListadoReporteDto> detalles, string separador)
+    {
+        var sb = new StringBuilder();
+        var cultura = new System.Globalization.CultureInfo("es-VE");
+
+        // Fila 1: Nombre de la Empresa en Columna C
+        string lineaEmpresa = string.Join(separador, new string[] {
+            "", "", EscaparCsv(enc.NombreEmpresa ?? "", separador), "", "", "", "", "", ""
+        });
+        sb.AppendLine(lineaEmpresa);
+
+        // Fila 2: PERÍODO en Columna C
+        string lineaPeriodo = string.Join(separador, new string[] {
+            "", "", "PERÍODO:", $"{enc.FechaDesde:dd/MM/yyyy} al {enc.FechaHasta:dd/MM/yyyy}", "", "", "", "", ""
+        });
+        sb.AppendLine(lineaPeriodo);
+
+        // Fila 3: CANTIDAD TOTAL DE ACCIONES
+        string lineaTotalAcciones = string.Join(separador, new string[] {
+            "", "", "CANTIDAD TOTAL DE ACCIONES:", enc.CantidadTotalAcciones.ToString("N0", cultura), "", "", "", "", ""
+        });
+        sb.AppendLine(lineaTotalAcciones);
+
+        // Fila 4: TOTAL ACCIONISTAS CONCILIADOS
+        string lineaTotalAccionistas = string.Join(separador, new string[] {
+            "", "", "TOTAL ACCIONISTAS CONCILIADOS:", enc.TotalAccionistasConciliados.ToString("N0", cultura), "", "", "", "", ""
+        });
+        sb.AppendLine(lineaTotalAccionistas);
+
+        // Fila 5: RESUMEN DE MOVIMIENTOS
+        string lineaMovimientos = string.Join(separador, new string[] {
+            "", "", "MOVIMIENTOS:", $"Nuevos: {enc.TotalNuevos:N0}", $"Actualizados: {enc.TotalActualizados:N0}", $"Inhabilitados: {enc.TotalInactivados:N0}", "", "", ""
+        });
+        sb.AppendLine(lineaMovimientos);
+
+        // Fila 6: En blanco
+        sb.AppendLine();
+
+        // Fila 7: Título del Listado iniciando en Columna A
+        string lineaTitulo = string.Join(separador, new string[] {
+            $"REPORTE DE CONCILIACIÓN DE ACCIONES ({enc.FechaDesde:dd.MM.yyyy} AL {enc.FechaHasta:dd.MM.yyyy})", "", "", "", "", "", "", "", ""
+        });
+        sb.AppendLine(lineaTitulo);
+
+        // Fila 8: Encabezados de Columna (iniciando en Columna A)
+        string encabezado = string.Join(separador, new string[] {
+            "#", "FECHA", "ACCIÓN", "TIPO DOC.", "CÉDULAS O R.I.F.", "ACCIONISTAS", "SALDO ANTERIOR", "SALDO NUEVO", "VARIACIÓN"
+        });
+        sb.AppendLine(encabezado);
+
+        // Filas de Detalle (iniciando en Columna A)
+        foreach (var item in detalles)
+        {
+            string variacionStr = item.Variacion > 0
+                ? $"+{item.Variacion.ToString("N0", cultura)}"
+                : item.Variacion.ToString("N0", cultura);
+
+            string linea = string.Join(separador, new string[] {
+                item.Numero.ToString(),
+                item.FechaConciliacion?.ToString("dd/MM/yyyy") ?? "-",
+                EscaparCsv(item.Accion ?? "", separador),
+                EscaparCsv(item.TipoDocumento ?? "", separador),
+                EscaparCsv(item.CedulaRif ?? "", separador),
+                EscaparCsv(item.NombreAccionista ?? "", separador),
+                item.SaldoAnterior.ToString("N0", cultura),
+                item.SaldoNuevo.ToString("N0", cultura),
+                variacionStr
+            });
+            sb.AppendLine(linea);
+        }
+
+        // Fila Totalizadora
+        long totalSaldoAnterior = detalles.Sum(x => x.SaldoAnterior);
+        long totalSaldoNuevo = detalles.Sum(x => x.SaldoNuevo);
+        long totalVariacion = detalles.Sum(x => x.Variacion);
+
+        string totalVarStr = totalVariacion > 0
+            ? $"+{totalVariacion.ToString("N0", cultura)}"
+            : totalVariacion.ToString("N0", cultura);
+
+        string filaTotales = string.Join(separador, new string[] {
+            "TOTALES", "", "", "", "", "",
+            totalSaldoAnterior.ToString("N0", cultura),
+            totalSaldoNuevo.ToString("N0", cultura),
+            totalVarStr
+        });
+        sb.AppendLine(filaTotales);
+
+        return sb.ToString();
+    }
+
+    private string GenerarCsvListadoAccionistasAlCorte(SociedadEncabezadoReporteDto enc, DateTime fechaCorte, List<AccionistaListadoCorteDto> listado, string separador)
+    {
+        var sb = new StringBuilder();
+        var cultura = new System.Globalization.CultureInfo("es-VE");
+
+        // Fila 1: Nombre de la Empresa en Columna C
+        string lineaEmpresa = string.Join(separador, new string[] {
+            "", "", EscaparCsv(enc.NombreEmpresa ?? "", separador), "", ""
+        });
+        sb.AppendLine(lineaEmpresa);
+
+        // Fila 2: CAPITAL SOCIAL en Columna C, Bs. en Columna D, Monto en Columna E
+        string capSocialStr = enc.CapitalSocial.HasValue ? enc.CapitalSocial.Value.ToString("N2", cultura) : "0,00";
+        string lineaCapital = string.Join(separador, new string[] {
+            "", "", "CAPITAL SOCIAL:", "Bs.", capSocialStr
+        });
+        sb.AppendLine(lineaCapital);
+
+        // Fila 3: TOTAL ACCIONES en Columna C, Total en Columna E
+        string lineaTotalAcciones = string.Join(separador, new string[] {
+            "", "", "TOTAL ACCIONES:", "", enc.TotalAcciones.ToString("N0", cultura)
+        });
+        sb.AppendLine(lineaTotalAcciones);
+
+        // Fila 4: VALOR NOMINAL en Columna C, Bs. en Columna D, Monto en Columna E
+        string valNomStr = enc.ValorNominal.HasValue ? enc.ValorNominal.Value.ToString("0.000", cultura) : "0,000";
+        string lineaValorNominal = string.Join(separador, new string[] {
+            "", "", "VALOR NOMINAL:", "Bs.", valNomStr
+        });
+        sb.AppendLine(lineaValorNominal);
+
+        // Fila 5: En blanco
+        sb.AppendLine();
+
+        // Fila 6: Título del Listado iniciando en Columna A
+        string lineaTitulo = string.Join(separador, new string[] {
+            $"LISTADO ACCIONISTAS AL {fechaCorte:dd.MM.yyyy}", "", "", "", ""
+        });
+        sb.AppendLine(lineaTitulo);
+
+        // Fila 7: Encabezados de Columna (iniciando en Columna A)
+        string encabezado = string.Join(separador, new string[] {
+            "#", "Cédulas o R.I.F.", "ACCIONISTAS", "ACCIONES", "PORCENTAJES"
+        });
+        sb.AppendLine(encabezado);
+
+        // Filas de Detalle (iniciando en Columna A)
+        foreach (var item in listado)
+        {
+            string linea = string.Join(separador, new string[] {
+                item.Numero.ToString(),
+                EscaparCsv(item.CedulaRif ?? "", separador),
+                EscaparCsv(item.NombreAccionista ?? "", separador),
+                item.NroAcciones.ToString("N0", cultura),
+                item.PorcentajeParticipacion.ToString("0.000000", cultura)
+            });
+            sb.AppendLine(linea);
+        }
+
+        // Fila Totalizadora: TOTAL ACCIONES en Columna C, Total en D, Porcentaje en E
+        long totalAcciones = listado.Sum(x => x.NroAcciones);
+        string lineaTotal = string.Join(separador, new string[] {
+            "",
+            "",
+            "TOTAL ACCIONES",
+            totalAcciones.ToString("N0", cultura),
+            "100,000000"
+        });
+        sb.AppendLine(lineaTotal);
+
+        return sb.ToString();
+    }
+
+    private string GenerarCsvListadoAccionistasSociedad(List<AccionistaSociedad> lista, string nombreSociedad, long totalAccionesSociedad, string separador)
+    {
+        var sb = new StringBuilder();
+
+        string encabezado = string.Join(separador, new string[] {
+            "Sociedad", "NombreAccionista", "TipoAccionista", "TipoDocumento", "Documento",
+            "NroAcciones", "PorcentajeParticipacion", "EstatusAccionista", "Email", "Telefono",
+            "FechaIngreso", "FechaRegistro", "UltimaModificacion"
+        });
+        sb.AppendLine(encabezado);
+
+        foreach (var item in lista)
+        {
+            long nroAcciones = item.NroAcciones ?? 0;
+            decimal porc = 0;
+            if (totalAccionesSociedad > 0 && nroAcciones > 0)
+            {
+                porc = Math.Round((decimal)nroAcciones / totalAccionesSociedad * 100, 4);
+            }
+
+            string nombreFinal = (item.Accionista?.TipoAccionista?.Id == 3)
+                ? (item.Accionista?.NombreSusesion ?? item.Accionista?.Nombre ?? string.Empty)
+                : (item.Accionista?.Nombre ?? string.Empty);
+
+            string telefono = !string.IsNullOrWhiteSpace(item.Accionista?.Telefono1) ? item.Accionista.Telefono1 : (!string.IsNullOrWhiteSpace(item.Accionista?.TelefonoMovil) ? item.Accionista.TelefonoMovil : "-");
+
+            string linea = string.Join(separador, new string[] {
+                EscaparCsv(nombreSociedad, separador),
+                EscaparCsv(nombreFinal, separador),
+                EscaparCsv(item.Accionista?.TipoAccionista?.Nombre ?? "-", separador),
+                EscaparCsv(item.Accionista?.TipoDocumento1?.Nombre ?? "-", separador),
+                EscaparCsv(item.Accionista?.Documento1 ?? "-", separador),
+                EscaparCsv(nroAcciones, separador),
+                EscaparCsv(porc.ToString("0.0000", new System.Globalization.CultureInfo("es-VE")) + "%", separador),
+                EscaparCsv(item.EstatusAccionista?.Nombre ?? "-", separador),
+                EscaparCsv(item.Accionista?.Email1 ?? "-", separador),
+                EscaparCsv(telefono, separador),
+                EscaparCsv(item.Accionista?.FechaIngreso?.ToString("yyyy-MM-dd") ?? "-", separador),
+                EscaparCsv(item.CreateDate.ToString("yyyy-MM-dd"), separador),
+                EscaparCsv(item.UpdateDate.ToString("yyyy-MM-dd"), separador)
             });
             sb.AppendLine(linea);
         }

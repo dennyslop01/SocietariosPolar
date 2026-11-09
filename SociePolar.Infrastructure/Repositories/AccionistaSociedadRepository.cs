@@ -569,5 +569,252 @@ namespace SociePolar.Infrastructure.Repositories
                 .Where(x => x.Accionista!.Id == accionistaId)
                 .ToListAsync();
         }
+
+        public async Task<List<AccionistaListadoCorteDto>> GetListadoAccionistasAlCorteAsync(int sociedadId, DateTime fechaHasta)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            DateTime fechaLimite = fechaHasta.Date.AddDays(1);
+
+            // 1. Obtener la sociedad para conocer el total de acciones
+            var sociedad = await context.Set<Sociedad>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sociedadId);
+
+            long totalAccionesSociedad = 0;
+            if (sociedad != null && !string.IsNullOrWhiteSpace(sociedad.NumeroAcciones))
+            {
+                string soloNum = System.Text.RegularExpressions.Regex.Replace(sociedad.NumeroAcciones, @"[^\d]", "");
+                if (long.TryParse(soloNum, out long totParsed))
+                {
+                    totalAccionesSociedad = totParsed;
+                }
+            }
+
+            // 2. Obtener los registros actuales de AccionistasSociedades directos (CustodioId == null)
+            List<AccionistaSociedad> actuales = new();
+            try
+            {
+                actuales = await context.Set<AccionistaSociedad>()
+                    .AsNoTracking()
+                    .Include(x => x.Accionista)
+                        .ThenInclude(a => a!.TipoAccionista)
+                    .Include(x => x.Accionista)
+                        .ThenInclude(a => a!.TipoDocumento1)
+                    .Where(x => x.Sociedad != null && x.Sociedad.Id == sociedadId && x.CustodioId == null)
+                    .ToListAsync();
+            }
+            catch
+            {
+                actuales = await context.Set<AccionistaSociedad>()
+                    .AsNoTracking()
+                    .Include(x => x.Accionista)
+                    .Where(x => x.Sociedad != null && x.Sociedad.Id == sociedadId && x.CustodioId == null)
+                    .ToListAsync();
+            }
+
+            // 3. Obtener los registros históricos de AccionistasSociedadesHistoricoNroAcciones anteriores a fechaLimite
+            List<AccionistaSociedadHistorico> historicos = new();
+            try
+            {
+                historicos = await context.Set<AccionistaSociedadHistorico>()
+                    .AsNoTracking()
+                    .Include(h => h.Accionista)
+                        .ThenInclude(a => a!.TipoAccionista)
+                    .Include(h => h.Accionista)
+                        .ThenInclude(a => a!.TipoDocumento1)
+                    .Where(h => h.Sociedad != null && h.Sociedad.Id == sociedadId && h.CreateDate < fechaLimite)
+                    .ToListAsync();
+            }
+            catch
+            {
+                try
+                {
+                    historicos = await context.Set<AccionistaSociedadHistorico>()
+                        .AsNoTracking()
+                        .Include(h => h.Accionista)
+                        .Where(h => h.Sociedad != null && h.Sociedad.Id == sociedadId && h.CreateDate < fechaLimite)
+                        .ToListAsync();
+                }
+                catch
+                {
+                    historicos = new List<AccionistaSociedadHistorico>();
+                }
+            }
+
+            // Agrupar los históricos por AccionistaId tomando el más reciente anterior a fechaLimite
+            var historicosPorAccionista = historicos
+                .Where(h => h.Accionista != null)
+                .GroupBy(h => h.Accionista!.Id)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(x => x.CreateDate).ThenByDescending(x => x.Id).First()
+                );
+
+            // Agrupar los actuales por AccionistaId para evitar excepciones por claves duplicadas si un accionista tiene múltiples registros
+            var actualesPorAccionista = actuales
+                .Where(a => a.Accionista != null)
+                .GroupBy(a => a.Accionista!.Id)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(x => (x.UpdateDate != default && x.UpdateDate > x.CreateDate) ? x.UpdateDate : x.CreateDate)
+                          .ThenByDescending(x => x.Id)
+                          .First()
+                );
+
+            // 4. Unir todos los IDs de accionistas involucrados
+            var todosAccionistasIds = actualesPorAccionista.Keys
+                .Union(historicosPorAccionista.Keys)
+                .Distinct()
+                .ToList();
+
+            var resultado = new List<AccionistaListadoCorteDto>();
+
+            foreach (var accionistaId in todosAccionistasIds)
+            {
+                actualesPorAccionista.TryGetValue(accionistaId, out var actual);
+                historicosPorAccionista.TryGetValue(accionistaId, out var historico);
+
+                Accionista? acc = actual?.Accionista ?? historico?.Accionista;
+                if (acc == null) continue;
+
+                long nroAccionesFinal = 0;
+                DateTime fechaEfectiva = DateTime.MinValue;
+                string origen = "Actual";
+
+                if (actual != null)
+                {
+                    DateTime fechaActual = (actual.UpdateDate != default && actual.UpdateDate > actual.CreateDate) 
+                        ? actual.UpdateDate 
+                        : actual.CreateDate;
+
+                    if (actual.CreateDate < fechaLimite)
+                    {
+                        if (actual.UpdateDate == default || actual.UpdateDate < fechaLimite)
+                        {
+                            // El registro actual es válido al corte
+                            if (historico != null && historico.CreateDate > fechaActual)
+                            {
+                                nroAccionesFinal = historico.NroAcciones ?? 0;
+                                fechaEfectiva = historico.CreateDate;
+                                origen = "Historico";
+                            }
+                            else
+                            {
+                                nroAccionesFinal = actual.NroAcciones ?? 0;
+                                fechaEfectiva = fechaActual;
+                                origen = "Actual";
+                            }
+                        }
+                        else
+                        {
+                            // Fue modificado DESPUÉS de la fecha de corte, usar el histórico previo
+                            if (historico != null)
+                            {
+                                nroAccionesFinal = historico.NroAcciones ?? 0;
+                                fechaEfectiva = historico.CreateDate;
+                                origen = "Historico";
+                            }
+                            else
+                            {
+                                nroAccionesFinal = actual.NroAcciones ?? 0;
+                                fechaEfectiva = actual.CreateDate;
+                                origen = "Actual";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Creado después de la fecha de corte
+                        if (historico != null)
+                        {
+                            nroAccionesFinal = historico.NroAcciones ?? 0;
+                            fechaEfectiva = historico.CreateDate;
+                            origen = "Historico";
+                        }
+                        else
+                        {
+                            nroAccionesFinal = 0;
+                        }
+                    }
+                }
+                else if (historico != null)
+                {
+                    nroAccionesFinal = historico.NroAcciones ?? 0;
+                    fechaEfectiva = historico.CreateDate;
+                    origen = "Historico";
+                }
+
+                // Omitir si no tiene acciones a esa fecha
+                if (nroAccionesFinal <= 0) continue;
+
+                // Formatear Cédula o RIF al formato exacto: Tipo + 15 dígitos con ceros a la izquierda
+                string cedulaRif = FormatearCedulaRifReporte(acc.TipoDocumento1?.Nombre, acc.Documento1);
+
+                // Formatear Nombre del accionista
+                string nombre = (acc.TipoAccionista?.Id == 3 && !string.IsNullOrWhiteSpace(acc.NombreSusesion))
+                    ? acc.NombreSusesion.Trim()
+                    : (acc.Nombre?.Trim() ?? string.Empty);
+
+                if (acc.Difunto == 1)
+                {
+                    nombre += acc.FechaDefuncion.HasValue 
+                        ? $" (DIFUNTO {acc.FechaDefuncion.Value:MM/yyyy})" 
+                        : " (DIFUNTO)";
+                }
+
+                decimal porcentaje = 0;
+                if (totalAccionesSociedad > 0)
+                {
+                    porcentaje = Math.Round(((decimal)nroAccionesFinal / totalAccionesSociedad) * 100m, 6);
+                }
+
+                resultado.Add(new AccionistaListadoCorteDto
+                {
+                    AccionistaId = accionistaId,
+                    CedulaRif = cedulaRif,
+                    NombreAccionista = nombre,
+                    NroAcciones = nroAccionesFinal,
+                    PorcentajeParticipacion = porcentaje,
+                    FechaEfectiva = fechaEfectiva,
+                    OrigenDato = origen
+                });
+            }
+
+            // Ordenar alfabéticamente por el nombre del accionista tal como en el reporte de muestra
+            resultado = resultado
+                .OrderBy(x => x.NombreAccionista, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            // Si totalAccionesSociedad era 0 en la tabla Sociedades, usar la suma de acciones del listado
+            if (totalAccionesSociedad <= 0 && resultado.Any())
+            {
+                totalAccionesSociedad = resultado.Sum(x => x.NroAcciones);
+                if (totalAccionesSociedad > 0)
+                {
+                    foreach (var item in resultado)
+                    {
+                        item.PorcentajeParticipacion = Math.Round(((decimal)item.NroAcciones / totalAccionesSociedad) * 100m, 6);
+                    }
+                }
+            }
+
+            // Asignar número correlativo
+            for (int i = 0; i < resultado.Count; i++)
+            {
+                resultado[i].Numero = i + 1;
+            }
+
+            return resultado;
+        }
+
+        private static string FormatearCedulaRifReporte(string? tipoDoc, string? documento)
+        {
+            if (string.IsNullOrWhiteSpace(documento)) return string.Empty;
+            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(documento, @"[^\d]", "");
+            if (string.IsNullOrEmpty(soloDigitos)) return documento.Trim();
+            string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "V";
+            if (prefijo.Length > 1) prefijo = prefijo.Substring(0, 1);
+            return $"{prefijo}{soloDigitos.PadLeft(15, '0')}";
+        }
     }
 }

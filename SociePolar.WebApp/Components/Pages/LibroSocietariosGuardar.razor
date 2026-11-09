@@ -1,7 +1,10 @@
 <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex !important; align-items: center; justify-content: center; padding-top: 40px;">
     <div class="modal-dialog modal-lg modal-dialog-scrollable" style="max-height: 90vh; margin: auto;">
             <EditForm EditContext="editContext" OnSubmit="GuardarCambios">
-                <DataAnnotationsValidator />
+                @if (!esModificacion)
+                {
+                    <DataAnnotationsValidator />
+                }
 
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header bg-primary text-white">
@@ -68,7 +71,10 @@
                                 </ul>
                             </div>
 
-                            <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            @if (!esModificacion)
+                            {
+                                <ValidationMessage For="@(() => entidadEditando.SociedadId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            }
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Clase Libro</label>
@@ -82,7 +88,10 @@
                                     }
                                 }
                             </select>
-                            <ValidationMessage For="@(() => entidadEditando.ClaseLibroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            @if (!esModificacion)
+                            {
+                                <ValidationMessage For="@(() => entidadEditando.ClaseLibroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            }
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Tipo Libro</label>
@@ -96,7 +105,6 @@
                                     }
                                 }
                             </select>
-                            <ValidationMessage For="@(() => entidadEditando.TipoLibroId)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Tomo</label>
@@ -106,7 +114,10 @@
                                    maxlength="3"
                                    inputmode="numeric"
                                    oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
-                            <ValidationMessage For="@(() => entidadEditando.TomoUso)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            @if (!esModificacion)
+                            {
+                                <ValidationMessage For="@(() => entidadEditando.TomoUso)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            }
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Folio</label>
@@ -116,7 +127,10 @@
                                    maxlength="3"
                                    inputmode="numeric"
                                    oninput="this.value = this.value.replace(/[^0-9+()-]/g, '');" />
-                            <ValidationMessage For="@(() => entidadEditando.Folios)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            @if (!esModificacion)
+                            {
+                                <ValidationMessage For="@(() => entidadEditando.Folios)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            }
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-secondary small">Fecha Desde</label>
@@ -145,7 +159,7 @@
                             <div class="form-check form-check-inline">
                                 <input type="radio"
                                        name="aplicaReformaGroup"
-                                       id="reformaNo
+                                       id="reformaNo"
                                        class="form-check-input"
                                        value="0"
                                        checked="@(entidadEditando.LibrosSellados == 0)"
@@ -195,7 +209,10 @@
                                       maxlength="2000"
                                       placeholder="Ingrese la ubicación (máximo 2,000 caracteres)...">
                                     </textarea>
-                            <ValidationMessage For="@(() => entidadEditando.Ubicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            @if (!esModificacion)
+                            {
+                                <ValidationMessage For="@(() => entidadEditando.Ubicacion)" class="text-danger mt-1" style="font-size: 11px; font-weight: 500;" />
+                            }
                         </div>
                         <div class="col-md-10 mb-3">
                             <label class="form-label fw-bold text-secondary small">Observaciones</label>
@@ -237,6 +254,7 @@
 
 @code {
     [Parameter] public string id { get; set; } = "";
+    private bool esModificacion => int.TryParse(id, out var parsedId) && parsedId > 0;
 
     [Parameter]
     public EventCallback<bool> OnFinalizado { get; set; }
@@ -368,28 +386,31 @@
         guardando = true;
         StateHasChanged();
 
-        bool formularioValido = editContext.Validate();
-
-        if (!formularioValido)
+        if (!esModificacion)
         {
-            guardando = false;
-            StateHasChanged();
-            await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
-            await jsRuntime.InvokeVoidAsync("eval", @"
-                var m = document.querySelector('.modal-body') || document.querySelector('.modal');
-                if (m) {
-                    m.scrollTop = 0;
-                    try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
-                }
-                var firstInput = document.querySelector('.modal select, .modal input');
-                if (firstInput) {
-                    try { firstInput.focus(); } catch(e) {}
-                    firstInput.classList.remove('pulse-invalid-field');
-                    void firstInput.offsetWidth;
-                    firstInput.classList.add('pulse-invalid-field');
-                }
-            ");
-            return;
+            bool formularioValido = editContext.Validate();
+
+            if (!formularioValido)
+            {
+                guardando = false;
+                StateHasChanged();
+                await MostrarNotificacion("Por favor complete los campos requeridos marcados en rojo", true);
+                await jsRuntime.InvokeVoidAsync("eval", @"
+                    var m = document.querySelector('.modal-body') || document.querySelector('.modal');
+                    if (m) {
+                        m.scrollTop = 0;
+                        try { m.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) {}
+                    }
+                    var firstInput = document.querySelector('.modal select, .modal input');
+                    if (firstInput) {
+                        try { firstInput.focus(); } catch(e) {}
+                        firstInput.classList.remove('pulse-invalid-field');
+                        void firstInput.offsetWidth;
+                        firstInput.classList.add('pulse-invalid-field');
+                    }
+                ");
+                return;
+            }
         }
 
         try
@@ -525,4 +546,3 @@
         textoBusqueda = ""; // Reinicia el filtro
     }
 }
-

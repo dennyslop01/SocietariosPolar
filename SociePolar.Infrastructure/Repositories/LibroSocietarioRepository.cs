@@ -60,8 +60,11 @@ namespace SociePolar.Infrastructure.Repositories
             var claseLibro = await context.Set<ClaseLibro>().FindAsync(entity.ClaseLibroId);
             if (claseLibro == null) throw new Exception($"ClaseLibro con ID {entity.ClaseLibroId} no existe.");
 
-            var tipoLibro = await context.Set<TipoLibro>().FindAsync(entity.TipoLibroId);
-            if (tipoLibro == null) throw new Exception($"TipoLibro con ID {entity.TipoLibroId} no existe.");
+            TipoLibro? tipoLibro = null;
+            if (entity.TipoLibroId.HasValue && entity.TipoLibroId.Value > 0)
+            {
+                tipoLibro = await context.Set<TipoLibro>().FindAsync(entity.TipoLibroId.Value);
+            }
 
             LibroSocietario? newLibroSocietario = new()
             {
@@ -101,21 +104,35 @@ namespace SociePolar.Infrastructure.Repositories
         {
             using var context = _contextFactory.CreateDbContext();
 
-            var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId);
-            if (sociedad == null) throw new Exception($"Sociedad con ID {entity.SociedadId} no existe.");
-
-            var claseLibro = await context.Set<ClaseLibro>().FindAsync(entity.ClaseLibroId);
-            if (claseLibro == null) throw new Exception($"ClaseLibro con ID {entity.ClaseLibroId} no existe.");
-
-            var tipoLibro = await context.Set<TipoLibro>().FindAsync(entity.TipoLibroId);
-            if (tipoLibro == null) throw new Exception($"TipoLibro con ID {entity.TipoLibroId} no existe.");
-
-            LibroSocietario? editLibroSocietario = await context.LibrosSocietarios.FindAsync(entity.Id);
+            LibroSocietario? editLibroSocietario = await context.LibrosSocietarios
+                .Include(l => l.Sociedad)
+                .Include(l => l.ClaseLibro)
+                .Include(l => l.TipoLibro)
+                .FirstOrDefaultAsync(l => l.Id == entity.Id);
             if (editLibroSocietario == null) throw new Exception($"LibroSocietario con ID {entity.Id} no existe.");
 
-            editLibroSocietario.Sociedad = sociedad;
-            editLibroSocietario.ClaseLibro = claseLibro;
-            editLibroSocietario.TipoLibro = tipoLibro;
+            if (entity.SociedadId.HasValue && entity.SociedadId.Value > 0)
+            {
+                var sociedad = await context.Set<Sociedad>().FindAsync(entity.SociedadId.Value);
+                if (sociedad != null) editLibroSocietario.Sociedad = sociedad;
+            }
+
+            if (entity.ClaseLibroId.HasValue && entity.ClaseLibroId.Value > 0)
+            {
+                var claseLibro = await context.Set<ClaseLibro>().FindAsync(entity.ClaseLibroId.Value);
+                if (claseLibro != null) editLibroSocietario.ClaseLibro = claseLibro;
+            }
+
+            if (entity.TipoLibroId.HasValue && entity.TipoLibroId.Value > 0)
+            {
+                var tipoLibro = await context.Set<TipoLibro>().FindAsync(entity.TipoLibroId.Value);
+                editLibroSocietario.TipoLibro = tipoLibro;
+            }
+            else
+            {
+                editLibroSocietario.TipoLibro = null;
+            }
+
             editLibroSocietario.TomoUso = entity.TomoUso;
             editLibroSocietario.Folios = entity.Folios;
             editLibroSocietario.LibrosSellados = entity.LibrosSellados.ToString();

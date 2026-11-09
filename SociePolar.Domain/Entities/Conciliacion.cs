@@ -1,4 +1,4 @@
-﻿namespace SociePolar.Domain.Entities
+namespace SociePolar.Domain.Entities
 {
     public class Conciliacion
     {
@@ -19,7 +19,7 @@
         public int ConciliacionId { get; set; }
         public string NombreAccionista { get; set; } = string.Empty;
         public string Rif { get; set; } = string.Empty;
-        public int TotalAcciones { get; set; }
+        public long TotalAcciones { get; set; }
         public string Accion { get; set; } = string.Empty;
         public DateTime CreateDate { get; set; }
         public int CreateUserId { get; set; }
@@ -30,7 +30,7 @@
         public int Id { get; set; }
         public int ConciliacionId { get; set; }
         public int AccionistaId { get; set; }
-        public int TotalAcciones { get; set; }
+        public long TotalAcciones { get; set; }
         public string Accion { get; set; } = string.Empty;
         public DateTime CreateDate { get; set; }
         public int CreateUserId { get; set; }

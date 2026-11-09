@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SociePolar.Domain.Dtos
 {
@@ -11,7 +11,6 @@ namespace SociePolar.Domain.Dtos
         [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una Clase de Libro válida.")] 
         public int? ClaseLibroId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un Tipo de Libro válido.")] 
         public int? TipoLibroId { get; set; }
 
         public string? TomoUso { get; set; }
@@ -28,7 +27,5 @@ namespace SociePolar.Domain.Dtos
         public DateTime? FechaSello { get; set; }
         public int? Vacio { get; set; }
         public string? Ubicacion { get; set; }
-
-
     }
 }

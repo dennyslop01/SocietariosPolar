@@ -14,10 +14,45 @@ namespace SociePolar.Infrastructure.Repositories
         public async Task<List<Conciliacion>> GetAllAsync()
         {
             using var context = await _contextFactory.CreateDbContextAsync();
-            return await context.Set<Conciliacion>()
+            var list = await context.Set<Conciliacion>()
                 .Include(b => b.Sociedad)
                 .Include(b => b.Sociedad.Empresa)
                 .ToListAsync();
+
+            bool hayCambios = false;
+            foreach (var item in list)
+            {
+                if (!item.FechaArchivo.HasValue && !string.IsNullOrEmpty(item.NombreConciliaciones))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(item.NombreConciliaciones, @"(\d{2})[\._](\d{2})[\._](\d{2,4})");
+                    if (match.Success)
+                    {
+                        if (int.TryParse(match.Groups[1].Value, out int d) &&
+                            int.TryParse(match.Groups[2].Value, out int m) &&
+                            int.TryParse(match.Groups[3].Value, out int y))
+                        {
+                            if (y < 100) y += 2000;
+                            try
+                            {
+                                item.FechaArchivo = new DateTime(y, m, d);
+                                hayCambios = true;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+
+            if (hayCambios)
+            {
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                catch { }
+            }
+
+            return list;
         }
 
         public async Task<Conciliacion?> GetByIdAsync(Int32 id)
@@ -45,7 +80,8 @@ namespace SociePolar.Infrastructure.Repositories
                 NombreConciliaciones = entity.NombreConciliaciones,
                 RutaConciliaciones = entity.RutaConciliaciones,
                 Observaciones = entity.Observaciones,
-                CreateDate = DateTime.UtcNow,
+                FechaArchivo = entity.FechaArchivo,
+                CreateDate = DateTime.Now,
                 CreateUserId = entity.CreateUserId,
             };
 

@@ -86,6 +86,63 @@ namespace SociePolar.WebApp.Utilities
         }
 
         /// <summary>
+        /// Formatea el número de documento de una Persona Natural con separadores de miles y millones (.) si no los tiene.
+        /// Ejemplo: "V", "10533569" -> "V-10.533.569"
+        /// Ejemplo: null, "V-10533569" -> "V-10.533.569"
+        /// Ejemplo: "V", "10.533.569" -> "V-10.533.569"
+        /// </summary>
+        public static string FormatearDocumentoPersonaNatural(string? tipoDoc, string? documento)
+        {
+            if (string.IsNullOrWhiteSpace(documento) || documento.Trim() == "-") return "-";
+            string limpio = documento.Trim();
+
+            // Si trae formato erróneo duplicado como 'V: V-' o 'V: ', limpiarlo
+            limpio = System.Text.RegularExpressions.Regex.Replace(limpio, @"^[VEJGvejg][\-:\s]+([VEJGvejg][\-:\s]+)", "$1", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "";
+
+            var match = System.Text.RegularExpressions.Regex.Match(limpio, @"^([VEPvep])[\-:\s]*(.+)$");
+            if (match.Success)
+            {
+                if (string.IsNullOrEmpty(prefijo))
+                {
+                    prefijo = match.Groups[1].Value.ToUpper();
+                }
+                limpio = match.Groups[2].Value.Trim();
+            }
+            else if (!string.IsNullOrEmpty(prefijo) && limpio.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+            {
+                limpio = limpio.Substring(prefijo.Length).TrimStart('-', ':', ' ', '.');
+            }
+
+            if (string.IsNullOrEmpty(prefijo))
+            {
+                prefijo = "V";
+            }
+
+            // Si ya contiene puntos (ej: 10.533.569), respetamos los puntos existentes
+            if (limpio.Contains('.'))
+            {
+                return $"{prefijo}-{limpio}";
+            }
+
+            // Extraer solo dígitos y formatear con punto como separador de miles
+            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(limpio, @"[^\d]", "");
+            if (long.TryParse(soloDigitos, out long numero))
+            {
+                var nfi = new System.Globalization.NumberFormatInfo
+                {
+                    NumberGroupSeparator = ".",
+                    NumberDecimalDigits = 0
+                };
+                string formateado = numero.ToString("N0", nfi);
+                return $"{prefijo}-{formateado}";
+            }
+
+            return $"{prefijo}-{limpio}";
+        }
+
+        /// <summary>
         /// Devuelve la etiqueta descriptiva del tipo de documento (ej: "RIF" para 'J', 'G' o Persona Jurídica, "Cédula" para 'V'/'E', "Pasaporte" para 'P', etc.).
         /// </summary>
         public static string ObtenerEtiquetaTipoDocumento(string? tipoDocNombre, int? tipoAccionistaId = null)

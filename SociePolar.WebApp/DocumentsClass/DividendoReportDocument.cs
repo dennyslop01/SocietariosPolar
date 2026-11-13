@@ -32,7 +32,7 @@ namespace SociePolar.WebApp.DocumentsClass
                 page.Size(PageSizes.A4.Landscape());
                 page.Margin(1.0f, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(8f).FontFamily("Arial"));
+                page.DefaultTextStyle(x => x.FontSize(7.5f).FontFamily("Arial"));
 
                 // Encabezado
                 page.Header().Column(col =>
@@ -45,18 +45,25 @@ namespace SociePolar.WebApp.DocumentsClass
                             infoCol.Item().Text(_encabezado.NombreEmpresa ?? "EMPRESA")
                                 .FontSize(11)
                                 .Bold()
-                                .FontColor("#104E8B");
+                                .FontColor("#00338D");
 
                             infoCol.Item().PaddingTop(2).Row(r =>
                             {
-                                r.ConstantItem(120).Text("PERÍODO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
+                                r.ConstantItem(140).Text("PERÍODO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
                                 r.RelativeItem().Text($"{_encabezado.FechaDesde:dd/MM/yyyy} al {_encabezado.FechaHasta:dd/MM/yyyy}")
                                     .FontSize(8).Bold();
                             });
 
                             infoCol.Item().Row(r =>
                             {
-                                r.ConstantItem(120).Text("MONTO DECRETADO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
+                                r.ConstantItem(140).Text("ACCIONISTAS / ACCIONES:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
+                                r.RelativeItem().Text($"{_detalles.Count:N0} accionistas | {_detalles.Sum(x => x.CantidadAcciones):N0} acciones")
+                                    .FontSize(8).Bold();
+                            });
+
+                            infoCol.Item().Row(r =>
+                            {
+                                r.ConstantItem(140).Text("MONTO DECRETADO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
                                 r.ConstantItem(25).Text(_encabezado.MonedaSimbolo ?? "Bs.").FontSize(8);
                                 r.RelativeItem().Text(_encabezado.MontoTotalDecretado.ToString("N2", _cultura))
                                     .FontSize(8).Bold();
@@ -64,7 +71,7 @@ namespace SociePolar.WebApp.DocumentsClass
 
                             infoCol.Item().Row(r =>
                             {
-                                r.ConstantItem(120).Text("MONTO RETENIDO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
+                                r.ConstantItem(140).Text("MONTO RETENIDO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
                                 r.ConstantItem(25).Text(_encabezado.MonedaSimbolo ?? "Bs.").FontSize(8);
                                 r.RelativeItem().Text(_encabezado.MontoTotalRetenido.ToString("N2", _cultura))
                                     .FontSize(8).Bold();
@@ -72,7 +79,7 @@ namespace SociePolar.WebApp.DocumentsClass
 
                             infoCol.Item().Row(r =>
                             {
-                                r.ConstantItem(120).Text("MONTO NETO PAGADO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
+                                r.ConstantItem(140).Text("MONTO NETO PAGADO:").Bold().FontSize(8).FontColor(Colors.Grey.Darken3);
                                 r.ConstantItem(25).Text(_encabezado.MonedaSimbolo ?? "Bs.").FontSize(8);
                                 r.RelativeItem().Text(_encabezado.MontoTotalNetoPagado.ToString("N2", _cultura))
                                     .FontSize(8).Bold();
@@ -103,15 +110,17 @@ namespace SociePolar.WebApp.DocumentsClass
                 {
                     table.ColumnsDefinition(cols =>
                     {
-                        cols.ConstantColumn(24);       // #
-                        cols.ConstantColumn(110);      // Cédulas o R.I.F.
+                        cols.ConstantColumn(22);       // #
+                        cols.ConstantColumn(75);       // Cédulas o R.I.F.
                         cols.RelativeColumn();         // ACCIONISTAS
-                        cols.ConstantColumn(85);       // MONTO DECRETADO
-                        cols.ConstantColumn(80);       // MONTO RETENIDO
-                        cols.ConstantColumn(85);       // MONTO NETO
-                        cols.ConstantColumn(70);       // TIPO PAGO
-                        cols.ConstantColumn(65);       // EJERCICIO
-                        cols.ConstantColumn(70);       // FECHA DECRETO
+                        cols.ConstantColumn(55);       // ACCIONES
+                        cols.ConstantColumn(85);       // BANCO / CUENTA
+                        cols.ConstantColumn(65);       // TIPO PAGO
+                        cols.ConstantColumn(75);       // MONTO DECRETADO
+                        cols.ConstantColumn(70);       // MONTO RETENIDO
+                        cols.ConstantColumn(75);       // MONTO NETO
+                        cols.ConstantColumn(40);       // NOTIF.
+                        cols.ConstantColumn(55);       // EJERCICIO
                     });
 
                     // Encabezados de Columna
@@ -127,6 +136,15 @@ namespace SociePolar.WebApp.DocumentsClass
                             .Text("ACCIONISTAS").Bold().FontSize(7.5f);
 
                         h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignRight()
+                            .Text("ACCIONES").Bold().FontSize(7.5f);
+
+                        h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignLeft()
+                            .Text("BANCO / CUENTA").Bold().FontSize(7.5f);
+
+                        h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignLeft()
+                            .Text("TIPO PAGO").Bold().FontSize(7.5f);
+
+                        h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignRight()
                             .Text("MTO. DECRETADO").Bold().FontSize(7.5f);
 
                         h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignRight()
@@ -136,20 +154,18 @@ namespace SociePolar.WebApp.DocumentsClass
                             .Text("MTO. NETO").Bold().FontSize(7.5f);
 
                         h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignCenter()
-                            .Text("TIPO PAGO").Bold().FontSize(7.5f);
+                            .Text("NOTIF.").Bold().FontSize(7.5f);
 
                         h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignCenter()
                             .Text("EJERCICIO").Bold().FontSize(7.5f);
-
-                        h.Cell().Border(0.75f).BorderColor(Colors.Black).Background(Colors.White).Padding(3).AlignCenter()
-                            .Text("FECHA DECRETO").Bold().FontSize(7.5f);
                     });
 
-                    // Filas de Datos
+                    // Filas de Detalle
+                    int correlativo = 1;
                     foreach (var item in _detalles)
                     {
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignCenter()
-                            .Text(item.Numero.ToString()).FontSize(7.5f);
+                            .Text((correlativo++).ToString()).FontSize(7.5f);
 
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignLeft()
                             .Text(item.CedulaRif ?? string.Empty).FontSize(7.5f);
@@ -158,31 +174,48 @@ namespace SociePolar.WebApp.DocumentsClass
                             .Text(item.NombreAccionista ?? string.Empty).FontSize(7.5f);
 
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignRight()
+                            .Text(item.CantidadAcciones > 0 ? item.CantidadAcciones.ToString("N0", _cultura) : "-").FontSize(7.5f);
+
+                        string bancoCuenta = !string.IsNullOrWhiteSpace(item.Banco)
+                            ? (string.IsNullOrWhiteSpace(item.NroCuenta) ? item.Banco : $"{item.Banco} ({item.NroCuenta})")
+                            : (item.NroCuenta ?? "-");
+
+                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignLeft()
+                            .Text(bancoCuenta).FontSize(7.0f);
+
+                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignLeft()
+                            .Text(item.TipoPago ?? "-").FontSize(7.5f);
+
+                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignRight()
                             .Text(item.MontoDecretado.ToString("N2", _cultura)).FontSize(7.5f);
 
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignRight()
                             .Text(item.MontoRetenido.ToString("N2", _cultura)).FontSize(7.5f);
 
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignRight()
-                            .Text(item.MontoNetoPagado.ToString("N2", _cultura)).FontSize(7.5f);
+                            .Text(item.MontoNetoPagado.ToString("N2", _cultura)).FontSize(7.5f).Bold();
 
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignCenter()
-                            .Text(item.TipoPago ?? "-").FontSize(7.5f);
+                            .Text(item.Notificado ? "Sí" : "No").FontSize(7.5f)
+                            .FontColor(item.Notificado ? Colors.Green.Darken2 : Colors.Grey.Darken1);
 
                         table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignCenter()
-                            .Text(item.EjercicioFiscal ?? "-").FontSize(7.5f);
-
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten1).PaddingVertical(2).PaddingHorizontal(2).AlignCenter()
-                            .Text(item.FechaDecreto?.ToString("dd/MM/yyyy") ?? "-").FontSize(7.5f);
+                            .Text(item.EjercicioFiscal ?? string.Empty).FontSize(7.5f);
                     }
 
                     // Fila Totalizadora
                     decimal totalDecretado = _detalles.Sum(x => x.MontoDecretado);
                     decimal totalRetenido = _detalles.Sum(x => x.MontoRetenido);
                     decimal totalNeto = _detalles.Sum(x => x.MontoNetoPagado);
+                    long totalAcciones = _detalles.Sum(x => x.CantidadAcciones);
 
                     table.Cell().ColumnSpan(3).Border(1f).BorderColor(Colors.Black).Padding(3).AlignCenter()
                         .Text("TOTALES").Bold().FontSize(8);
+
+                    table.Cell().Border(1f).BorderColor(Colors.Black).Padding(3).AlignRight()
+                        .Text(totalAcciones > 0 ? totalAcciones.ToString("N0", _cultura) : "-").Bold().FontSize(8);
+
+                    table.Cell().ColumnSpan(2).Border(1f).BorderColor(Colors.Black).Padding(3);
 
                     table.Cell().Border(1f).BorderColor(Colors.Black).Padding(3).AlignRight()
                         .Text(totalDecretado.ToString("N2", _cultura)).Bold().FontSize(8);
@@ -193,8 +226,7 @@ namespace SociePolar.WebApp.DocumentsClass
                     table.Cell().Border(1f).BorderColor(Colors.Black).Padding(3).AlignRight()
                         .Text(totalNeto.ToString("N2", _cultura)).Bold().FontSize(8);
 
-                    table.Cell().ColumnSpan(3).Border(1f).BorderColor(Colors.Black).Padding(3).AlignCenter()
-                        .Text("");
+                    table.Cell().ColumnSpan(2).Border(1f).BorderColor(Colors.Black).Padding(3);
                 });
 
                 // Pie de página

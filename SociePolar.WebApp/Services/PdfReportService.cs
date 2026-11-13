@@ -354,5 +354,43 @@ namespace SociePolar.WebApp.Services
 
             return relativeUrl;
         }
+
+        public async Task<string> GenerarYDescargarCertificacionCartaAsync(
+            CertificacionReportDto dto,
+            string nombreArchivoBase)
+        {
+            byte[] logoBytes = Array.Empty<byte>();
+            string rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoCertificacion.jpg");
+            if (!File.Exists(rutaLogo))
+            {
+                rutaLogo = Path.Combine(_env.WebRootPath, "images", "LogoPolar.jpg");
+            }
+            if (File.Exists(rutaLogo))
+            {
+                logoBytes = await File.ReadAllBytesAsync(rutaLogo);
+            }
+
+            var document = new CertificacionCartaReportDocument(dto, logoBytes);
+            var pdfBytes = document.GeneratePdf();
+
+            string nombreLimpio = System.Text.RegularExpressions.Regex.Replace(nombreArchivoBase, @"[^\w\s-]", "").Replace(" ", "_").Trim();
+            if (string.IsNullOrWhiteSpace(nombreLimpio)) nombreLimpio = "Certificacion";
+            string nombreArchivo = $"{nombreLimpio}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            string reportsFolder = Path.Combine(_env.WebRootPath, "reports");
+            if (!Directory.Exists(reportsFolder))
+            {
+                Directory.CreateDirectory(reportsFolder);
+            }
+            string physicalPath = Path.Combine(reportsFolder, nombreArchivo);
+            await File.WriteAllBytesAsync(physicalPath, pdfBytes);
+
+            string relativeUrl = $"reports/{nombreArchivo}";
+
+            string base64Data = Convert.ToBase64String(pdfBytes);
+            await _js.InvokeVoidAsync("descargarYAbrirPdf", base64Data, nombreArchivo, relativeUrl);
+
+            return relativeUrl;
+        }
     }
 }

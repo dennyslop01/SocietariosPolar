@@ -10,6 +10,7 @@ namespace SociePolar.Domain.Dtos
         public decimal PorcentajeParticipacion { get; set; }
         public DateTime FechaEfectiva { get; set; }
         public string? OrigenDato { get; set; } // "Historico" o "Actual"
+        public int? EstatusId { get; set; }
     }
 
     public class SociedadEncabezadoReporteDto

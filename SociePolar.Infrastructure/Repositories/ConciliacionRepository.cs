@@ -200,6 +200,7 @@ namespace SociePolar.Infrastructure.Repositories
             var accionistas = await context.Set<Accionista>()
                 .AsNoTracking()
                 .Include(a => a.TipoDocumento1)
+                .Include(a => a.TipoAccionista)
                 .Where(a => accionistaIds.Contains(a.Id))
                 .ToListAsync();
 
@@ -287,6 +288,24 @@ namespace SociePolar.Infrastructure.Repositories
 
                 long variacion = saldoNuevo - saldoAnterior;
 
+                string categoria;
+                if (accion.Equals("Creado", StringComparison.OrdinalIgnoreCase))
+                {
+                    categoria = "Ingreso";
+                }
+                else if (accion.Equals("Inactivado", StringComparison.OrdinalIgnoreCase))
+                {
+                    categoria = "Egreso";
+                }
+                else
+                {
+                    if (variacion > 0) categoria = "Compra";
+                    else if (variacion < 0) categoria = "Venta";
+                    else categoria = "Sin Variación";
+                }
+
+                string docFormateado = FormatearDocumentoConciliacion(tipoDoc, nroDoc, acc?.TipoAccionista?.Id);
+
                 listaResultado.Add(new ConciliacionListadoReporteDto
                 {
                     ConciliacionId = cd.ConciliacionId,
@@ -294,8 +313,10 @@ namespace SociePolar.Infrastructure.Repositories
                     FechaConciliacion = fechaMovimiento,
                     Accion = accion,
                     TipoDocumento = tipoDoc,
-                    CedulaRif = nroDoc,
+                    CedulaRif = docFormateado,
                     NombreAccionista = nombreAcc,
+                    TipoAccionistaId = acc?.TipoAccionista?.Id,
+                    CategoriaMovimiento = categoria,
                     SaldoAnterior = saldoAnterior,
                     SaldoNuevo = saldoNuevo,
                     Variacion = variacion
@@ -314,6 +335,54 @@ namespace SociePolar.Infrastructure.Repositories
             }
 
             return ordenados;
+        }
+
+        private static string FormatearDocumentoConciliacion(string? tipoDoc, string? documento, int? tipoAccionistaId)
+        {
+            if (string.IsNullOrWhiteSpace(documento)) return string.Empty;
+            string limpio = documento.Trim();
+
+            // Si es Persona Natural (Id == 1) o tiene tipo V / E, formatear con separadores de miles y millones (.)
+            if (tipoAccionistaId == 1 || string.Equals(tipoDoc, "V", StringComparison.OrdinalIgnoreCase) || string.Equals(tipoDoc, "E", StringComparison.OrdinalIgnoreCase))
+            {
+                string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "V";
+                var match = System.Text.RegularExpressions.Regex.Match(limpio, @"^([VEPvep])[\-:\s]*(.+)$");
+                if (match.Success)
+                {
+                    prefijo = match.Groups[1].Value.ToUpper();
+                    limpio = match.Groups[2].Value.Trim();
+                }
+                else if (limpio.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+                {
+                    limpio = limpio.Substring(prefijo.Length).TrimStart('-', ':', ' ', '.');
+                }
+
+                if (limpio.Contains('.'))
+                {
+                    return $"{prefijo}-{limpio}";
+                }
+
+                string soloDigitos = System.Text.RegularExpressions.Regex.Replace(limpio, @"[^\d]", "");
+                if (long.TryParse(soloDigitos, out long numero))
+                {
+                    var nfi = new System.Globalization.NumberFormatInfo
+                    {
+                        NumberGroupSeparator = ".",
+                        NumberDecimalDigits = 0
+                    };
+                    return $"{prefijo}-{numero.ToString("N0", nfi)}";
+                }
+
+                return $"{prefijo}-{limpio}";
+            }
+
+            // Jurídico u otros
+            string pref = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "";
+            if (!string.IsNullOrEmpty(pref) && !limpio.StartsWith(pref, StringComparison.OrdinalIgnoreCase))
+            {
+                return $"{pref}-{limpio}";
+            }
+            return limpio;
         }
     }
 }

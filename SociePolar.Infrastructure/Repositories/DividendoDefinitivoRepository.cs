@@ -159,9 +159,21 @@ namespace SociePolar.Infrastructure.Repositories
                     .ThenInclude(a => a!.TipoDocumento1)
                 .Include(det => det.Accionista)
                     .ThenInclude(a => a!.TipoAccionista)
+                .Include(det => det.Accionista)
+                    .ThenInclude(a => a!.Banco)
+                .Include(det => det.Accionista)
+                    .ThenInclude(a => a!.TipoCuenta)
                 .Include(det => det.Moneda)
                 .Where(det => idsProcesos.Contains(det.DividendoDefinitivoId))
                 .ToListAsync();
+
+            // Cargar cantidad de acciones de los accionistas para esa sociedad
+            var accionistaIds = detalles.Where(d => d.Accionista != null).Select(d => d.Accionista!.Id).Distinct().ToList();
+            var dictAcciones = await context.Set<AccionistaSociedad>()
+                .AsNoTracking()
+                .Where(x => x.Sociedad!.Id == sociedadId && accionistaIds.Contains(x.Accionista!.Id) && x.CustodioId == null)
+                .GroupBy(x => x.Accionista!.Id)
+                .ToDictionaryAsync(g => g.Key, g => g.Sum(s => s.NroAcciones ?? 0));
 
             var resultado = new List<DividendoListadoReporteDto>();
 
@@ -170,7 +182,7 @@ namespace SociePolar.Infrastructure.Repositories
                 procesosDict.TryGetValue(det.DividendoDefinitivoId, out var proc);
                 var acc = det.Accionista;
 
-                string cedulaRif = acc != null ? FormatearCedulaRifReporte(acc.TipoDocumento1?.Nombre, acc.Documento1) : string.Empty;
+                string cedulaRif = acc != null ? FormatearCedulaRifReporte(acc.TipoDocumento1?.Nombre, acc.Documento1, acc.TipoAccionista?.Id) : string.Empty;
 
                 string nombreAccionista = string.Empty;
                 if (acc != null)
@@ -188,23 +200,61 @@ namespace SociePolar.Infrastructure.Repositories
                 }
 
                 string moneda = det.Moneda?.Simbolo ?? proc?.Moneda?.Simbolo ?? "Bs.";
+                string monedaPago = det.Moneda?.Nombre ?? det.Moneda?.Simbolo ?? proc?.Moneda?.Nombre ?? proc?.Moneda?.Simbolo ?? "Bolívares";
+
+                dictAcciones.TryGetValue(acc?.Id ?? 0, out long cantAcciones);
 
                 resultado.Add(new DividendoListadoReporteDto
                 {
                     DividendoDefinitivoId = det.DividendoDefinitivoId,
                     ProcesoNombre = proc?.NombreDividendos ?? proc?.Explicacion ?? $"Proceso {det.DividendoDefinitivoId}",
+                    SociedadNombre = proc?.Sociedad?.Empresa?.Nombre ?? "",
                     AccionistaId = acc?.Id ?? 0,
+                    TipoAccionistaId = acc?.TipoAccionista?.Id,
                     CedulaRif = cedulaRif,
                     NombreAccionista = nombreAccionista,
+                    CantidadAcciones = cantAcciones,
+                    Correos = acc?.EmailContacto ?? "",
+                    Telefonos = acc?.TelefonoContacto ?? "",
+                    Banco = acc?.Banco?.Nombre ?? "",
+                    TipoCuenta = acc?.TipoCuenta?.Nombre ?? "",
+                    NroCuenta = acc?.NumeroCuenta ?? "",
+                    TitularCuenta = acc?.NombreTitularCuenta ?? "",
+                    TipoPago = det.TipoPago ?? "",
+                    MonedaPago = monedaPago,
+                    Notificado = det.Notificado,
+                    FechaNotificacion = det.FechaNotificacion,
                     MontoDecretado = det.MontoDecretado,
-                    MontoRetenido = det.MontoRetenido,
-                    Porcion1Monto = det.Porcion1Monto,
-                    Porcion2Monto = det.Porcion2Monto,
-                    Porcion3Monto = det.Porcion3Monto,
-                    Porcion4Monto = det.Porcion4Monto,
-                    TipoPago = det.TipoPago,
-                    EjercicioFiscal = det.EjercicioFiscal,
                     FechaDecreto = det.FechaDecreto,
+                    MontoRetenido = det.MontoRetenido,
+                    EjercicioFiscal = det.EjercicioFiscal ?? "",
+                    Porcion1Monto = det.Porcion1Monto,
+                    Porcion1Porcentaje = det.Porcion1Porcentaje,
+                    Porcion1FechaPago = det.Porcion1FechaPago,
+                    Porcion2Monto = det.Porcion2Monto,
+                    Porcion2Porcentaje = det.Porcion2Porcentaje,
+                    Porcion2FechaPago = det.Porcion2FechaPago,
+                    Porcion3Monto = det.Porcion3Monto,
+                    Porcion3Porcentaje = det.Porcion3Porcentaje,
+                    Porcion3FechaPago = det.Porcion3FechaPago,
+                    Porcion4Monto = det.Porcion4Monto,
+                    Porcion4Porcentaje = det.Porcion4Porcentaje,
+                    Porcion4FechaPago = det.Porcion4FechaPago,
+                    Observaciones = det.Observaciones ?? "",
+                    SoporteEnviadoP1 = det.SoporteEnviadoP1,
+                    SoporteFechaP1 = det.SoporteFechaP1,
+                    SoporteEnviadoP2 = det.SoporteEnviadoP2,
+                    SoporteFechaP2 = det.SoporteFechaP2,
+                    SoporteEnviadoP3 = det.SoporteEnviadoP3,
+                    SoporteFechaP3 = det.SoporteFechaP3,
+                    SoporteEnviadoP4 = det.SoporteEnviadoP4,
+                    SoporteFechaP4 = det.SoporteFechaP4,
+                    RutaCarta = proc?.RutaDividendos ?? "",
+                    NombreCarta = proc?.NombreDividendos ?? "",
+                    RutaSoporte1 = proc?.RutaActa ?? "",
+                    NombreSoporte1 = proc?.NombreActa ?? "",
+                    RutaSoporte2 = proc?.RutaDocumento ?? "",
+                    NombreSoporte2 = proc?.NombreDocumento ?? "",
                     FechaProceso = proc?.CreateDate ?? DateTime.MinValue,
                     MonedaSimbolo = moneda
                 });
@@ -224,14 +274,52 @@ namespace SociePolar.Infrastructure.Repositories
             return resultado;
         }
 
-        private static string FormatearCedulaRifReporte(string? tipoDoc, string? documento)
+        private static string FormatearCedulaRifReporte(string? tipoDoc, string? documento, int? tipoAccionistaId)
         {
             if (string.IsNullOrWhiteSpace(documento)) return string.Empty;
-            string soloDigitos = System.Text.RegularExpressions.Regex.Replace(documento, @"[^\d]", "");
-            if (string.IsNullOrEmpty(soloDigitos)) return documento.Trim();
-            string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "V";
-            if (prefijo.Length > 1) prefijo = prefijo.Substring(0, 1);
-            return $"{prefijo}{soloDigitos.PadLeft(15, '0')}";
+            string limpio = documento.Trim();
+
+            // Si es Persona Natural (Id == 1) o tiene tipo V / E, formatear con separadores de miles y millones (.)
+            if (tipoAccionistaId == 1 || string.Equals(tipoDoc, "V", StringComparison.OrdinalIgnoreCase) || string.Equals(tipoDoc, "E", StringComparison.OrdinalIgnoreCase))
+            {
+                string prefijo = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "V";
+                var match = System.Text.RegularExpressions.Regex.Match(limpio, @"^([VEPvep])[\-:\s]*(.+)$");
+                if (match.Success)
+                {
+                    prefijo = match.Groups[1].Value.ToUpper();
+                    limpio = match.Groups[2].Value.Trim();
+                }
+                else if (limpio.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase))
+                {
+                    limpio = limpio.Substring(prefijo.Length).TrimStart('-', ':', ' ', '.');
+                }
+
+                if (limpio.Contains('.'))
+                {
+                    return $"{prefijo}-{limpio}";
+                }
+
+                string soloDigitos = System.Text.RegularExpressions.Regex.Replace(limpio, @"[^\d]", "");
+                if (long.TryParse(soloDigitos, out long numero))
+                {
+                    var nfi = new System.Globalization.NumberFormatInfo
+                    {
+                        NumberGroupSeparator = ".",
+                        NumberDecimalDigits = 0
+                    };
+                    return $"{prefijo}-{numero.ToString("N0", nfi)}";
+                }
+
+                return $"{prefijo}-{limpio}";
+            }
+
+            // Jurídico o Sucesión
+            string pref = !string.IsNullOrWhiteSpace(tipoDoc) ? tipoDoc.Trim().ToUpper() : "";
+            if (!string.IsNullOrEmpty(pref) && !limpio.StartsWith(pref, StringComparison.OrdinalIgnoreCase))
+            {
+                return $"{pref}-{limpio}";
+            }
+            return limpio;
         }
     }
 }

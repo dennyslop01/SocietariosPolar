@@ -570,7 +570,7 @@ namespace SociePolar.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<AccionistaListadoCorteDto>> GetListadoAccionistasAlCorteAsync(int sociedadId, DateTime fechaHasta)
+        public async Task<List<AccionistaListadoCorteDto>> GetListadoAccionistasAlCorteAsync(int sociedadId, DateTime fechaHasta, int? estatusId = 1)
         {
             using var context = await _contextFactory.CreateDbContextAsync();
             DateTime fechaLimite = fechaHasta.Date.AddDays(1);
@@ -594,22 +594,36 @@ namespace SociePolar.Infrastructure.Repositories
             List<AccionistaSociedad> actuales = new();
             try
             {
-                actuales = await context.Set<AccionistaSociedad>()
+                var query = context.Set<AccionistaSociedad>()
                     .AsNoTracking()
+                    .Include(x => x.EstatusAccionista)
                     .Include(x => x.Accionista)
                         .ThenInclude(a => a!.TipoAccionista)
                     .Include(x => x.Accionista)
                         .ThenInclude(a => a!.TipoDocumento1)
-                    .Where(x => x.Sociedad != null && x.Sociedad.Id == sociedadId && x.CustodioId == null)
-                    .ToListAsync();
+                    .Where(x => x.Sociedad != null && x.Sociedad.Id == sociedadId && x.CustodioId == null);
+
+                if (estatusId.HasValue)
+                {
+                    query = query.Where(x => x.EstatusAccionista != null && x.EstatusAccionista.Id == estatusId.Value);
+                }
+
+                actuales = await query.ToListAsync();
             }
             catch
             {
-                actuales = await context.Set<AccionistaSociedad>()
+                var query = context.Set<AccionistaSociedad>()
                     .AsNoTracking()
+                    .Include(x => x.EstatusAccionista)
                     .Include(x => x.Accionista)
-                    .Where(x => x.Sociedad != null && x.Sociedad.Id == sociedadId && x.CustodioId == null)
-                    .ToListAsync();
+                    .Where(x => x.Sociedad != null && x.Sociedad.Id == sociedadId && x.CustodioId == null);
+
+                if (estatusId.HasValue)
+                {
+                    query = query.Where(x => x.EstatusAccionista != null && x.EstatusAccionista.Id == estatusId.Value);
+                }
+
+                actuales = await query.ToListAsync();
             }
 
             // 3. Obtener los registros históricos de AccionistasSociedadesHistoricoNroAcciones anteriores a fechaLimite
@@ -662,10 +676,19 @@ namespace SociePolar.Infrastructure.Repositories
                 );
 
             // 4. Unir todos los IDs de accionistas involucrados
-            var todosAccionistasIds = actualesPorAccionista.Keys
-                .Union(historicosPorAccionista.Keys)
-                .Distinct()
-                .ToList();
+            List<int> todosAccionistasIds;
+            if (estatusId.HasValue)
+            {
+                // Si se especifica estatusId (ej. Activos = 1), solo se consideran los accionistas que tienen dicho estatus en AccionistasSociedades
+                todosAccionistasIds = actualesPorAccionista.Keys.Distinct().ToList();
+            }
+            else
+            {
+                todosAccionistasIds = actualesPorAccionista.Keys
+                    .Union(historicosPorAccionista.Keys)
+                    .Distinct()
+                    .ToList();
+            }
 
             var resultado = new List<AccionistaListadoCorteDto>();
 
@@ -776,7 +799,8 @@ namespace SociePolar.Infrastructure.Repositories
                     NroAcciones = nroAccionesFinal,
                     PorcentajeParticipacion = porcentaje,
                     FechaEfectiva = fechaEfectiva,
-                    OrigenDato = origen
+                    OrigenDato = origen,
+                    EstatusId = actual?.EstatusAccionista?.Id ?? estatusId ?? 1
                 });
             }
 
